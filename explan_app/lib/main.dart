@@ -3,24 +3,32 @@ import 'package:geolocator/geolocator.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'services/api_service.dart';
 import 'models/location_model.dart';
+import 'screens/login_page.dart';
 
 void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: HomePage());
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: LoginPage(),
+    );
   }
 }
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
-  _HomePageState createState() => _HomePageState();
+  HomePageState createState() => HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> {
   List<LocationModel> locations = [];
   final player = AudioPlayer();
   LocationModel? currentLocation;
@@ -44,7 +52,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void trackPosition() async {
-  LocationPermission permission = await Geolocator.requestPermission();
+  await Geolocator.requestPermission();
 
   Geolocator.getPositionStream().listen((Position position) {
     if (locations.isEmpty) return;
