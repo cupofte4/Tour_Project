@@ -64,5 +64,26 @@ namespace Tour_Project.Controllers
             _context.SaveChanges();
             return Ok();
         }
+
+        [HttpPut("{id}")]
+        public IActionResult Update(int id, Location updated)
+        {
+            var location = _context.Locations.Find(id);
+            if (location == null) return NotFound();
+
+            location.Name = updated.Name;
+            location.Description = updated.Description;
+            location.Image = updated.Image;
+            location.Audio = updated.Audio;
+            location.Latitude = updated.Latitude;
+            location.Longitude = updated.Longitude;
+            location.TextVi = updated.TextVi;
+            location.TextEn = updated.TextEn;
+            location.TextZh = updated.TextZh;
+            location.TextDe = updated.TextDe;
+
+            _context.SaveChanges();
+            return Ok(location);
+        }
     }
 }
