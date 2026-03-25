@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { speakLocation, stop, getTextForLang } from "../services/ttsService";
 import "../styles/app.css";
 
 function LocationCard({ location, lang, apiUrl, onImageClick }) {
+  const [isPlaying, setIsPlaying] = useState(false);
   if (!location)
     return (
       <div className="empty-state">
@@ -24,10 +26,29 @@ function LocationCard({ location, lang, apiUrl, onImageClick }) {
       <div className="location-desc">{text}</div>
 
       <div className="tts-controls">
-        <button className="tts-btn play" onClick={() => speakLocation(location, lang)}>
-          ▶ Đọc thuyết minh
+        <button 
+          className="tts-btn play" 
+          onClick={() => {
+            if (isPlaying) {
+              // Pause
+              stop();
+              setIsPlaying(false);
+            } else {
+              // Play
+              speakLocation(location, lang);
+              setIsPlaying(true);
+            }
+          }}
+        >
+          {isPlaying ? "⏸ Đọc thuyết minh" : "▶ Đọc thuyết minh"}
         </button>
-        <button className="tts-btn stop" onClick={stop}>
+        <button 
+          className="tts-btn stop" 
+          onClick={() => {
+            stop();
+            setIsPlaying(false);
+          }}
+        >
           ⏹ Dừng
         </button>
       </div>

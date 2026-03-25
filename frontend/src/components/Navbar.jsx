@@ -9,7 +9,6 @@ function Navbar() {
       </div>
       <div className="navbar-links">
         <a href="/"><span className="nav-icon">⌂</span> Trang chủ</a>
-        <a href="/admin"><span className="nav-icon">☰</span> Quản trị</a>
       </div>
     </div>
   );

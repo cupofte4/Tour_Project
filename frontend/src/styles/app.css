@@ -61,6 +61,7 @@ body {
 
 .left-col {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -81,7 +82,7 @@ body {
 
 .image-strip .img-thumb {
   width: 300px;
-  height: 300px;
+  height: 220px;
   flex-shrink: 0;
   border-radius: 4px;
   aspect-ratio: unset;
@@ -113,6 +114,23 @@ body {
   color: #1565c0;
   border-bottom: 2px solid #e3f2fd;
   padding-bottom: 8px;
+}
+
+.btn-start-tour {
+  margin-left: auto;
+  padding: 4px 12px;
+  font-size: 11px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #1e88e5;
+  color: white;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.btn-start-tour:hover {
+  background: #1565c0; /* Đổi sang màu xanh đậm hơn khi trỏ chuột */
 }
 
 /* Location card */
@@ -294,3 +312,115 @@ audio {
 }
 
 .lightbox-close:hover { background: rgba(255,255,255,0.3); }
+
+/* ====================================
+   Travel Sidebar
+   ==================================== */
+.travel-sidebar {
+  width: 250px;
+  background-color: #e8f1f8;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px 0;
+}
+
+/* User Info Section */
+.sidebar-user-info {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 16px 20px 16px;
+}
+
+.user-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #1e88e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+.user-name {
+  font-weight: 600;
+  margin: 0;
+  color: #333;
+  font-size: 15px;
+}
+
+.user-email {
+  color: #888;
+  font-size: 13px;
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+.user-divider {
+  border-bottom: 1px solid #eee;
+  width: 80%;
+  margin: 20px auto 0;
+}
+
+/* Menu Items */
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  flex: 1;
+}
+
+.menu-btn {
+  text-align: left;
+  border: none;
+  padding: 12px 24px;
+  font-size: 14px;
+  color: #555;
+  background-color: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.menu-btn:hover {
+  background-color: #e3f2fd;
+  color: #1e88e5;
+  font-weight: 500;
+}
+
+.menu-divider {
+  border: none;
+  border-top: 1px solid #d0e3f0;
+  margin: 0;
+  padding: 0;
+}
+
+/* Logout Button */
+.sidebar-logout {
+  padding: 20px 16px 0;
+  margin-top: auto;
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #ef5350;
+  border-radius: 6px;
+  background-color: transparent;
+  color: #e53935;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+  background-color: #ffebee;
+  border-color: #d32f2f;
+  color: #d32f2f;
+}

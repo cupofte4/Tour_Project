@@ -13,3 +13,17 @@ export async function login(username, password) {
 
   return await res.json();
 }
+
+export async function register(fullName, username, password) {
+  const res = await fetch(`${API_URL}/auth/register`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ fullName, username, password }),
+  });
+
+  if (res.status === 400) return null;
+
+  return await res.json();
+}

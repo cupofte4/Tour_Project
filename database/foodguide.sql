@@ -4,8 +4,14 @@ USE tourdb;
 CREATE TABLE Users (
     Id INT PRIMARY KEY AUTO_INCREMENT,
     Username VARCHAR(50) CHARACTER SET utf8mb4 UNIQUE,
-    Password VARCHAR(255)
+    Password VARCHAR(255),
+    FullName VARCHAR(100) CHARACTER SET utf8mb4
 );
+
+INSERT INTO Users (Username, Password, FullName) VALUES
+  ('nguyenvana', '123456', 'Nguyễn Văn A'),
+  ('tranthib', 'password123', 'Trần Thị B'),
+  ('traveler99', 'dulichvietnam', 'Du Khách 99');
 
 CREATE TABLE Locations (
     Id INT PRIMARY KEY AUTO_INCREMENT,
@@ -65,6 +71,6 @@ VALUES
   'Willkommen bei Vinh Khanh Gegrillten Meeresfrüchten! Dies ist das ideale Ziel für Liebhaber frischer Meeresfrüchte in der Vinh Khanh Essensstraße. Das Restaurant ist bekannt für seine duftenden Holzkohle-Grillgerichte wie mit Knoblauchbutter gegrillten Hummer, Satay-gegrillten Tintenfisch, mit Käse überbackene Jakobsmuscheln, Salz-und-Pfeffer-Krabbe und biergekochte Schwimmkrabbe. Meeresfrüchte werden jeden Morgen direkt von Fischereihäfen importiert, um absolute Frische zu gewährleisten. Die lebhafte Bürgersteig-Atmosphäre und der aromatische Grillrauch schaffen ein unvergessliches Straßenessen-Erlebnis, das beim Besuch Saigons nicht verpasst werden sollte.'
 );
 
-INSERT INTO Users (Username, Password) VALUES ('admin', 'admin123');
+INSERT INTO Users (Username, Password, FullName) VALUES ('admin', 'admin123', 'Admin');
 
 SELECT * FROM Locations;
