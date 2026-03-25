@@ -22,17 +22,44 @@ namespace Tour_Project.Controllers
                 .FirstOrDefault(x => x.Username == user.Username && x.Password == user.Password);
 
             if (u == null)
-                return Unauthorized();
+                return Unauthorized(new { message = "Username hoặc password không chính xác" });
 
-            return Ok(u);
+            return Ok(new
+            {
+                id = u.Id,
+                fullName = u.FullName,
+                username = u.Username,
+                phone = u.Phone,
+                gender = u.Gender,
+                avatar = u.Avatar,
+                role = u.Role
+            });
         }
 
         [HttpPost("register")]
         public IActionResult Register(User user)
         {
+            // Check if username already exists
+            var existingUser = _context.Users.FirstOrDefault(x => x.Username == user.Username);
+            if (existingUser != null)
+                return BadRequest(new { message = "Tên đăng nhập đã tồn tại" });
+
+            // Set default role as 'User'
+            user.Role = "User";
+            
             _context.Users.Add(user);
             _context.SaveChanges();
-            return Ok(user);
+
+            return Ok(new
+            {
+                id = user.Id,
+                fullName = user.FullName,
+                username = user.Username,
+                phone = user.Phone,
+                gender = user.Gender,
+                avatar = user.Avatar,
+                role = user.Role
+            });
         }
     }
 }

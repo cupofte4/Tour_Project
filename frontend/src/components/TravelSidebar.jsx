@@ -6,8 +6,8 @@ const TravelSidebar = () => {
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState(null);
   
-  useEffect(() => {
-    // Get user info from localStorage
+  // Load user data from localStorage
+  const loadUserData = () => {
     const user = localStorage.getItem('user');
     const username = localStorage.getItem('username');
     
@@ -16,20 +16,49 @@ const TravelSidebar = () => {
         const userData = JSON.parse(user);
         setUserInfo({
           fullName: userData.fullName || 'User',
-          username: username || userData.username || 'user'
+          username: username || userData.username || 'user',
+          avatar: userData.avatar || null
         });
       } catch (error) {
         console.error('Error parsing user data:', error);
       }
     }
+  };
+
+  useEffect(() => {
+    loadUserData();
+
+    // Listen for storage changes (from other tabs/windows)
+    const handleStorageChange = (e) => {
+      if (e.key === 'user') {
+        loadUserData();
+      }
+    };
+
+    // Listen for custom events from same window
+    const handleProfileUpdate = () => {
+      loadUserData();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+    };
   }, []);
 
   const menuItems = [
-    { id: 1, label: 'Hồ sơ của tôi', icon: FaUser },
-    { id: 2, label: 'Địa điểm yêu thích', icon: FaHeart },
-    { id: 3, label: 'Lịch trình', icon: FaCalendar },
-    { id: 4, label: 'Cài đặt', icon: FaCog }
+    { id: 1, label: 'Hồ sơ của tôi', icon: FaUser, path: '/profile' },
+    { id: 2, label: 'Địa điểm yêu thích', icon: FaHeart, path: '/favorites' },
+    { id: 3, label: 'Lịch trình', icon: FaCalendar, path: '/schedule' },
+    { id: 4, label: 'Cài đặt', icon: FaCog, path: '/settings' }
   ];
+
+  const handleMenuClick = (path) => {
+    navigate(path);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -50,9 +79,18 @@ const TravelSidebar = () => {
           margin: '0 auto 16px',
           backgroundColor: '#e8f1f8',
           borderRadius: '50%',
-          boxShadow: '0 2px 8px rgba(30, 136, 229, 0.2)'
+          boxShadow: '0 2px 8px rgba(30, 136, 229, 0.2)',
+          overflow: 'hidden'
         }}>
-          <FaUserCircle size={56} color="#1e88e5" />
+          {userInfo?.avatar ? (
+            <img 
+              src={userInfo.avatar} 
+              alt="Avatar" 
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          ) : (
+            <FaUserCircle size={56} color="#1e88e5" />
+          )}
         </div>
         <h3 className="user-name">{userInfo?.fullName || 'User'}</h3>
         <p className="user-email">@{userInfo?.username || 'user'}</p>
@@ -65,7 +103,10 @@ const TravelSidebar = () => {
           const IconComponent = item.icon;
           return (
             <React.Fragment key={item.id}>
-              <button className="menu-btn">
+              <button 
+                className="menu-btn"
+                onClick={() => handleMenuClick(item.path)}
+              >
                 <IconComponent size={18} style={{ marginRight: '8px' }} />
                 {item.label}
               </button>
