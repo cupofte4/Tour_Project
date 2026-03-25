@@ -1,10 +1,12 @@
-import { useState } from "react";
-import Sidebar from "../components/Sidebar";
-import AdminNavbar from "../components/AdminNavbar";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import AdminNavbar, { AdminSidebar } from "../components/AdminNavbar";
 import { createLocation } from "../services/locationService";
 import "../styles/admin.css";
 
 function AddLocation() {
+  const navigate = useNavigate();
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const [location, setLocation] = useState({
     name: "",
     description: "",
@@ -14,53 +16,84 @@ function AddLocation() {
     longitude: "",
   });
 
+  useEffect(() => {
+    const userString = localStorage.getItem("user");
+    if (!userString) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const userData = JSON.parse(userString);
+      const role = (userData?.role || "").toLowerCase();
+      if (role !== "admin") {
+        navigate("/");
+        return;
+      }
+      setIsAuthorized(true);
+    } catch {
+      navigate("/login");
+    }
+  }, [navigate]);
+
   const handleSubmit = async () => {
     await createLocation(location);
     alert("Đã thêm địa điểm!");
   };
 
+  if (!isAuthorized) return null;
+
   return (
     <div className="layout">
-      <Sidebar />
+      <AdminSidebar />
 
       <div className="main">
-        <AdminNavbar />
+        <AdminNavbar
+          title="Add new location"
+          subtitle="Create a new destination entry with media, coordinates, and essential travel context."
+        />
 
         <div className="content">
           <div className="card">
             <h3>Add Location</h3>
 
-            <input placeholder="Name"
+            <input
+              placeholder="Name"
               onChange={(e) =>
                 setLocation({ ...location, name: e.target.value })
               }
             />
 
-            <textarea placeholder="Description"
+            <textarea
+              placeholder="Description"
               onChange={(e) =>
                 setLocation({ ...location, description: e.target.value })
               }
             />
 
-            <input placeholder="Image file"
+            <input
+              placeholder="Image file"
               onChange={(e) =>
                 setLocation({ ...location, image: e.target.value })
               }
             />
 
-            <input placeholder="Audio file"
+            <input
+              placeholder="Audio file"
               onChange={(e) =>
                 setLocation({ ...location, audio: e.target.value })
               }
             />
 
-            <input placeholder="Latitude"
+            <input
+              placeholder="Latitude"
               onChange={(e) =>
                 setLocation({ ...location, latitude: e.target.value })
               }
             />
 
-            <input placeholder="Longitude"
+            <input
+              placeholder="Longitude"
               onChange={(e) =>
                 setLocation({ ...location, longitude: e.target.value })
               }

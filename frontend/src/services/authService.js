@@ -9,7 +9,10 @@ export async function login(username, password) {
     body: JSON.stringify({ username, password }),
   });
 
-  if (res.status === 401) return null;
+  if (res.status === 401) {
+    const error = await res.json().catch(() => ({ message: "Đăng nhập thất bại" }));
+    throw new Error(error.message || "Đăng nhập thất bại");
+  }
 
   return await res.json();
 }

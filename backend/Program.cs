@@ -40,7 +40,8 @@ using (var scope = app.Services.CreateScope())
             Password = "admin123", // TODO: Hash password in production
             Phone = "0900000000",
             Gender = "Nam",
-            Role = "Admin"
+            Role = Roles.Admin,
+            IsLocked = false
         });
         db.SaveChanges();
     }

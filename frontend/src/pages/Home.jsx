@@ -37,12 +37,24 @@ function Home() {
 
   // Check authentication on mount
   useEffect(() => {
-    const user = localStorage.getItem("user");
-    if (!user) {
+    const userString = localStorage.getItem("user");
+    if (!userString) {
       navigate("/login");
-    } else {
-      setIsAuthenticated(true);
+      return;
     }
+
+    try {
+      const userData = JSON.parse(userString);
+      const role = (userData?.role || "").toLowerCase();
+      if (role === "admin") {
+        navigate("/admin/dashboard", { replace: true });
+        return;
+      }
+    } catch {
+      // ignore parse errors and let Home handle as normal user
+    }
+
+    setIsAuthenticated(true);
   }, [navigate]);
 
   useEffect(() => {

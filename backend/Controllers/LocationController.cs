@@ -74,6 +74,7 @@ namespace Tour_Project.Controllers
             location.Name = updated.Name;
             location.Description = updated.Description;
             location.Image = updated.Image;
+            location.Images = updated.Images;
             location.Audio = updated.Audio;
             location.Latitude = updated.Latitude;
             location.Longitude = updated.Longitude;

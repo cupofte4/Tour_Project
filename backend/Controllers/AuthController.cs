@@ -24,6 +24,9 @@ namespace Tour_Project.Controllers
             if (u == null)
                 return Unauthorized(new { message = "Username hoặc password không chính xác" });
 
+            if (u.IsLocked)
+                return Unauthorized(new { message = "Tài khoản của bạn đã bị khóa" });
+
             return Ok(new
             {
                 id = u.Id,
@@ -32,7 +35,8 @@ namespace Tour_Project.Controllers
                 phone = u.Phone,
                 gender = u.Gender,
                 avatar = u.Avatar,
-                role = u.Role
+                role = Roles.Normalize(u.Role),
+                isLocked = u.IsLocked
             });
         }
 
@@ -44,8 +48,8 @@ namespace Tour_Project.Controllers
             if (existingUser != null)
                 return BadRequest(new { message = "Tên đăng nhập đã tồn tại" });
 
-            // Set default role as 'User'
-            user.Role = "User";
+            // Set default role as 'user'
+            user.Role = Roles.User;
             
             _context.Users.Add(user);
             _context.SaveChanges();
@@ -58,7 +62,8 @@ namespace Tour_Project.Controllers
                 phone = user.Phone,
                 gender = user.Gender,
                 avatar = user.Avatar,
-                role = user.Role
+                role = Roles.Normalize(user.Role),
+                isLocked = user.IsLocked
             });
         }
     }

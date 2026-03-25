@@ -1,21 +1,47 @@
 import { useState } from "react";
-import { speakLocation, stop, getTextForLang } from "../services/ttsService";
+import { speakLocationAsync, stop, getTextForLang } from "../services/ttsService";
 import "../styles/app.css";
 
-function LocationCard({ location, lang, apiUrl, onImageClick }) {
+function LocationCard({ location, lang, apiUrl }) {
   const [isPlaying, setIsPlaying] = useState(false);
-  if (!location)
+
+  if (!location) {
     return (
       <div className="empty-state">
         <div className="icon">🔍</div>
         <p>Đang tìm địa điểm gần bạn...</p>
       </div>
     );
+  }
 
   const text = getTextForLang(location, lang);
   let images = [];
-  try { images = JSON.parse(location.images || "[]"); } catch {}
-  if (images.length === 0 && location.image) images = [location.image];
+
+  try {
+    images = JSON.parse(location.images || "[]");
+  } catch {
+    images = [];
+  }
+
+  if (images.length === 0 && location.image) {
+    images = [location.image];
+  }
+
+  const handlePlay = async () => {
+    if (isPlaying) {
+      stop();
+      setIsPlaying(false);
+      return;
+    }
+
+    setIsPlaying(true);
+
+    try {
+      await speakLocationAsync(location, lang);
+    } finally {
+      setIsPlaying(false);
+    }
+  };
 
   return (
     <div className="location-card">
@@ -26,24 +52,11 @@ function LocationCard({ location, lang, apiUrl, onImageClick }) {
       <div className="location-desc">{text}</div>
 
       <div className="tts-controls">
-        <button 
-          className="tts-btn play" 
-          onClick={() => {
-            if (isPlaying) {
-              // Pause
-              stop();
-              setIsPlaying(false);
-            } else {
-              // Play
-              speakLocation(location, lang);
-              setIsPlaying(true);
-            }
-          }}
-        >
-          {isPlaying ? "⏸ Đọc thuyết minh" : "▶ Đọc thuyết minh"}
+        <button className="tts-btn play" onClick={handlePlay}>
+          {isPlaying ? "⏸ Đang đọc thuyết minh" : "▶ Đọc thuyết minh"}
         </button>
-        <button 
-          className="tts-btn stop" 
+        <button
+          className="tts-btn stop"
           onClick={() => {
             stop();
             setIsPlaying(false);

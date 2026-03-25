@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Admin from "./pages/Admin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AddLocation from "./pages/AddLocation";
 import EditLocation from "./pages/EditLocation";
@@ -24,7 +23,5 @@ function App() {
     </BrowserRouter>
   );
 }
-
-export default App;
 
 export default App;
