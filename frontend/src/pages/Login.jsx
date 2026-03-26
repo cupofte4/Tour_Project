@@ -116,6 +116,7 @@ function Login() {
               type="text"
               id="username"
               className="form-input"
+              autoComplete="username"
               placeholder="Nhập tên đăng nhập"
               value={username}
               onChange={(event) => setUsername(event.target.value)}
@@ -128,6 +129,7 @@ function Login() {
               type="password"
               id="password"
               className="form-input"
+              autoComplete="current-password"
               placeholder="Nhập mật khẩu"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
@@ -140,7 +142,9 @@ function Login() {
         </form>
 
         <div className="login-footer">
-          <a href="#forgot" className="footer-link">Quên mật khẩu?</a>
+          <a href="#forgot" className="footer-link">
+            Quên mật khẩu?
+          </a>
           <span className="footer-divider">•</span>
           <a href="/register" className="footer-link">
             Chưa có tài khoản? <strong>Đăng ký ngay</strong>

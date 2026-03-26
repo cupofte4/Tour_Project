@@ -36,6 +36,21 @@ export async function updateLocation(id, location) {
   return await res.json();
 }
 
+export async function submitLocationReview(id, review) {
+  const res = await fetch(`${API_URL}/location/${id}/reviews`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(review),
+  });
+
+  if (!res.ok) {
+    const message = await res.text();
+    throw new Error(message || "Không gửi được đánh giá.");
+  }
+
+  return await res.json();
+}
+
 export async function deleteLocation(id) {
   await fetch(`${API_URL}/location/${id}`, { method: "DELETE" });
 }

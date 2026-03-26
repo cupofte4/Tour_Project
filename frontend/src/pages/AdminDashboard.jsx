@@ -25,7 +25,8 @@ import {
   getAllLocations,
   updateLocation,
 } from "../services/locationService";
-import { uploadAudio, uploadImages } from "../services/uploadService";
+import { speak, stop } from "../services/ttsService";
+import { uploadImages } from "../services/uploadService";
 import { getAllUsers, updateAdminUser } from "../services/userService";
 import "../styles/admin.css";
 
@@ -41,7 +42,9 @@ const createEmptyLocationForm = () => ({
   description: "",
   image: "",
   images: "[]",
-  audio: "",
+  address: "",
+  phone: "",
+  reviewsJson: "[]",
   latitude: "",
   longitude: "",
   textVi: "",
@@ -87,7 +90,6 @@ const getUserStatus = (user) =>
 function AdminDashboard() {
   const navigate = useNavigate();
   const galleryInputRef = useRef(null);
-  const audioInputRef = useRef(null);
 
   const [user, setUser] = useState(null);
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -110,10 +112,12 @@ function AdminDashboard() {
   const [locationNotice, setLocationNotice] = useState("");
   const [locationForm, setLocationForm] = useState(createEmptyLocationForm());
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
-  const [isUploadingAudio, setIsUploadingAudio] = useState(false);
   const [playingLang, setPlayingLang] = useState("");
 
-  const galleryImages = useMemo(() => parseImageList(locationForm.images), [locationForm.images]);
+  const galleryImages = useMemo(
+    () => parseImageList(locationForm.images),
+    [locationForm.images],
+  );
 
   useEffect(() => {
     try {
@@ -147,9 +151,7 @@ function AdminDashboard() {
 
   useEffect(() => {
     return () => {
-      if (window?.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
+      stop();
     };
   }, []);
 
@@ -230,7 +232,11 @@ function AdminDashboard() {
         isLocked: userForm.isLocked,
       });
 
-      setUsers((current) => current.map((item) => (item.id === updatedUser.id ? updatedUser : item)));
+      setUsers((current) =>
+        current.map((item) =>
+          item.id === updatedUser.id ? updatedUser : item,
+        ),
+      );
       setUserForm((current) => ({ ...current, password: "" }));
       setUserNotice("Đã cập nhật tài khoản người dùng.");
     } catch (error) {
@@ -251,11 +257,22 @@ function AdminDashboard() {
         isLocked: !targetUser.isLocked,
       });
 
-      setUsers((current) => current.map((item) => (item.id === updatedUser.id ? updatedUser : item)));
-      setUserNotice(updatedUser.isLocked ? "Tài khoản đã được khóa." : "Tài khoản đã được mở khóa.");
+      setUsers((current) =>
+        current.map((item) =>
+          item.id === updatedUser.id ? updatedUser : item,
+        ),
+      );
+      setUserNotice(
+        updatedUser.isLocked
+          ? "Tài khoản đã được khóa."
+          : "Tài khoản đã được mở khóa.",
+      );
 
       if (userForm.id === updatedUser.id) {
-        setUserForm((current) => ({ ...current, isLocked: updatedUser.isLocked }));
+        setUserForm((current) => ({
+          ...current,
+          isLocked: updatedUser.isLocked,
+        }));
       }
     } catch (error) {
       console.error("Failed to toggle user lock:", error);
@@ -268,22 +285,17 @@ function AdminDashboard() {
   };
 
   const resetLocationForm = () => {
-    if (window?.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
+    stop();
 
     setLocationForm(createEmptyLocationForm());
     setLocationError("");
     setLocationNotice("");
     setIsUploadingGallery(false);
-    setIsUploadingAudio(false);
     setPlayingLang("");
   };
 
   const startEditingLocation = (location) => {
-    if (window?.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
+    stop();
 
     setLocationError("");
     setLocationNotice("");
@@ -294,7 +306,9 @@ function AdminDashboard() {
       description: location.description || "",
       image: location.image || "",
       images: location.images || "[]",
-      audio: location.audio || "",
+      address: location.address || "",
+      phone: location.phone || "",
+      reviewsJson: location.reviewsJson || "[]",
       latitude: location.latitude ?? "",
       longitude: location.longitude ?? "",
       textVi: location.textVi || "",
@@ -306,11 +320,16 @@ function AdminDashboard() {
   };
 
   const setGalleryImages = (images) => {
-    setLocationForm((current) => ({ ...current, images: stringifyImageList(images) }));
+    setLocationForm((current) => ({
+      ...current,
+      images: stringifyImageList(images),
+    }));
   };
 
   const handleGalleryUpload = async (files) => {
-    const selectedFiles = Array.from(files || []).filter((file) => file.type.startsWith("image/"));
+    const selectedFiles = Array.from(files || []).filter((file) =>
+      file.type.startsWith("image/"),
+    );
     if (selectedFiles.length === 0) return;
 
     setIsUploadingGallery(true);
@@ -318,34 +337,23 @@ function AdminDashboard() {
 
     try {
       const uploadedUrls = await uploadImages(selectedFiles);
-      const mergedImages = Array.from(new Set([...galleryImages, ...uploadedUrls].filter(Boolean)));
+      const mergedImages = Array.from(
+        new Set([...galleryImages, ...uploadedUrls].filter(Boolean)),
+      );
       setGalleryImages(mergedImages);
-      setLocationForm((current) => ({ ...current, image: mergedImages[0] || "" }));
-      setLocationNotice(uploadedUrls.length > 1 ? `Đã tải ${uploadedUrls.length} ảnh vào bộ sưu tập.` : "Đã tải ảnh vào bộ sưu tập.");
+      setLocationForm((current) => ({
+        ...current,
+        image: mergedImages[0] || "",
+      }));
+      setLocationNotice(
+        uploadedUrls.length > 1
+          ? `Đã tải ${uploadedUrls.length} ảnh vào bộ sưu tập.`
+          : "Đã tải ảnh vào bộ sưu tập.",
+      );
     } catch (error) {
       setLocationError(error.message || "Không tải được danh sách ảnh.");
     } finally {
       setIsUploadingGallery(false);
-    }
-  };
-
-  const handleAudioUpload = async (files) => {
-    const selectedFiles = Array.from(files || []).filter((file) =>
-      file.type.startsWith("audio/") || /\.(mp3|wav|ogg|m4a)$/i.test(file.name)
-    );
-    if (selectedFiles.length === 0) return;
-
-    setIsUploadingAudio(true);
-    setLocationError("");
-
-    try {
-      const audioFileName = await uploadAudio(selectedFiles[0]);
-      setLocationForm((current) => ({ ...current, audio: audioFileName }));
-      setLocationNotice("Đã tải audio lên thành công.");
-    } catch (error) {
-      setLocationError(error.message || "Không tải được audio.");
-    } finally {
-      setIsUploadingAudio(false);
     }
   };
 
@@ -355,7 +363,7 @@ function AdminDashboard() {
     setLocationForm((current) => ({ ...current, image: nextImages[0] || "" }));
   };
 
-  const handlePreviewAudio = (text, langCode) => {
+  const handlePreviewAudio = async (text, langCode) => {
     const normalizedText = (text || "").trim();
 
     if (!window?.speechSynthesis) {
@@ -363,9 +371,8 @@ function AdminDashboard() {
       return;
     }
 
-    window.speechSynthesis.cancel();
-
     if (playingLang === langCode) {
+      stop();
       setPlayingLang("");
       return;
     }
@@ -376,17 +383,16 @@ function AdminDashboard() {
     }
 
     setLocationError("");
-
-    const utterance = new SpeechSynthesisUtterance(normalizedText);
-    utterance.lang = langCode;
-    utterance.onend = () => setPlayingLang("");
-    utterance.onerror = () => {
-      setPlayingLang("");
-      setLocationError("Không thể phát text-to-speech cho nội dung này.");
-    };
-
     setPlayingLang(langCode);
-    window.speechSynthesis.speak(utterance);
+
+    try {
+      await speak(normalizedText, langCode);
+    } catch (error) {
+      console.error("Preview audio failed:", error);
+      setLocationError("Không thể phát text-to-speech cho nội dung này.");
+    } finally {
+      setPlayingLang((current) => (current === langCode ? "" : current));
+    }
   };
 
   const handleLocationSubmit = async (event) => {
@@ -412,7 +418,9 @@ function AdminDashboard() {
       description: locationForm.description.trim(),
       image: galleryImages[0] || "",
       images: stringifyImageList(galleryImages),
-      audio: locationForm.audio.trim(),
+      address: locationForm.address.trim(),
+      phone: locationForm.phone.trim(),
+      reviewsJson: locationForm.reviewsJson || "[]",
       latitude,
       longitude,
       textVi: locationForm.textVi.trim(),
@@ -426,8 +434,12 @@ function AdminDashboard() {
     try {
       if (locationForm.id) {
         const updated = await updateLocation(locationForm.id, payload);
-        setLocations((current) => current.map((item) => (item.id === updated.id ? updated : item)));
-        setLocationNotice("Đã cập nhật địa điểm và frontend sẽ nhận ngay ở lần tải dữ liệu tiếp theo.");
+        setLocations((current) =>
+          current.map((item) => (item.id === updated.id ? updated : item)),
+        );
+        setLocationNotice(
+          "Đã cập nhật địa điểm và frontend sẽ nhận ngay ở lần tải dữ liệu tiếp theo.",
+        );
       } else {
         const created = await createLocation(payload);
         setLocations((current) => [created, ...current]);
@@ -437,7 +449,9 @@ function AdminDashboard() {
       resetLocationForm();
       await loadLocations();
     } catch (error) {
-      setLocationError("Không lưu được địa điểm. Kiểm tra backend rồi thử lại.");
+      setLocationError(
+        "Không lưu được địa điểm. Kiểm tra backend rồi thử lại.",
+      );
     } finally {
       setIsSavingLocation(false);
     }
@@ -451,7 +465,9 @@ function AdminDashboard() {
 
     try {
       await deleteLocation(locationId);
-      setLocations((current) => current.filter((item) => item.id !== locationId));
+      setLocations((current) =>
+        current.filter((item) => item.id !== locationId),
+      );
       if (locationForm.id === locationId) {
         resetLocationForm();
       }
@@ -464,13 +480,17 @@ function AdminDashboard() {
   const filteredUsers = useMemo(() => {
     const keyword = userSearch.trim().toLowerCase();
     if (!keyword) return users;
-    return users.filter((item) => (item.fullName || "").toLowerCase().includes(keyword));
+    return users.filter((item) =>
+      (item.fullName || "").toLowerCase().includes(keyword),
+    );
   }, [userSearch, users]);
 
   const filteredLocations = useMemo(() => {
     const keyword = locationSearch.trim().toLowerCase();
     if (!keyword) return locations;
-    return locations.filter((item) => (item.name || "").toLowerCase().includes(keyword));
+    return locations.filter((item) =>
+      (item.name || "").toLowerCase().includes(keyword),
+    );
   }, [locationSearch, locations]);
 
   if (!isAuthorized || !user) {
@@ -515,7 +535,9 @@ function AdminDashboard() {
   const showSearch = activeMenu !== "overview";
   const searchValue = activeMenu === "users" ? userSearch : locationSearch;
   const searchPlaceholder =
-    activeMenu === "users" ? "Tìm theo tên người dùng" : "Tìm theo tên địa điểm";
+    activeMenu === "users"
+      ? "Tìm theo tên người dùng"
+      : "Tìm theo tên địa điểm";
 
   const handleNavbarSearchChange = (value) => {
     if (activeMenu === "users") {
@@ -532,7 +554,11 @@ function AdminDashboard() {
           <p className="section-eyebrow">Latest activity</p>
           <h2 className="section-title">Tất cả người dùng</h2>
         </div>
-        <button type="button" className="ghost-action" onClick={() => setActiveMenu("users")}>
+        <button
+          type="button"
+          className="ghost-action"
+          onClick={() => setActiveMenu("users")}
+        >
           <span>Xem chi tiết</span>
           <LuArrowUpRight size={16} />
         </button>
@@ -540,15 +566,22 @@ function AdminDashboard() {
 
       {isLoadingUsers ? (
         <div className="admin-empty-state">
-          <div className="admin-empty-state-icon"><LuLoaderCircle size={26} className="spin" /></div>
+          <div className="admin-empty-state-icon">
+            <LuLoaderCircle size={26} className="spin" />
+          </div>
           <h3>Đang tải người dùng</h3>
           <p>Danh sách tài khoản đang được đồng bộ từ backend.</p>
         </div>
       ) : users.length === 0 ? (
         <div className="admin-empty-state">
-          <div className="admin-empty-state-icon"><LuFolderOpen size={26} /></div>
+          <div className="admin-empty-state-icon">
+            <LuFolderOpen size={26} />
+          </div>
           <h3>Chưa có người dùng nào</h3>
-          <p>Dữ liệu người dùng đang trống. Tài khoản sẽ xuất hiện tại đây sau khi đăng ký.</p>
+          <p>
+            Dữ liệu người dùng đang trống. Tài khoản sẽ xuất hiện tại đây sau
+            khi đăng ký.
+          </p>
         </div>
       ) : (
         <table className="users-table">
@@ -569,13 +602,22 @@ function AdminDashboard() {
                   <td>{index + 1}</td>
                   <td>
                     <div className="table-user">
-                      <div className="table-user-avatar">{member.fullName?.charAt(0) || "U"}</div>
-                      <div className="table-user-copy"><strong>{member.fullName}</strong><span>{member.username}</span></div>
+                      <div className="table-user-avatar">
+                        {member.fullName?.charAt(0) || "U"}
+                      </div>
+                      <div className="table-user-copy">
+                        <strong>{member.fullName}</strong>
+                        <span>{member.username}</span>
+                      </div>
                     </div>
                   </td>
                   <td>{member.username}</td>
                   <td>{(member.role || "user").toUpperCase()}</td>
-                  <td><span className={`status-pill status-${status.key}`}>{status.label}</span></td>
+                  <td>
+                    <span className={`status-pill status-${status.key}`}>
+                      {status.label}
+                    </span>
+                  </td>
                 </tr>
               );
             })}
@@ -591,42 +633,110 @@ function AdminDashboard() {
         <div className="section-heading">
           <div>
             <p className="section-eyebrow">Account control</p>
-            <h2 className="section-title">{userForm.id ? "Chỉnh sửa người dùng" : "Chọn người dùng để chỉnh sửa"}</h2>
+            <h2 className="section-title">
+              {userForm.id
+                ? "Chỉnh sửa người dùng"
+                : "Chọn người dùng để chỉnh sửa"}
+            </h2>
           </div>
-          <button type="button" className="ghost-action" onClick={resetUserForm}>
+          <button
+            type="button"
+            className="ghost-action"
+            onClick={resetUserForm}
+          >
             <LuRefreshCw size={16} />
             <span>Đặt lại form</span>
           </button>
         </div>
 
-        {userError && <div className="admin-feedback admin-feedback-error">{userError}</div>}
-        {userNotice && <div className="admin-feedback admin-feedback-success">{userNotice}</div>}
+        {userError && (
+          <div className="admin-feedback admin-feedback-error">{userError}</div>
+        )}
+        {userNotice && (
+          <div className="admin-feedback admin-feedback-success">
+            {userNotice}
+          </div>
+        )}
 
         {userForm.id ? (
           <form className="user-form" onSubmit={handleUserSubmit}>
             <div className="form-row">
-              <div className="form-group"><label htmlFor="fullName">Họ và tên</label><input id="fullName" value={userForm.fullName} disabled /></div>
-              <div className="form-group"><label htmlFor="username">Username</label><input id="username" value={userForm.username} disabled /></div>
+              <div className="form-group">
+                <label htmlFor="fullName">Họ và tên</label>
+                <input id="fullName" value={userForm.fullName} disabled />
+              </div>
+              <div className="form-group">
+                <label htmlFor="username">Username</label>
+                <input id="username" value={userForm.username} disabled />
+              </div>
             </div>
             <div className="form-row">
-              <div className="form-group"><label htmlFor="role">Role</label><input id="role" value={(userForm.role || "user").toUpperCase()} disabled /></div>
-              <div className="form-group"><label htmlFor="password">Mật khẩu mới</label><input id="password" name="password" type="password" value={userForm.password} placeholder="Để trống nếu không đổi mật khẩu" onChange={handleUserFormChange} /></div>
+              <div className="form-group">
+                <label htmlFor="role">Role</label>
+                <input
+                  id="role"
+                  value={(userForm.role || "user").toUpperCase()}
+                  disabled
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="password">Mật khẩu mới</label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={userForm.password}
+                  placeholder="Để trống nếu không đổi mật khẩu"
+                  onChange={handleUserFormChange}
+                />
+              </div>
             </div>
             <label className="admin-toggle">
-              <input type="checkbox" name="isLocked" checked={userForm.isLocked} onChange={handleUserFormChange} />
+              <input
+                type="checkbox"
+                name="isLocked"
+                checked={userForm.isLocked}
+                onChange={handleUserFormChange}
+              />
               <span className="admin-toggle-switch" />
-              <span className="admin-toggle-label">{userForm.isLocked ? "Tài khoản đang bị khóa" : "Tài khoản đang hoạt động"}</span>
+              <span className="admin-toggle-label">
+                {userForm.isLocked
+                  ? "Tài khoản đang bị khóa"
+                  : "Tài khoản đang hoạt động"}
+              </span>
             </label>
             <div className="location-form-actions">
-              <button type="submit" className="btn btn-primary" disabled={isSavingUser}>{isSavingUser ? <LuLoaderCircle size={16} className="spin" /> : <LuSave size={16} />}<span>Lưu tài khoản</span></button>
-              <button type="button" className="btn action-btn-muted" onClick={resetUserForm}>Hủy chỉnh sửa</button>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={isSavingUser}
+              >
+                {isSavingUser ? (
+                  <LuLoaderCircle size={16} className="spin" />
+                ) : (
+                  <LuSave size={16} />
+                )}
+                <span>Lưu tài khoản</span>
+              </button>
+              <button
+                type="button"
+                className="btn action-btn-muted"
+                onClick={resetUserForm}
+              >
+                Hủy chỉnh sửa
+              </button>
             </div>
           </form>
         ) : (
           <div className="admin-empty-state compact-empty-state">
-            <div className="admin-empty-state-icon"><LuUsers size={24} /></div>
+            <div className="admin-empty-state-icon">
+              <LuUsers size={24} />
+            </div>
             <h3>Chưa chọn người dùng</h3>
-            <p>Chọn một người dùng ở bảng bên phải để đổi mật khẩu hoặc khóa, mở khóa tài khoản.</p>
+            <p>
+              Chọn một người dùng ở bảng bên phải để đổi mật khẩu hoặc khóa, mở
+              khóa tài khoản.
+            </p>
           </div>
         )}
       </div>
@@ -636,27 +746,87 @@ function AdminDashboard() {
             <p className="section-eyebrow">User management</p>
             <h2 className="section-title">Danh sách người dùng</h2>
           </div>
-          <button type="button" className="ghost-action" onClick={loadUsers}><LuRefreshCw size={16} /><span>Tải lại</span></button>
+          <button type="button" className="ghost-action" onClick={loadUsers}>
+            <LuRefreshCw size={16} />
+            <span>Tải lại</span>
+          </button>
         </div>
 
         {isLoadingUsers ? (
-          <div className="admin-empty-state"><div className="admin-empty-state-icon"><LuLoaderCircle size={26} className="spin" /></div><h3>Đang tải người dùng</h3><p>Danh sách tài khoản đang được đồng bộ từ backend.</p></div>
+          <div className="admin-empty-state">
+            <div className="admin-empty-state-icon">
+              <LuLoaderCircle size={26} className="spin" />
+            </div>
+            <h3>Đang tải người dùng</h3>
+            <p>Danh sách tài khoản đang được đồng bộ từ backend.</p>
+          </div>
         ) : filteredUsers.length === 0 ? (
-          <div className="admin-empty-state"><div className="admin-empty-state-icon"><LuFolderOpen size={26} /></div><h3>Không tìm thấy người dùng phù hợp</h3><p>Thử lại với tên ngắn hơn hoặc xóa từ khóa tìm kiếm hiện tại.</p></div>
+          <div className="admin-empty-state">
+            <div className="admin-empty-state-icon">
+              <LuFolderOpen size={26} />
+            </div>
+            <h3>Không tìm thấy người dùng phù hợp</h3>
+            <p>Thử lại với tên ngắn hơn hoặc xóa từ khóa tìm kiếm hiện tại.</p>
+          </div>
         ) : (
           <table className="users-table">
-            <thead><tr><th>STT</th><th>Họ và tên</th><th>Username</th><th>Role</th><th>Trạng thái</th><th>Hành động</th></tr></thead>
+            <thead>
+              <tr>
+                <th>STT</th>
+                <th>Họ và tên</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
             <tbody>
               {filteredUsers.map((member, index) => {
                 const status = getUserStatus(member);
                 return (
                   <tr key={member.id}>
                     <td>{index + 1}</td>
-                    <td><div className="table-user"><div className="table-user-avatar">{member.fullName?.charAt(0) || "U"}</div><div className="table-user-copy"><strong>{member.fullName}</strong><span>{member.username}</span></div></div></td>
+                    <td>
+                      <div className="table-user">
+                        <div className="table-user-avatar">
+                          {member.fullName?.charAt(0) || "U"}
+                        </div>
+                        <div className="table-user-copy">
+                          <strong>{member.fullName}</strong>
+                          <span>{member.username}</span>
+                        </div>
+                      </div>
+                    </td>
                     <td>{member.username}</td>
                     <td>{(member.role || "user").toUpperCase()}</td>
-                    <td><span className={`status-pill status-${status.key}`}>{status.label}</span></td>
-                    <td><div className="table-actions"><button type="button" className="action-btn" onClick={() => startEditingUser(member)}>Sửa</button><button type="button" className="action-btn action-btn-muted" onClick={() => handleQuickToggleLock(member)}>{member.isLocked ? <LuLockOpen size={14} /> : <LuLock size={14} />}<span>{member.isLocked ? "Mở khóa" : "Khóa"}</span></button></div></td>
+                    <td>
+                      <span className={`status-pill status-${status.key}`}>
+                        {status.label}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="table-actions">
+                        <button
+                          type="button"
+                          className="action-btn"
+                          onClick={() => startEditingUser(member)}
+                        >
+                          Sửa
+                        </button>
+                        <button
+                          type="button"
+                          className="action-btn action-btn-muted"
+                          onClick={() => handleQuickToggleLock(member)}
+                        >
+                          {member.isLocked ? (
+                            <LuLockOpen size={14} />
+                          ) : (
+                            <LuLock size={14} />
+                          )}
+                          <span>{member.isLocked ? "Mở khóa" : "Khóa"}</span>
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
@@ -668,8 +838,16 @@ function AdminDashboard() {
   );
 
   const renderPreviewButton = (text, langCode) => (
-    <button type="button" className={`preview-audio-btn ${playingLang === langCode ? "is-playing" : ""}`} onClick={() => handlePreviewAudio(text, langCode)}>
-      {playingLang === langCode ? <FaStop size={11} /> : <FaVolumeUp size={11} />}
+    <button
+      type="button"
+      className={`preview-audio-btn ${playingLang === langCode ? "is-playing" : ""}`}
+      onClick={() => handlePreviewAudio(text, langCode)}
+    >
+      {playingLang === langCode ? (
+        <FaStop size={11} />
+      ) : (
+        <FaVolumeUp size={11} />
+      )}
       <span>{playingLang === langCode ? "Dừng" : "Nghe thử"}</span>
     </button>
   );
@@ -678,25 +856,99 @@ function AdminDashboard() {
     <section className="location-manager location-manager-stacked">
       <div className="table-card shell-card">
         <div className="section-heading">
-          <div><p className="section-eyebrow">Published data</p><h2 className="section-title">Danh sách địa điểm</h2></div>
-          <button type="button" className="ghost-action" onClick={loadLocations}><LuRefreshCw size={16} /><span>Tải lại</span></button>
+          <div>
+            <p className="section-eyebrow">Published data</p>
+            <h2 className="section-title">Danh sách địa điểm</h2>
+          </div>
+          <button
+            type="button"
+            className="ghost-action"
+            onClick={loadLocations}
+          >
+            <LuRefreshCw size={16} />
+            <span>Tải lại</span>
+          </button>
         </div>
         {isLoadingLocations ? (
-          <div className="admin-empty-state"><div className="admin-empty-state-icon"><LuLoaderCircle size={26} className="spin" /></div><h3>Đang tải địa điểm</h3><p>Hệ thống đang đồng bộ dữ liệu từ backend.</p></div>
+          <div className="admin-empty-state">
+            <div className="admin-empty-state-icon">
+              <LuLoaderCircle size={26} className="spin" />
+            </div>
+            <h3>Đang tải địa điểm</h3>
+            <p>Hệ thống đang đồng bộ dữ liệu từ backend.</p>
+          </div>
         ) : filteredLocations.length === 0 ? (
-          <div className="admin-empty-state"><div className="admin-empty-state-icon"><LuMapPinned size={26} /></div><h3>Không tìm thấy địa điểm phù hợp</h3><p>Thử lại với tên địa điểm ngắn hơn hoặc xóa từ khóa tìm kiếm hiện tại.</p></div>
+          <div className="admin-empty-state">
+            <div className="admin-empty-state-icon">
+              <LuMapPinned size={26} />
+            </div>
+            <h3>Không tìm thấy địa điểm phù hợp</h3>
+            <p>
+              Thử lại với tên địa điểm ngắn hơn hoặc xóa từ khóa tìm kiếm hiện
+              tại.
+            </p>
+          </div>
         ) : (
           <table className="users-table">
-            <thead><tr><th>#</th><th>Tên địa điểm</th><th>Mô tả</th><th>Tọa độ</th><th>Media</th><th>Hành động</th></tr></thead>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Tên địa điểm</th>
+                <th>Mô tả</th>
+                <th>Tọa độ</th>
+                <th>Media</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
             <tbody>
               {filteredLocations.map((location, index) => (
                 <tr key={location.id}>
                   <td>{index + 1}</td>
-                  <td><div className="table-user"><div className="table-user-avatar">{location.name?.charAt(0) || "L"}</div><div className="table-user-copy"><strong>{location.name}</strong><span>ID {location.id}</span></div></div></td>
-                  <td className="location-description-cell">{location.description || "Không có mô tả"}</td>
-                  <td className="location-coordinate-cell">{location.latitude}, {location.longitude}</td>
-                  <td><div className="location-media-meta"><span>{parseImageList(location.images).length > 0 ? "Images" : "No image"}</span><span>{location.audio ? "Audio" : "No audio"}</span></div></td>
-                  <td><div className="table-actions"><button type="button" className="action-btn" onClick={() => startEditingLocation(location)}>Sửa</button><button type="button" className="action-btn action-btn-muted" onClick={() => handleDeleteLocation(location.id)}><LuTrash2 size={14} /><span>Xóa</span></button></div></td>
+                  <td>
+                    <div className="table-user">
+                      <div className="table-user-avatar">
+                        {location.name?.charAt(0) || "L"}
+                      </div>
+                      <div className="table-user-copy">
+                        <strong>{location.name}</strong>
+                        <span>ID {location.id}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="location-description-cell">
+                    {location.description || "Không có mô tả"}
+                  </td>
+                  <td className="location-coordinate-cell">
+                    {location.latitude}, {location.longitude}
+                  </td>
+                  <td>
+                    <div className="location-media-meta">
+                      <span>
+                        {parseImageList(location.images).length > 0
+                          ? "Images"
+                          : "No image"}
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="table-actions">
+                      <button
+                        type="button"
+                        className="action-btn"
+                        onClick={() => startEditingLocation(location)}
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        type="button"
+                        className="action-btn action-btn-muted"
+                        onClick={() => handleDeleteLocation(location.id)}
+                      >
+                        <LuTrash2 size={14} />
+                        <span>Xóa</span>
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -706,33 +958,103 @@ function AdminDashboard() {
 
       <div className="location-editor shell-card">
         <div className="section-heading">
-          <div><p className="section-eyebrow">Location editor</p><h2 className="section-title">{locationForm.id ? "Cập nhật địa điểm" : "Thêm địa điểm mới"}</h2></div>
-          <button type="button" className="ghost-action" onClick={resetLocationForm}><LuRefreshCw size={16} /><span>Đặt lại form</span></button>
+          <div>
+            <p className="section-eyebrow">Location editor</p>
+            <h2 className="section-title">
+              {locationForm.id ? "Cập nhật địa điểm" : "Thêm địa điểm mới"}
+            </h2>
+          </div>
+          <button
+            type="button"
+            className="ghost-action"
+            onClick={resetLocationForm}
+          >
+            <LuRefreshCw size={16} />
+            <span>Đặt lại form</span>
+          </button>
         </div>
 
         <form className="location-form" onSubmit={handleLocationSubmit}>
           <div className="form-row">
-            <div className="form-group"><label htmlFor="name">Tên địa điểm</label><input id="name" name="name" value={locationForm.name} onChange={handleLocationInputChange} /></div>
             <div className="form-group">
-              <label htmlFor="audio">Audio file</label>
-              <input id="audio" name="audio" value={locationForm.audio} readOnly hidden />
-              <input ref={audioInputRef} type="file" accept="audio/*" className="hidden-file-input" onChange={(event) => handleAudioUpload(event.target.files)} />
-              <button type="button" className={`upload-dropzone ${isUploadingAudio ? "is-uploading" : ""}`} onClick={() => audioInputRef.current?.click()} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); handleAudioUpload(event.dataTransfer.files); }}>
-                <span className="upload-dropzone-icon">{isUploadingAudio ? <LuLoaderCircle size={20} className="spin" /> : <LuMusic4 size={20} />}</span>
-                <span className="upload-dropzone-copy"><strong>{isUploadingAudio ? "Đang tải audio..." : "Thả file audio vào đây"}</strong><span>Hoặc bấm để chọn file mp3, wav, m4a hoặc ogg</span></span>
-              </button>
-              <div className="upload-inline-hint">{locationForm.audio ? `Audio hiện tại: ${locationForm.audio}` : "Chưa có audio file cho địa điểm này."}</div>
+              <label htmlFor="name">Tên địa điểm</label>
+              <input
+                id="name"
+                name="name"
+                value={locationForm.name}
+                onChange={handleLocationInputChange}
+              />
             </div>
           </div>
 
-          <div className="form-group"><label htmlFor="description">Mô tả ngắn</label><textarea id="description" name="description" value={locationForm.description} onChange={handleLocationInputChange} /></div>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="address">Địa chỉ quán</label>
+              <input
+                id="address"
+                name="address"
+                value={locationForm.address}
+                onChange={handleLocationInputChange}
+                placeholder="Ví dụ: 123 Nguyễn Huệ, Quận 1, TP.HCM"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="phone">Số điện thoại</label>
+              <input
+                id="phone"
+                name="phone"
+                value={locationForm.phone}
+                onChange={handleLocationInputChange}
+                placeholder="Ví dụ: 0901234567"
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="description">Mô tả ngắn</label>
+            <textarea
+              id="description"
+              name="description"
+              value={locationForm.description}
+              onChange={handleLocationInputChange}
+            />
+          </div>
           <div className="form-row location-media-grid">
             <div className="form-group">
               <label>Danh sách ảnh</label>
-              <input ref={galleryInputRef} type="file" accept="image/*" multiple className="hidden-file-input" onChange={(event) => handleGalleryUpload(event.target.files)} />
-              <button type="button" className={`upload-dropzone ${isUploadingGallery ? "is-uploading" : ""}`} onClick={() => galleryInputRef.current?.click()} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); handleGalleryUpload(event.dataTransfer.files); }}>
-                <span className="upload-dropzone-icon">{isUploadingGallery ? <LuLoaderCircle size={20} className="spin" /> : <LuUpload size={20} />}</span>
-                <span className="upload-dropzone-copy"><strong>{isUploadingGallery ? "Đang tải danh sách ảnh..." : "Thả nhiều ảnh vào đây"}</strong><span>Hoặc bấm để chọn nhiều ảnh cùng lúc</span></span>
+              <input
+                ref={galleryInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden-file-input"
+                onChange={(event) => handleGalleryUpload(event.target.files)}
+              />
+              <button
+                type="button"
+                className={`upload-dropzone ${isUploadingGallery ? "is-uploading" : ""}`}
+                onClick={() => galleryInputRef.current?.click()}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  handleGalleryUpload(event.dataTransfer.files);
+                }}
+              >
+                <span className="upload-dropzone-icon">
+                  {isUploadingGallery ? (
+                    <LuLoaderCircle size={20} className="spin" />
+                  ) : (
+                    <LuUpload size={20} />
+                  )}
+                </span>
+                <span className="upload-dropzone-copy">
+                  <strong>
+                    {isUploadingGallery
+                      ? "Đang tải danh sách ảnh..."
+                      : "Thả nhiều ảnh vào đây"}
+                  </strong>
+                  <span>Hoặc bấm để chọn nhiều ảnh cùng lúc</span>
+                </span>
               </button>
               <div className="upload-inline-hint">
                 {galleryImages.length > 0
@@ -742,11 +1064,27 @@ function AdminDashboard() {
               {galleryImages.length > 0 ? (
                 <div className="gallery-preview-grid">
                   {galleryImages.map((imageUrl, index) => (
-                    <article key={`${imageUrl}-${index}`} className="gallery-preview-card">
+                    <article
+                      key={`${imageUrl}-${index}`}
+                      className="gallery-preview-card"
+                    >
                       <img src={imageUrl} alt={`Ảnh địa điểm ${index + 1}`} />
                       <div className="gallery-preview-actions">
-                        {index === 0 ? <span className="status-pill status-active">Ảnh chính</span> : <span className="status-pill">Ảnh phụ</span>}
-                        <button type="button" className="icon-action-btn" onClick={() => removeGalleryImage(imageUrl)} aria-label="Xóa ảnh khỏi danh sách"><LuTrash2 size={14} /></button>
+                        {index === 0 ? (
+                          <span className="status-pill status-active">
+                            Ảnh chính
+                          </span>
+                        ) : (
+                          <span className="status-pill">Ảnh phụ</span>
+                        )}
+                        <button
+                          type="button"
+                          className="icon-action-btn"
+                          onClick={() => removeGalleryImage(imageUrl)}
+                          aria-label="Xóa ảnh khỏi danh sách"
+                        >
+                          <LuTrash2 size={14} />
+                        </button>
                       </div>
                     </article>
                   ))}
@@ -756,28 +1094,124 @@ function AdminDashboard() {
           </div>
 
           <div className="form-row">
-            <div className="form-group"><label htmlFor="latitude">Latitude</label><input id="latitude" name="latitude" value={locationForm.latitude} onChange={handleLocationInputChange} /></div>
-            <div className="form-group"><label htmlFor="longitude">Longitude</label><input id="longitude" name="longitude" value={locationForm.longitude} onChange={handleLocationInputChange} /></div>
+            <div className="form-group">
+              <label htmlFor="latitude">Latitude</label>
+              <input
+                id="latitude"
+                name="latitude"
+                value={locationForm.latitude}
+                onChange={handleLocationInputChange}
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="longitude">Longitude</label>
+              <input
+                id="longitude"
+                name="longitude"
+                value={locationForm.longitude}
+                onChange={handleLocationInputChange}
+              />
+            </div>
           </div>
-
-          <div className="form-group">
-            <div className="preview-label-row"><label htmlFor="textVi">Nội dung thuyết minh tiếng Việt</label>{renderPreviewButton(locationForm.textVi, "vi-VN")}</div>
-            <textarea id="textVi" name="textVi" value={locationForm.textVi} onChange={handleLocationInputChange} />
-          </div>
-
+          <br />
+          <h2 class="section-title">Nội dung thuyết minh</h2>
           <div className="form-row">
-            <div className="form-group"><div className="preview-label-row"><label htmlFor="textEn">English</label>{renderPreviewButton(locationForm.textEn, "en-US")}</div><textarea id="textEn" name="textEn" value={locationForm.textEn} onChange={handleLocationInputChange} /></div>
-            <div className="form-group"><div className="preview-label-row"><label htmlFor="textZh">Chinese</label>{renderPreviewButton(locationForm.textZh, "zh-CN")}</div><textarea id="textZh" name="textZh" value={locationForm.textZh} onChange={handleLocationInputChange} /></div>
+            {/* Tiếng Việt */}
+            <div className="form-group">
+              <div className="preview-label-row">
+                <label htmlFor="textVi">Tiếng Việt</label>
+                {renderPreviewButton(locationForm.textVi, "vi-VN")}
+              </div>
+              <textarea
+                id="textVi"
+                name="textVi"
+                rows={5}
+                value={locationForm.textVi}
+                onChange={handleLocationInputChange}
+              />
+            </div>
+
+            {/* English */}
+            <div className="form-group">
+              <div className="preview-label-row">
+                <label htmlFor="textEn">English</label>
+                {renderPreviewButton(locationForm.textEn, "en-US")}
+              </div>
+              <textarea
+                id="textEn"
+                name="textEn"
+                rows={5}
+                value={locationForm.textEn}
+                onChange={handleLocationInputChange}
+              />
+            </div>
+
+            {/* Chinese */}
+            <div className="form-group">
+              <div className="preview-label-row">
+                <label htmlFor="textZh">Chinese</label>
+                {renderPreviewButton(locationForm.textZh, "zh-CN")}
+              </div>
+              <textarea
+                id="textZh"
+                name="textZh"
+                rows={5}
+                value={locationForm.textZh}
+                onChange={handleLocationInputChange}
+              />
+            </div>
+
+            {/* German */}
+            <div className="form-group">
+              <div className="preview-label-row">
+                <label htmlFor="textDe">German</label>
+                {renderPreviewButton(locationForm.textDe, "de-DE")}
+              </div>
+              <textarea
+                id="textDe"
+                name="textDe"
+                rows={5}
+                value={locationForm.textDe}
+                onChange={handleLocationInputChange}
+              />
+            </div>
           </div>
 
-          <div className="form-group"><div className="preview-label-row"><label htmlFor="textDe">German</label>{renderPreviewButton(locationForm.textDe, "de-DE")}</div><textarea id="textDe" name="textDe" value={locationForm.textDe} onChange={handleLocationInputChange} /></div>
-
-          {locationError && <div className="admin-feedback admin-feedback-error">{locationError}</div>}
-          {locationNotice && <div className="admin-feedback admin-feedback-success">{locationNotice}</div>}
+          {locationError && (
+            <div className="admin-feedback admin-feedback-error">
+              {locationError}
+            </div>
+          )}
+          {locationNotice && (
+            <div className="admin-feedback admin-feedback-success">
+              {locationNotice}
+            </div>
+          )}
 
           <div className="location-form-actions">
-            <button type="submit" className="btn btn-primary" disabled={isSavingLocation || isUploadingGallery || isUploadingAudio}>{isSavingLocation ? <LuLoaderCircle size={16} className="spin" /> : locationForm.id ? <LuSave size={16} /> : <LuPlus size={16} />}<span>{locationForm.id ? "Lưu thay đổi" : "Thêm địa điểm"}</span></button>
-            {locationForm.id && <button type="button" className="btn action-btn-muted" onClick={resetLocationForm}>Hủy chỉnh sửa</button>}
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={isSavingLocation || isUploadingGallery}
+            >
+              {isSavingLocation ? (
+                <LuLoaderCircle size={16} className="spin" />
+              ) : locationForm.id ? (
+                <LuSave size={16} />
+              ) : (
+                <LuPlus size={16} />
+              )}
+              <span>{locationForm.id ? "Lưu thay đổi" : "Thêm địa điểm"}</span>
+            </button>
+            {locationForm.id && (
+              <button
+                type="button"
+                className="btn action-btn-muted"
+                onClick={resetLocationForm}
+              >
+                Hủy chỉnh sửa
+              </button>
+            )}
           </div>
         </form>
       </div>
@@ -786,11 +1220,49 @@ function AdminDashboard() {
 
   return (
     <div className="admin-shell">
-      <AdminSidebar user={user} activeKey={activeMenu} items={DASHBOARD_TABS} onItemClick={(item) => setActiveMenu(item.key)} onLogout={handleLogout} />
+      <AdminSidebar
+        user={user}
+        activeKey={activeMenu}
+        items={DASHBOARD_TABS}
+        onItemClick={(item) => setActiveMenu(item.key)}
+        onLogout={handleLogout}
+      />
       <main className="admin-main">
-        <AdminNavbar title={dashboardTitle} subtitle={dashboardSubtitle} user={user} showSearch={showSearch} searchValue={searchValue} searchPlaceholder={searchPlaceholder} onSearchChange={handleNavbarSearchChange} />
+        <AdminNavbar
+          title={dashboardTitle}
+          subtitle={dashboardSubtitle}
+          user={user}
+          showSearch={showSearch}
+          searchValue={searchValue}
+          searchPlaceholder={searchPlaceholder}
+          onSearchChange={handleNavbarSearchChange}
+        />
         <div className="admin-content">
-          {activeMenu === "overview" && <><section className="stats-grid">{stats.map((stat) => { const Icon = stat.icon; return <article key={stat.title} className="stat-card shell-card"><div className="stat-card-top"><div className="stat-icon"><Icon size={20} /></div><span className="stat-chip">Live</span></div><div className="stat-copy"><p className="stat-title">{stat.title}</p><h3 className="stat-value">{stat.value}</h3><p className="stat-note">{stat.note}</p></div></article>; })}</section>{renderUsersOverviewTable()}</>}
+          {activeMenu === "overview" && (
+            <>
+              <section className="stats-grid">
+                {stats.map((stat) => {
+                  const Icon = stat.icon;
+                  return (
+                    <article key={stat.title} className="stat-card shell-card">
+                      <div className="stat-card-top">
+                        <div className="stat-icon">
+                          <Icon size={20} />
+                        </div>
+                        <span className="stat-chip">Live</span>
+                      </div>
+                      <div className="stat-copy">
+                        <p className="stat-title">{stat.title}</p>
+                        <h3 className="stat-value">{stat.value}</h3>
+                        <p className="stat-note">{stat.note}</p>
+                      </div>
+                    </article>
+                  );
+                })}
+              </section>
+              {renderUsersOverviewTable()}
+            </>
+          )}
           {activeMenu === "users" && renderUsersTab()}
           {activeMenu === "locations" && renderLocationsTab()}
         </div>

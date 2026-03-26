@@ -1,12 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getNearLocation, getAllLocations } from "../services/locationService";
-import {
-  speakLocation,
-  speakLocationAsync,
-  stop,
-  LANGUAGES,
-} from "../services/ttsService";
+import { speakLocationAsync, stop, LANGUAGES } from "../services/ttsService";
 import LocationCard from "../components/LocationCard";
 import MapView from "../components/MapView";
 import Navbar from "../components/Navbar";
@@ -34,6 +29,17 @@ function Home() {
   const pausedRef = useRef(false);
 
   const [lightbox, setLightbox] = useState(null);
+
+  const handleLocationUpdated = (updatedLocation) => {
+    if (!updatedLocation?.id) return;
+
+    setLocation((current) =>
+      current?.id === updatedLocation.id ? updatedLocation : current
+    );
+    setLocations((current) =>
+      current.map((item) => (item.id === updatedLocation.id ? updatedLocation : item))
+    );
+  };
 
   // Check authentication on mount
   useEffect(() => {
@@ -222,6 +228,7 @@ function Home() {
                 location={location}
                 lang={lang}
                 apiUrl={API_URL}
+                onLocationUpdated={handleLocationUpdated}
                 onImageClick={setLightbox}
               />
             </div>

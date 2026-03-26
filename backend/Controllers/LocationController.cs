@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 using Tour_Project.Data;
 using Tour_Project.Models;
 using Tour_Project.Services;
@@ -9,6 +10,11 @@ namespace Tour_Project.Controllers
     [ApiController]
     public class LocationController : ControllerBase
     {
+        private static readonly JsonSerializerOptions ReviewJsonOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
         private readonly AppDbContext _context;
         private readonly LocationService _service;
 
@@ -27,6 +33,7 @@ namespace Tour_Project.Controllers
         [HttpPost]
         public IActionResult Create(Location location)
         {
+            location.ReviewsJson ??= "[]";
             _context.Locations.Add(location);
             _context.SaveChanges();
             return Ok(location);
@@ -75,7 +82,9 @@ namespace Tour_Project.Controllers
             location.Description = updated.Description;
             location.Image = updated.Image;
             location.Images = updated.Images;
-            location.Audio = updated.Audio;
+            location.Address = updated.Address;
+            location.Phone = updated.Phone;
+            location.ReviewsJson = string.IsNullOrWhiteSpace(updated.ReviewsJson) ? "[]" : updated.ReviewsJson;
             location.Latitude = updated.Latitude;
             location.Longitude = updated.Longitude;
             location.TextVi = updated.TextVi;
@@ -85,6 +94,54 @@ namespace Tour_Project.Controllers
 
             _context.SaveChanges();
             return Ok(location);
+        }
+
+        [HttpPost("{id}/reviews")]
+        public IActionResult AddReview(int id, CreateLocationReviewRequest request)
+        {
+            var location = _context.Locations.Find(id);
+            if (location == null) return NotFound();
+
+            var comment = request.Comment?.Trim() ?? "";
+            if (request.Rating < 1 || request.Rating > 5)
+            {
+                return BadRequest("Rating must be between 1 and 5.");
+            }
+
+            if (string.IsNullOrWhiteSpace(comment))
+            {
+                return BadRequest("Comment is required.");
+            }
+
+            var reviews = DeserializeReviews(location.ReviewsJson);
+            reviews.Insert(0, new LocationReview
+            {
+                Author = string.IsNullOrWhiteSpace(request.Author) ? "Guest" : request.Author.Trim(),
+                Rating = request.Rating,
+                Comment = comment,
+                CreatedAt = DateTime.UtcNow
+            });
+
+            location.ReviewsJson = JsonSerializer.Serialize(reviews, ReviewJsonOptions);
+            _context.SaveChanges();
+            return Ok(location);
+        }
+
+        private static List<LocationReview> DeserializeReviews(string? rawJson)
+        {
+            if (string.IsNullOrWhiteSpace(rawJson))
+            {
+                return [];
+            }
+
+            try
+            {
+                return JsonSerializer.Deserialize<List<LocationReview>>(rawJson, ReviewJsonOptions) ?? [];
+            }
+            catch
+            {
+                return [];
+            }
         }
     }
 }

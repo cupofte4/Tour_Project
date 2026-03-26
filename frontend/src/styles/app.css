@@ -134,6 +134,11 @@ body {
 }
 
 /* Location card */
+.location-card {
+  display: grid;
+  gap: 14px;
+}
+
 .location-name {
   font-size: 20px;
   font-weight: bold;
@@ -154,6 +159,145 @@ body {
   line-height: 1.75;
   white-space: pre-wrap;
   border: 1px solid #e9ecef;
+}
+
+.location-meta-card,
+.reviews-card {
+  background: #fff;
+  border: 1px solid #e4ebf3;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.location-meta-card {
+  display: grid;
+  gap: 12px;
+}
+
+.location-meta-item {
+  display: grid;
+  gap: 4px;
+}
+
+.location-meta-label,
+.review-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6b7a90;
+  font-weight: 700;
+}
+
+.location-meta-value {
+  font-size: 14px;
+  color: #20324d;
+  line-height: 1.6;
+}
+
+.reviews-card {
+  display: grid;
+  gap: 14px;
+}
+
+.reviews-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.reviews-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #16345f;
+}
+
+.reviews-summary {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #5f6f84;
+}
+
+.reviews-average {
+  color: #ff9800;
+  font-size: 18px;
+  letter-spacing: 1px;
+}
+
+.review-form {
+  display: grid;
+  gap: 10px;
+}
+
+.review-select,
+.review-textarea {
+  width: 100%;
+  border: 1px solid #d5e0ec;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #23354f;
+  background: #fbfdff;
+}
+
+.review-textarea {
+  min-height: 90px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.review-submit-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #ff8a00, #ff6f00);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.review-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.review-error {
+  color: #c62828;
+  font-size: 13px;
+}
+
+.reviews-list {
+  display: grid;
+  gap: 10px;
+}
+
+.review-item {
+  background: #f7faff;
+  border: 1px solid #dde7f2;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.review-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+  color: #17355e;
+}
+
+.review-item p {
+  color: #46576d;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 6px;
+}
+
+.review-item small,
+.reviews-empty {
+  color: #6d7f96;
+  font-size: 12px;
 }
 
 audio {

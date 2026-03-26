@@ -11,7 +11,9 @@ function AddLocation() {
     name: "",
     description: "",
     image: "",
-    audio: "",
+    address: "",
+    phone: "",
+    reviewsJson: "[]",
     latitude: "",
     longitude: "",
   });
@@ -79,9 +81,16 @@ function AddLocation() {
             />
 
             <input
-              placeholder="Audio file"
+              placeholder="Address"
               onChange={(e) =>
-                setLocation({ ...location, audio: e.target.value })
+                setLocation({ ...location, address: e.target.value })
+              }
+            />
+
+            <input
+              placeholder="Phone"
+              onChange={(e) =>
+                setLocation({ ...location, phone: e.target.value })
               }
             />
 
