@@ -52,6 +52,21 @@ function Favorites() {
   }, [isAuthenticated]);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const refreshLocations = async () => {
+      const data = await getAllLocations();
+      setLocations(Array.isArray(data) ? data : []);
+    };
+
+    window.addEventListener("focus", refreshLocations);
+
+    return () => {
+      window.removeEventListener("focus", refreshLocations);
+    };
+  }, [isAuthenticated]);
+
+  useEffect(() => {
     const syncFavorites = () => {
       setFavoriteIds(getFavoriteLocationIds());
     };

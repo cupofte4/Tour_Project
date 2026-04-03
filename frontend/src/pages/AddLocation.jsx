@@ -11,11 +11,16 @@ function AddLocation() {
     name: "",
     description: "",
     image: "",
+    images: "[]",
     address: "",
     phone: "",
     reviewsJson: "[]",
     latitude: "",
     longitude: "",
+    textVi: "",
+    textEn: "",
+    textZh: "",
+    textDe: "",
   });
 
   useEffect(() => {
@@ -39,8 +44,16 @@ function AddLocation() {
   }, [navigate]);
 
   const handleSubmit = async () => {
-    await createLocation(location);
-    alert("Đã thêm địa điểm!");
+    await createLocation({
+      ...location,
+      latitude: Number(location.latitude),
+      longitude: Number(location.longitude),
+      images: location.images || "[]",
+      reviewsJson: location.reviewsJson || "[]",
+    });
+
+    window.alert("Da them dia diem!");
+    navigate("/admin/dashboard");
   };
 
   if (!isAuthorized) return null;

@@ -30,6 +30,15 @@ function Home() {
 
   const [lightbox, setLightbox] = useState(null);
 
+  const loadLocations = async () => {
+    try {
+      const data = await getAllLocations();
+      setLocations(Array.isArray(data) ? data : []);
+    } catch {
+      setLocations([]);
+    }
+  };
+
   const handleLocationUpdated = (updatedLocation) => {
     if (!updatedLocation?.id) return;
 
@@ -74,9 +83,19 @@ function Home() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    getAllLocations()
-      .then((data) => setLocations(Array.isArray(data) ? data : []))
-      .catch(() => setLocations([]));
+    loadLocations();
+
+    const handleRefreshLocations = () => {
+      loadLocations();
+    };
+
+    window.addEventListener("focus", handleRefreshLocations);
+    const intervalId = window.setInterval(handleRefreshLocations, 15000);
+
+    return () => {
+      window.removeEventListener("focus", handleRefreshLocations);
+      window.clearInterval(intervalId);
+    };
   }, [isAuthenticated]);
 
   useEffect(() => {

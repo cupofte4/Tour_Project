@@ -1,8 +1,8 @@
 const LANGUAGES = [
-  { code: "vi-VN", label: "🇻🇳 Tiếng Việt" },
-  { code: "en-US", label: "🇺🇸 English" },
-  { code: "zh-CN", label: "🇨🇳 中文" },
-  { code: "de-DE", label: "🇩🇪 Deutsch" },
+  { code: "vi-VN", label: "Tiếng Việt" },
+  { code: "en-US", label: "English" },
+  { code: "zh-CN", label: "中文" },
+  { code: "de-DE", label: "Deutsch" },
 ];
 
 const LANG_FIELD = {
@@ -15,8 +15,8 @@ const LANG_FIELD = {
 const LANG_RATE = {
   "vi-VN": 0.98,
   "en-US": 0.94,
-  "zh-CN": 0.92,
-  "de-DE": 0.88,
+  "zh-CN": 0.9,
+  "de-DE": 0.9,
 };
 
 const LANG_PITCH = {
@@ -37,6 +37,23 @@ const PREFERRED_VOICE_NAMES = {
     "Daniel",
     "Moira",
     "Alex",
+  ],
+  "zh-CN": [
+    "Microsoft Xiaoxiao",
+    "Microsoft Yunxi",
+    "Microsoft Yaoyao",
+    "Google 普通话",
+    "Google Mandarin",
+    "Tingting",
+    "Meijia",
+  ],
+  "de-DE": [
+    "Microsoft Katja",
+    "Microsoft Conrad",
+    "Google Deutsch",
+    "Anna",
+    "Petra",
+    "Markus",
   ],
 };
 
@@ -86,6 +103,13 @@ function getVoiceForLang(langCode) {
     return preferredVoice;
   }
 
+  const langPrefix = langCode.split("-")[0];
+
+  const localPrefixVoice = voices.find(
+    (voice) => voice.lang.startsWith(langPrefix) && voice.localService,
+  );
+  if (localPrefixVoice) return localPrefixVoice;
+
   const localVoice = voices.find(
     (voice) => voice.lang === langCode && voice.localService,
   );
@@ -94,7 +118,6 @@ function getVoiceForLang(langCode) {
   const exactVoice = voices.find((voice) => voice.lang === langCode);
   if (exactVoice) return exactVoice;
 
-  const langPrefix = langCode.split("-")[0];
   return (
     voices.find((voice) => voice.lang.startsWith(`${langPrefix}-`)) ||
     voices.find((voice) => voice.lang.startsWith(langPrefix)) ||
@@ -102,18 +125,24 @@ function getVoiceForLang(langCode) {
   );
 }
 
+function getSentencePattern(langCode) {
+  if (langCode === "zh-CN") {
+    return /[^。！？；，、\n]+[。！？；，、]?/g;
+  }
+
+  return /[^.!?;:\n]+[.!?;:]?/g;
+}
+
 function splitTextIntoChunks(text, langCode) {
   const normalized = normalizeText(text);
   if (!normalized) return [];
 
-  const maxLength = langCode === "zh-CN" ? 180 : 420;
+  const maxLength = langCode === "zh-CN" ? 90 : langCode === "de-DE" ? 260 : 420;
   if (normalized.length <= maxLength) {
     return [normalized];
   }
 
-  // Only break on strong sentence boundaries. Splitting on commas/colons
-  // makes browser TTS pause unnaturally and causes the "vấp" effect.
-  const sentencePattern = /[^.!?。！？;；\n]+[.!?。！？;；]?/g;
+  const sentencePattern = getSentencePattern(langCode);
   const sentences = normalized.match(sentencePattern)?.map((item) => item.trim()) || [
     normalized,
   ];
@@ -124,7 +153,8 @@ function splitTextIntoChunks(text, langCode) {
   for (const sentence of sentences) {
     if (!sentence) continue;
 
-    const candidate = currentChunk ? `${currentChunk} ${sentence}` : sentence;
+    const joiner = langCode === "zh-CN" ? "" : " ";
+    const candidate = currentChunk ? `${currentChunk}${joiner}${sentence}` : sentence;
     if (candidate.length <= maxLength) {
       currentChunk = candidate;
       continue;
@@ -140,16 +170,21 @@ function splitTextIntoChunks(text, langCode) {
       continue;
     }
 
-    const words = sentence.split(" ");
+    const units =
+      langCode === "zh-CN"
+        ? sentence.match(/.{1,36}/g) || [sentence]
+        : sentence.split(" ");
+
     let partial = "";
 
-    for (const word of words) {
-      const nextPartial = partial ? `${partial} ${word}` : word;
+    for (const unit of units) {
+      const separator = langCode === "zh-CN" ? "" : " ";
+      const nextPartial = partial ? `${partial}${separator}${unit}` : unit;
       if (nextPartial.length <= maxLength) {
         partial = nextPartial;
       } else {
         if (partial) chunks.push(partial);
-        partial = word;
+        partial = unit;
       }
     }
 
@@ -177,6 +212,29 @@ function stop() {
   }
 }
 
+async function speakChunk(chunk, langCode, voice, sessionId) {
+  if (sessionId !== currentSessionId || !window?.speechSynthesis) {
+    return;
+  }
+
+  await new Promise((resolve) => {
+    const utterance = new SpeechSynthesisUtterance(chunk);
+    utterance.lang = langCode;
+    utterance.rate = LANG_RATE[langCode] || 0.95;
+    utterance.pitch = LANG_PITCH[langCode] || 1;
+    utterance.volume = 1;
+
+    if (voice) {
+      utterance.voice = voice;
+    }
+
+    utterance.onend = () => resolve();
+    utterance.onerror = () => resolve();
+
+    window.speechSynthesis.speak(utterance);
+  });
+}
+
 async function playChunks(text, langCode) {
   if (!window?.speechSynthesis) return;
 
@@ -192,48 +250,19 @@ async function playChunks(text, langCode) {
 
   const voice = getVoiceForLang(langCode);
 
-  await new Promise((resolve) => {
-    let completedCount = 0;
-    let finished = false;
+  for (const chunk of chunks) {
+    if (sessionId !== currentSessionId) {
+      return;
+    }
 
-    const finish = () => {
-      if (finished) return;
-      finished = true;
-      resolve();
-    };
+    await speakChunk(chunk, langCode, voice, sessionId);
 
-    chunks.forEach((chunk) => {
-      const utterance = new SpeechSynthesisUtterance(chunk);
-      utterance.lang = langCode;
-      utterance.rate = LANG_RATE[langCode] || 0.95;
-      utterance.pitch = LANG_PITCH[langCode] || 1;
-      utterance.volume = 1;
-
-      if (voice) {
-        utterance.voice = voice;
-      }
-
-      utterance.onend = () => {
-        if (sessionId !== currentSessionId) {
-          finish();
-          return;
-        }
-
-        completedCount += 1;
-        if (completedCount >= chunks.length) {
-          finish();
-        }
-      };
-
-      utterance.onerror = () => {
-        finish();
-      };
-
-      if (sessionId === currentSessionId) {
-        window.speechSynthesis.speak(utterance);
-      }
-    });
-  });
+    if (langCode === "zh-CN") {
+      await wait(40);
+    } else if (langCode === "de-DE") {
+      await wait(25);
+    }
+  }
 }
 
 async function speak(text, langCode) {
