@@ -6,6 +6,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AddLocation from "./pages/AddLocation";
 import EditLocation from "./pages/EditLocation";
 import MyProfile from "./pages/MyProfile";
+import Settings from "./pages/Settings";
+import Favorites from "./pages/Favorites";
 
 function App() {
   return (
@@ -24,6 +26,8 @@ function App() {
         <Route path="/admin/add" element={<AddLocation />} />
         <Route path="/admin/tts" element={<EditLocation />} />
         <Route path="/profile" element={<MyProfile />} />
+        <Route path="/favorites" element={<Favorites />} />
+        <Route path="/settings" element={<Settings />} />
       </Routes>
     </BrowserRouter>
   );

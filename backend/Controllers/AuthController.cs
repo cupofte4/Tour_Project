@@ -66,5 +66,44 @@ namespace Tour_Project.Controllers
                 isLocked = user.IsLocked
             });
         }
+
+        [HttpPost("change-password")]
+        public IActionResult ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Username) ||
+                string.IsNullOrWhiteSpace(request.CurrentPassword) ||
+                string.IsNullOrWhiteSpace(request.NewPassword))
+            {
+                return BadRequest(new { message = "Vui lòng nhập đầy đủ thông tin đổi mật khẩu" });
+            }
+
+            if (request.NewPassword.Length < 6)
+            {
+                return BadRequest(new { message = "Mật khẩu mới phải có ít nhất 6 ký tự" });
+            }
+
+            var user = _context.Users.FirstOrDefault(x => x.Username == request.Username);
+            if (user == null)
+            {
+                return NotFound(new { message = "Không tìm thấy người dùng" });
+            }
+
+            if (user.Password != request.CurrentPassword)
+            {
+                return BadRequest(new { message = "Mật khẩu hiện tại không chính xác" });
+            }
+
+            user.Password = request.NewPassword;
+            _context.SaveChanges();
+
+            return Ok(new { message = "Đổi mật khẩu thành công" });
+        }
+    }
+
+    public class ChangePasswordRequest
+    {
+        public string Username { get; set; } = string.Empty;
+        public string CurrentPassword { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
     }
 }

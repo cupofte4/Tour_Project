@@ -1,0 +1,7 @@
+E:\CNTT_Code\CSharp\backend\obj\Debug\net8.0\backend.csproj.AssemblyReference.cache
+E:\CNTT_Code\CSharp\backend\obj\Debug\net8.0\backend.GeneratedMSBuildEditorConfig.editorconfig
+E:\CNTT_Code\CSharp\backend\obj\Debug\net8.0\backend.AssemblyInfoInputs.cache
+E:\CNTT_Code\CSharp\backend\obj\Debug\net8.0\backend.AssemblyInfo.cs
+E:\CNTT_Code\CSharp\backend\obj\Debug\net8.0\backend.csproj.CoreCompileInputs.cache
+E:\CNTT_Code\CSharp\backend\obj\Debug\net8.0\backend.MvcApplicationPartsAssemblyInfo.cache
+E:\CNTT_Code\CSharp\backend\obj\Debug\net8.0\backend.sourcelink.json

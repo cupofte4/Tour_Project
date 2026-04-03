@@ -5,6 +5,10 @@ import {
   getTextForLang,
 } from "../services/ttsService";
 import { submitLocationReview } from "../services/locationService";
+import {
+  isFavoriteLocation,
+  toggleFavoriteLocation,
+} from "../services/favoritesService";
 import "../styles/app.css";
 
 const parseReviews = (rawReviews) => {
@@ -36,44 +40,42 @@ const formatReviewDate = (value) => {
 
 const renderStars = (rating) => "★".repeat(rating) + "☆".repeat(5 - rating);
 
-function LocationCard({ location, lang, apiUrl, onLocationUpdated }) {
+function LocationCard({ location, lang, onLocationUpdated }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [reviewError, setReviewError] = useState("");
+  const [isFavorite, setIsFavorite] = useState(false);
+
   const reviews = useMemo(
     () => parseReviews(location?.reviewsJson),
     [location?.reviewsJson],
   );
-  const images = useMemo(() => {
-    if (!location) {
-      return [];
-    }
-
-    try {
-      const parsedImages = JSON.parse(location.images || "[]");
-      if (Array.isArray(parsedImages) && parsedImages.length > 0) {
-        return parsedImages;
-      }
-    } catch {
-      // Ignore invalid gallery JSON and fall back to the primary image.
-    }
-
-    return location.image ? [location.image] : [];
-  }, [location]);
 
   useEffect(() => {
     setReviewRating(5);
     setReviewComment("");
     setReviewError("");
+    setIsFavorite(location?.id ? isFavoriteLocation(location.id) : false);
+  }, [location?.id]);
+
+  useEffect(() => {
+    const syncFavoriteState = () => {
+      setIsFavorite(location?.id ? isFavoriteLocation(location.id) : false);
+    };
+
+    window.addEventListener("favoritesUpdated", syncFavoriteState);
+    return () => {
+      window.removeEventListener("favoritesUpdated", syncFavoriteState);
+    };
   }, [location?.id]);
 
   if (!location) {
     return (
       <div className="empty-state">
         <div className="icon">🔍</div>
-        <p>Đang tìm địa điểm gần bạn...</p>
+        <p>Chọn một point trên bản đồ để xem thông tin và gửi review.</p>
       </div>
     );
   }
@@ -144,11 +146,28 @@ function LocationCard({ location, lang, apiUrl, onLocationUpdated }) {
     }
   };
 
+  const handleToggleFavorite = () => {
+    try {
+      const nextState = toggleFavoriteLocation(location.id);
+      setIsFavorite(nextState);
+    } catch (error) {
+      setReviewError(error.message || "Không thể lưu địa điểm yêu thích.");
+    }
+  };
+
   return (
     <div className="location-card">
-      <div className="location-name">{location.name}</div>
-
-      {images.length > 0 && null}
+      <div className="location-name-row">
+        <div className="location-name">{location.name}</div>
+        <button
+          type="button"
+          className={`favorite-btn ${isFavorite ? "active" : ""}`}
+          onClick={handleToggleFavorite}
+        >
+          <span className="favorite-icon">{isFavorite ? "♥" : "♡"}</span>
+          <span>Yêu thích</span>
+        </button>
+      </div>
 
       <div className="location-desc">{text}</div>
 
@@ -166,6 +185,7 @@ function LocationCard({ location, lang, apiUrl, onLocationUpdated }) {
           ⏹ Dừng
         </button>
       </div>
+
       <div className="location-meta-card">
         <div className="location-meta-item">
           <span className="location-meta-label">Địa chỉ</span>
@@ -226,9 +246,7 @@ function LocationCard({ location, lang, apiUrl, onLocationUpdated }) {
             placeholder="Món nào ngon, giá cả ra sao, phục vụ thế nào?"
           />
 
-          {reviewError ? (
-            <div className="review-error">{reviewError}</div>
-          ) : null}
+          {reviewError ? <div className="review-error">{reviewError}</div> : null}
 
           <button
             className="review-submit-btn"

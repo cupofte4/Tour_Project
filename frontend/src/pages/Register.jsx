@@ -1,83 +1,77 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { register } from '../services/authService';
-import '../styles/login.css';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { register } from "../services/authService";
+import "../styles/login.css";
 
 function Register() {
-  const [fullName, setFullName] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
+  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setErrorMsg('');
+  const handleRegister = async (event) => {
+    event.preventDefault();
+    setErrorMsg("");
     setIsLoading(true);
 
     try {
-      // Validation
       if (!fullName.trim()) {
-        setErrorMsg('Vui lòng nhập tên đầy đủ');
+        setErrorMsg("Vui lòng nhập tên đầy đủ.");
         setIsLoading(false);
         return;
       }
 
       if (!username.trim()) {
-        setErrorMsg('Vui lòng nhập tên đăng nhập');
+        setErrorMsg("Vui lòng nhập tên đăng nhập.");
         setIsLoading(false);
         return;
       }
 
-      // Username validation (minimum 3 characters)
       if (username.length < 3) {
-        setErrorMsg('Tên đăng nhập phải có ít nhất 3 ký tự');
+        setErrorMsg("Tên đăng nhập phải có ít nhất 3 ký tự.");
         setIsLoading(false);
         return;
       }
 
       if (!password.trim()) {
-        setErrorMsg('Vui lòng nhập mật khẩu');
+        setErrorMsg("Vui lòng nhập mật khẩu.");
         setIsLoading(false);
         return;
       }
 
-      // Password validation (minimum 6 characters)
       if (password.length < 6) {
-        setErrorMsg('Mật khẩu phải có ít nhất 6 ký tự');
+        setErrorMsg("Mật khẩu phải có ít nhất 6 ký tự.");
         setIsLoading(false);
         return;
       }
 
       if (!confirmPassword.trim()) {
-        setErrorMsg('Vui lòng xác nhận mật khẩu');
+        setErrorMsg("Vui lòng xác nhận mật khẩu.");
         setIsLoading(false);
         return;
       }
 
-      // Password match validation
       if (password !== confirmPassword) {
-        setErrorMsg('Mật khẩu xác nhận không khớp');
+        setErrorMsg("Mật khẩu xác nhận không khớp.");
         setIsLoading(false);
         return;
       }
 
-      // Call API register
       const result = await register(fullName, username, password);
 
       if (result) {
-        // Navigate to login page with success message
-        navigate('/login', { 
-          state: { message: 'Đăng ký thành công! Vui lòng đăng nhập.' } 
+        navigate("/login", {
+          state: { message: "Đăng ký thành công! Vui lòng đăng nhập." },
         });
       } else {
-        setErrorMsg('Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác!');
+        setErrorMsg("Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác.");
       }
     } catch (error) {
-      setErrorMsg('Có lỗi xảy ra. Vui lòng thử lại!');
-      console.error('Register error:', error);
+      setErrorMsg("Có lỗi xảy ra. Vui lòng thử lại.");
+      console.error("Register error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -85,88 +79,112 @@ function Register() {
 
   return (
     <div className="login-page">
-      <div className="login-box">
-        {/* Header */}
-        <div className="login-header">
-          <div className="login-logo">
-            <span className="logo-icon">🎧</span>
-          </div>
-          <h1 className="login-title">Travel Audio Guide</h1>
-          <p className="login-subtitle">Đăng ký tài khoản mới</p>
-        </div>
-
-        {/* Error Message */}
-        {errorMsg && (
-          <div className="error-msg">
-            <span>⚠️</span> {errorMsg}
-          </div>
-        )}
-
-        {/* Form */}
-        <form onSubmit={handleRegister} className="login-form">
-          {/* Full Name Input */}
-          <div className="form-group">
-            <label htmlFor="fullName">Tên đầy đủ</label>
-            <input
-              type="text"
-              id="fullName"
-              className="form-input"
-              placeholder="Nhập tên của bạn"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-            />
+      <div className="login-shell">
+        <section className="login-visual-panel" aria-hidden="true">
+          <div className="visual-backdrop" />
+          <div className="visual-copy">
+            <p className="visual-eyebrow">NEW TRAVELLER!</p>
+            <h1 className="visual-title">Bắt đầu hành trình khám phá của riêng bạn.</h1>
+            <p className="visual-description">
+              Chỉ mất vài giây để gia nhập cộng đồng xê dịch Travel Audio Guide!!. Điền thông tin của bạn và mở khóa vô vàn trải nghiệm mới lạ.
+            </p>
           </div>
 
-          {/* Username Input */}
-          <div className="form-group">
-            <label htmlFor="username">Tên đăng nhập</label>
-            <input
-              type="text"
-              id="username"
-              className="form-input"
-              placeholder="Nhập tên đăng nhập (tối thiểu 3 ký tự)"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
+          <div className="map-illustration">
+            <div className="map-board">
+              <div className="map-fold map-fold-one" />
+              <div className="map-fold map-fold-two" />
+              <div className="map-route" />
+              <span className="map-pin map-pin-one" />
+              <span className="map-pin map-pin-two" />
+              <span className="map-pin map-pin-three" />
+              <span className="map-shadow" />
+            </div>
           </div>
+        </section>
 
-          {/* Password Input */}
-          <div className="form-group">
-            <label htmlFor="password">Mật khẩu</label>
-            <input
-              type="password"
-              id="password"
-              className="form-input"
-              placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+        <section className="login-form-panel">
+          <div className="login-card">
+            <div className="login-brand">
+              <span className="login-brand-mark">KHỞI ĐẦU CÙNG TRAVEL AUDIO GUIDE</span>
+            </div>
+
+            <div className="login-header">
+              <h2 className="login-title">Tham gia cùng Travel Audio Guide</h2>
+              <p className="login-subtitle">
+                Bắt đầu lưu trữ các điểm đến yêu thích, lên lịch trình cá nhân và khám phá những trải nghiệm du lịch tuyệt vời cùng Travel Audio Guide!!.
+              </p>
+            </div>
+
+            {errorMsg && (
+              <div className="login-alert login-alert-error">
+                <span className="login-alert-icon">!</span>
+                <span>{errorMsg}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleRegister} className="login-form">
+              <div className="form-group">
+                <label htmlFor="fullName">Full name</label>
+                <input
+                  type="text"
+                  id="fullName"
+                  className="form-input"
+                  placeholder="Ngo Tran Bao Tin"
+                  value={fullName}
+                  onChange={(event) => setFullName(event.target.value)}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="username">Username</label>
+                <input
+                  type="text"
+                  id="username"
+                  className="form-input"
+                  placeholder="Choose a username"
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="password">Password</label>
+                <input
+                  type="password"
+                  id="password"
+                  className="form-input"
+                  placeholder="Create a password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="confirmPassword">Confirm password</label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  className="form-input"
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                />
+              </div>
+
+              <button type="submit" className="login-btn" disabled={isLoading}>
+                {isLoading ? "Creating account..." : "Create account"}
+              </button>
+            </form>
+
+            <p className="login-footer">
+              Already have an account?
+              <a href="/login" className="signup-link">
+                Log in
+              </a>
+            </p>
           </div>
-
-          {/* Confirm Password Input */}
-          <div className="form-group">
-            <label htmlFor="confirmPassword">Xác nhận mật khẩu</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              className="form-input"
-              placeholder="Nhập lại mật khẩu"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
-          </div>
-
-          {/* Register Button */}
-          <button type="submit" className="login-btn" disabled={isLoading}>
-            {isLoading ? 'Đang đăng ký...' : 'Đăng ký'}
-          </button>
-        </form>
-
-        {/* Footer Links */}
-        <div className="login-footer">
-          <span style={{ fontSize: '13px', color: '#666' }}>Đã có tài khoản?</span>
-          <a href="/login" className="footer-link"><strong>Đăng nhập ngay</strong></a>
-        </div>
+        </section>
       </div>
     </div>
   );

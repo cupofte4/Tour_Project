@@ -34,14 +34,18 @@ function Home() {
     if (!updatedLocation?.id) return;
 
     setLocation((current) =>
-      current?.id === updatedLocation.id ? updatedLocation : current
+      current?.id === updatedLocation.id ? updatedLocation : current,
     );
     setLocations((current) =>
-      current.map((item) => (item.id === updatedLocation.id ? updatedLocation : item))
+      current.map((item) => (item.id === updatedLocation.id ? updatedLocation : item)),
     );
   };
 
-  // Check authentication on mount
+  const handleMapLocationSelect = (selectedLocation) => {
+    if (!selectedLocation?.id) return;
+    setLocation(selectedLocation);
+  };
+
   useEffect(() => {
     const userString = localStorage.getItem("user");
     if (!userString) {
@@ -57,7 +61,7 @@ function Home() {
         return;
       }
     } catch {
-      // ignore parse errors and let Home handle as normal user
+      // Ignore parse errors and let Home handle as normal user.
     }
 
     setIsAuthenticated(true);
@@ -68,14 +72,19 @@ function Home() {
   }, [lang]);
 
   useEffect(() => {
-    // Nếu chưa xác thực, không chạy tour
+    if (!isAuthenticated) return;
+
+    getAllLocations()
+      .then((data) => setLocations(Array.isArray(data) ? data : []))
+      .catch(() => setLocations([]));
+  }, [isAuthenticated]);
+
+  useEffect(() => {
     if (!isAuthenticated || !isTourStarted) {
       runningRef.current = false;
       stop();
       return;
     }
-
-    getAllLocations().then((data) => setLocations(data));
 
     runningRef.current = true;
     let lat = 10.7595;
@@ -83,12 +92,10 @@ function Home() {
 
     const run = async () => {
       while (runningRef.current && visitedRef.current.size < 4) {
-        // Nếu navigation xảy ra, dừng tour
         if (!runningRef.current) break;
 
-        // Chờ nếu đang pause
         while (pausedRef.current) {
-          await new Promise((r) => setTimeout(r, 300));
+          await new Promise((resolve) => setTimeout(resolve, 300));
         }
 
         lat += 0.00005;
@@ -101,7 +108,6 @@ function Home() {
           visitedRef.current.add(data.id);
           setLocation(data);
 
-          // Đợi TTS đọc xong mới tiếp tục di chuyển
           await speakLocationAsync(data, langRef.current);
 
           if (visitedRef.current.size >= 4) {
@@ -110,8 +116,7 @@ function Home() {
           }
         }
 
-        // Chờ 3s trước khi bước tiếp
-        await new Promise((r) => setTimeout(r, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 3000));
       }
     };
 
@@ -132,7 +137,11 @@ function Home() {
             <TravelSidebar />
             <div className="left-col">
               <div className="map">
-                <MapView userLocation={userLocation} locations={locations} />
+                <MapView
+                  userLocation={userLocation}
+                  locations={locations}
+                  onSelectLocation={handleMapLocationSelect}
+                />
               </div>
               <div className="image-strip">
                 {location
@@ -141,8 +150,9 @@ function Home() {
                       try {
                         imgs = JSON.parse(location.images || "[]");
                       } catch {}
-                      if (imgs.length === 0 && location.image)
+                      if (imgs.length === 0 && location.image) {
                         imgs = [location.image];
+                      }
                       return imgs.length > 0
                         ? imgs.map((src, i) => (
                             <div
@@ -159,24 +169,23 @@ function Home() {
               </div>
             </div>
             <div className="right-panel">
-              <div className="panel-title">📍 Địa điểm gần bạn</div>
+              <div className="panel-title">📍 Địa điểm để khám phá và review</div>
 
               <div className="status-bar">
                 {!isTourStarted ? (
                   <>
-                    <span style={{ marginRight: 8 }}>🚀</span>
-                    Nhấn "Bắt đầu di chuyển" để khám phá
+                    <span style={{ marginRight: 8 }}>🗺️</span>
+                    Click vào point trên bản đồ để xem thông tin và đánh giá, hoặc bắt đầu di chuyển để nghe audio tự động.
                     <button
                       className="btn-start-tour"
                       onClick={() => setIsTourStarted(true)}
                     >
-                      ▶ Bắt đầu di chuyển
+                      ▶ Di chuyển
                     </button>
                   </>
                 ) : done ? (
                   <>
-                    <span style={{ marginRight: 8 }}>✅</span> Đã hoàn thành
-                    tour — 4/4 địa điểm
+                    <span style={{ marginRight: 8 }}>✅</span> Đã hoàn thành tour - 4/4 địa điểm
                   </>
                 ) : (
                   <>
@@ -190,7 +199,7 @@ function Home() {
                     <button
                       onClick={() => {
                         pausedRef.current = !pausedRef.current;
-                        setPaused((p) => !p);
+                        setPaused((prev) => !prev);
                       }}
                       style={{
                         marginLeft: "auto",
@@ -239,7 +248,7 @@ function Home() {
               <img
                 src={lightbox}
                 alt="preview"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(event) => event.stopPropagation()}
               />
               <button
                 className="lightbox-close"
@@ -290,10 +299,12 @@ function Home() {
                 cursor: "pointer",
                 transition: "0.2s ease",
               }}
-              onMouseOver={(e) =>
-                (e.target.style.transform = "translateY(-2px)")
+              onMouseOver={(event) =>
+                (event.target.style.transform = "translateY(-2px)")
               }
-              onMouseOut={(e) => (e.target.style.transform = "translateY(0)")}
+              onMouseOut={(event) =>
+                (event.target.style.transform = "translateY(0)")
+              }
             >
               Đăng nhập ngay
             </button>

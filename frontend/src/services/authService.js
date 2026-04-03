@@ -30,3 +30,23 @@ export async function register(fullName, username, password) {
 
   return await res.json();
 }
+
+export async function changePassword(username, currentPassword, newPassword) {
+  const res = await fetch(`${API_URL}/auth/change-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ username, currentPassword, newPassword }),
+  });
+
+  const data = await res.json().catch(() => ({
+    message: "Không thể đổi mật khẩu lúc này",
+  }));
+
+  if (!res.ok) {
+    throw new Error(data.message || "Không thể đổi mật khẩu lúc này");
+  }
+
+  return data;
+}
