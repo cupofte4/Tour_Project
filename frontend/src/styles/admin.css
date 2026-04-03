@@ -55,13 +55,15 @@ a {
 .layout {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 288px minmax(0, 1fr);
+  grid-template-columns: minmax(248px, 20vw) minmax(0, 1fr);
   gap: 28px;
   padding: 24px;
   background: transparent;
 }
 
 .sidebar {
+  width: 100%;
+  min-width: 0;
   border-radius: 30px;
   padding: 24px 18px 18px;
   background: rgba(248, 249, 250, 0.96);
@@ -225,6 +227,7 @@ a {
   align-items: flex-start;
   justify-content: space-between;
   gap: 24px;
+  flex-wrap: wrap;
 }
 
 .admin-navbar-copy {
@@ -260,10 +263,13 @@ a {
   display: flex;
   align-items: center;
   gap: 14px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .admin-search {
-  min-width: 200px;
+  flex: 1 1 280px;
+  min-width: min(280px, 100%);
   padding: 12px 13px;
   border-radius: 999px;
   background: var(--admin-surface-soft);
@@ -395,6 +401,7 @@ a {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 18px;
+  flex-wrap: wrap;
 }
 
 .section-title,
@@ -507,6 +514,7 @@ a {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .user-manager,
@@ -602,6 +610,7 @@ a {
   align-items: center;
   gap: 12px;
   margin-top: 8px;
+  flex-wrap: wrap;
 }
 
 .hidden-file-input {
@@ -665,6 +674,7 @@ a {
   align-items: center;
   gap: 12px;
   margin-bottom: 8px;
+  flex-wrap: wrap;
 }
 
 .preview-label-row label {
@@ -697,7 +707,7 @@ a {
 .gallery-preview-grid {
   margin-top: 14px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 12px;
 }
 
@@ -712,9 +722,11 @@ a {
 
 .gallery-preview-card img {
   width: 100%;
-  aspect-ratio: 1 / 1;
+  height: auto;
+  aspect-ratio: auto;
   object-fit: cover;
   border-radius: 14px;
+  display: block;
 }
 
 .gallery-preview-actions {
@@ -862,7 +874,7 @@ a {
 
 .location-media-meta span {
   color: var(--admin-text-muted);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .spin {
@@ -930,12 +942,129 @@ td {
   text-align: left;
 }
 
-@media (max-width: 1100px) {
+@media (min-width: 1201px) and (max-width: 1536px) {
   .admin-shell,
   .layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(220px, 20vw) minmax(0, 1fr);
+    gap: 20px;
+    padding: 20px;
   }
 
+  .sidebar {
+    padding: 20px 14px 16px;
+  }
+
+  .admin-navbar,
+  .table-card,
+  .card,
+  .stat-card,
+  .user-editor,
+  .location-editor {
+    padding: 22px;
+  }
+
+  .gallery-preview-grid {
+    gap: 10px;
+  }
+
+  .form-row {
+    gap: 14px;
+  }
+
+  .section-title,
+  .card-title {
+    font-size: 18px;
+  }
+
+  .admin-navbar-subtitle,
+  .location-description-cell,
+  .users-table td,
+  .upload-dropzone-copy span,
+  .upload-inline-hint {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .admin-shell,
+  .layout {
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 18px;
+    padding: 18px;
+  }
+
+  .sidebar {
+    padding: 18px 10px 14px;
+    align-items: center;
+    gap: 18px;
+    border-radius: 24px;
+  }
+
+  .sidebar-brand {
+    justify-content: center;
+    padding: 4px 0;
+  }
+
+  .sidebar-brand > div:last-child,
+  .sidebar-section-label,
+  .sidebar-link span {
+    display: none;
+  }
+
+  .sidebar-section,
+  .sidebar-links,
+  .sidebar-footer {
+    width: 100%;
+  }
+
+  .sidebar-link {
+    justify-content: center;
+    padding: 14px 10px;
+    gap: 0;
+  }
+
+  .sidebar-footer {
+    padding-top: 10px;
+  }
+
+  .admin-navbar,
+  .table-card,
+  .card,
+  .stat-card,
+  .user-editor,
+  .location-editor {
+    padding: 20px;
+  }
+
+  .admin-navbar-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .admin-search {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .table-card {
+    overflow-x: auto;
+  }
+
+  .users-table {
+    min-width: 920px;
+  }
+
+  .gallery-preview-grid {
+    gap: 10px;
+  }
+
+  .location-description-cell {
+    max-width: 240px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 1100px) {
   .sidebar {
     position: static;
     height: auto;
@@ -983,6 +1112,108 @@ td {
 
   .form-row {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767px) {
+  .admin-shell,
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 14px;
+  }
+
+  .sidebar {
+    position: static;
+    top: auto;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 20px;
+  }
+
+  .sidebar-section {
+    flex: 1;
+  }
+
+  .sidebar-links {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 8px;
+    overflow-x: auto;
+  }
+
+  .sidebar-link,
+  .sidebar-link.sidebar-link-danger {
+    flex: 0 0 auto;
+    min-width: 48px;
+  }
+
+  .sidebar-footer {
+    width: auto;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .admin-navbar,
+  .table-card,
+  .card,
+  .stat-card,
+  .user-editor,
+  .location-editor {
+    padding: 16px;
+  }
+
+  .admin-navbar-title {
+    font-size: 26px;
+  }
+
+  .section-title,
+  .card-title {
+    font-size: 18px;
+  }
+
+  .admin-navbar-subtitle,
+  .users-table td,
+  .upload-dropzone-copy span,
+  .upload-inline-hint,
+  .location-description-cell {
+    font-size: 12px;
+  }
+
+  .upload-dropzone {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .upload-dropzone-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .gallery-preview-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 8px;
+  }
+
+  .gallery-preview-card {
+    padding: 8px;
+  }
+
+  .preview-audio-btn,
+  .action-btn,
+  .admin-shell .btn,
+  .layout .btn {
+    width: 100%;
+  }
+
+  .admin-navbar-user {
+    width: 100%;
+    justify-content: flex-start;
   }
 }
 
