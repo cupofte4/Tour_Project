@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "VinhKhanhGuide.Application/1.0.0": {
+        "dependencies": {
+          "VinhKhanhGuide.Domain": "1.0.0"
+        },
+        "runtime": {
+          "VinhKhanhGuide.Application.dll": {}
+        }
+      },
+      "VinhKhanhGuide.Domain/1.0.0": {
+        "runtime": {
+          "VinhKhanhGuide.Domain.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "VinhKhanhGuide.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "VinhKhanhGuide.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

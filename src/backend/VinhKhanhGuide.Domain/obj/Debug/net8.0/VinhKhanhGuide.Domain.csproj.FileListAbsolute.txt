@@ -1,0 +1,12 @@
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Domain/bin/Debug/net8.0/VinhKhanhGuide.Domain.deps.json
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Domain/bin/Debug/net8.0/VinhKhanhGuide.Domain.dll
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Domain/bin/Debug/net8.0/VinhKhanhGuide.Domain.pdb
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Domain/obj/Debug/net8.0/VinhKhanhGuide.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Domain/obj/Debug/net8.0/VinhKhanhGuide.Domain.AssemblyInfoInputs.cache
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Domain/obj/Debug/net8.0/VinhKhanhGuide.Domain.AssemblyInfo.cs
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Domain/obj/Debug/net8.0/VinhKhanhGuide.Domain.csproj.CoreCompileInputs.cache
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Domain/obj/Debug/net8.0/VinhKhanhGuide.Domain.sourcelink.json
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Domain/obj/Debug/net8.0/VinhKhanhGuide.Domain.dll
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Domain/obj/Debug/net8.0/refint/VinhKhanhGuide.Domain.dll
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Domain/obj/Debug/net8.0/VinhKhanhGuide.Domain.pdb
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Domain/obj/Debug/net8.0/ref/VinhKhanhGuide.Domain.dll
