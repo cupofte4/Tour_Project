@@ -91,17 +91,11 @@ export function AdminSidebar({
 function AdminNavbar({
   title = "Admin Dashboard",
   subtitle = "Track content, users, and operational updates in one place.",
-  user,
   showSearch = false,
   searchValue = "",
   searchPlaceholder = "Search dashboard",
   onSearchChange,
 }) {
-  const localUser = user || JSON.parse(localStorage.getItem("user") || "{}");
-  const displayName = localUser.fullName || localUser.username || "Administrator";
-  const displayRole = (localUser.role || "admin").toUpperCase();
-  const avatarText = displayName.charAt(0).toUpperCase();
-
   return (
     <header className="admin-navbar shell-card">
       <div className="admin-navbar-copy">
@@ -126,16 +120,6 @@ function AdminNavbar({
         <button type="button" className="admin-icon-button" aria-label="Notifications">
           <LuBell size={18} />
         </button>
-
-        <div className="admin-navbar-user">
-          <div className="admin-avatar">
-            {localUser.avatar ? <img src={localUser.avatar} alt={displayName} /> : <span>{avatarText}</span>}
-          </div>
-          <div className="admin-navbar-user-meta">
-            <strong>{displayName}</strong>
-            <span>{displayRole}</span>
-          </div>
-        </div>
       </div>
     </header>
   );
