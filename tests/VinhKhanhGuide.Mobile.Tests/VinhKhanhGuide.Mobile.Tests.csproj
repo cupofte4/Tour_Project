@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
+    <PackageReference Include="xunit" Version="2.9.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\GeoPoint.cs" Link="Models\GeoPoint.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\NearbyStallNotification.cs" Link="Models\NearbyStallNotification.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\ProximityOptions.cs" Link="Models\ProximityOptions.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\StallSummary.cs" Link="Models\StallSummary.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\IProximityDistanceCalculator.cs" Link="Services\IProximityDistanceCalculator.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\IProximityService.cs" Link="Services\IProximityService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\ProximityDistanceCalculator.cs" Link="Services\ProximityDistanceCalculator.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\ProximityService.cs" Link="Services\ProximityService.cs" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="VinhKhanhGuide.Mobile.Views.StallMapPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
+    Title="Stall Map">
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="12" Padding="16">
+        <Label
+            Grid.Row="0"
+            Text="{Binding StatusMessage}"
+            TextColor="#666666"
+            IsVisible="{Binding HasStatusMessage}" />
+
+        <Grid Grid.Row="1">
+            <maps:Map x:Name="StallsMap" />
+
+            <Frame
+                Margin="12"
+                Padding="12"
+                BackgroundColor="White"
+                BorderColor="#D9D9D9"
+                CornerRadius="12"
+                HasShadow="True"
+                HorizontalOptions="Fill"
+                VerticalOptions="Start"
+                IsVisible="{Binding HasNearbyStall}">
+                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="4" ColumnSpacing="12">
+                    <Label
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        FontAttributes="Bold"
+                        Text="{Binding NearbyStall.StallName}" />
+                    <Button
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Padding="8,0"
+                        Clicked="OnDismissNearbyStallClicked"
+                        Text="X" />
+                    <Label
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Text="{Binding NearbyStall.Category}" />
+                    <Label
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        Text="{Binding NearbyStall.DistanceText}"
+                        TextColor="#666666" />
+                    <Button
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        Clicked="OnOpenNearbyStallClicked"
+                        Text="Open" />
+                </Grid>
+            </Frame>
+
+            <ActivityIndicator
+                HorizontalOptions="Center"
+                VerticalOptions="Center"
+                IsRunning="{Binding IsLoading}"
+                IsVisible="{Binding IsLoading}" />
+        </Grid>
+
+        <Label
+            Grid.Row="2"
+            Text="Tap a pin or nearby card to open stall details."
+            TextColor="#666666" />
+    </Grid>
+</ContentPage>

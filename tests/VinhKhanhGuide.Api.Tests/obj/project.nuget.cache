@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "hF9pMJq/ZBw=",
+  "dgSpecHash": "n/vBdxzY3P4=",
   "success": true,
   "projectFilePath": "/Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/VinhKhanhGuide.Api.Tests.csproj",
   "expectedPackageFiles": [
@@ -10,6 +10,7 @@
     "/Users/tranhau/.nuget/packages/microsoft.entityframeworkcore/8.0.4/microsoft.entityframeworkcore.8.0.4.nupkg.sha512",
     "/Users/tranhau/.nuget/packages/microsoft.entityframeworkcore.abstractions/8.0.4/microsoft.entityframeworkcore.abstractions.8.0.4.nupkg.sha512",
     "/Users/tranhau/.nuget/packages/microsoft.entityframeworkcore.analyzers/8.0.4/microsoft.entityframeworkcore.analyzers.8.0.4.nupkg.sha512",
+    "/Users/tranhau/.nuget/packages/microsoft.entityframeworkcore.inmemory/8.0.4/microsoft.entityframeworkcore.inmemory.8.0.4.nupkg.sha512",
     "/Users/tranhau/.nuget/packages/microsoft.entityframeworkcore.relational/8.0.4/microsoft.entityframeworkcore.relational.8.0.4.nupkg.sha512",
     "/Users/tranhau/.nuget/packages/microsoft.extensions.apidescription.server/8.0.0/microsoft.extensions.apidescription.server.8.0.0.nupkg.sha512",
     "/Users/tranhau/.nuget/packages/microsoft.extensions.caching.abstractions/8.0.0/microsoft.extensions.caching.abstractions.8.0.0.nupkg.sha512",

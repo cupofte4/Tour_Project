@@ -420,3 +420,10 @@
 /Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/bin/Debug/net8.0/Swashbuckle.AspNetCore.Swagger.dll
 /Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/bin/Debug/net8.0/Swashbuckle.AspNetCore.SwaggerGen.dll
 /Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/bin/Debug/net8.0/Swashbuckle.AspNetCore.SwaggerUI.dll
+/Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.dll
+/Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.Abstractions.dll
+/Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.InMemory.dll
+/Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.Relational.dll
+/Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/bin/Debug/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll
+/Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/bin/Debug/net8.0/Npgsql.dll
+/Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/bin/Debug/net8.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll

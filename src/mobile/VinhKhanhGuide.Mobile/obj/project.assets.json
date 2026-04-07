@@ -336,6 +336,22 @@
           }
         }
       },
+      "Microsoft.Maui.Controls.Maps/8.0.100": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Maui.Maps": "8.0.100"
+        },
+        "compile": {
+          "lib/net8.0-ios18.0/Microsoft.Maui.Controls.Maps.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0-ios18.0/Microsoft.Maui.Controls.Maps.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
       "Microsoft.Maui.Controls.Xaml/8.0.100": {
         "type": "package",
         "dependencies": {
@@ -404,6 +420,19 @@
         },
         "runtime": {
           "lib/net8.0-ios18.0/Microsoft.Maui.Graphics.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
+      "Microsoft.Maui.Maps/8.0.100": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0-ios18.0/Microsoft.Maui.Maps.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0-ios18.0/Microsoft.Maui.Maps.dll": {
             "related": ".pdb;.xml"
           }
         }
@@ -757,6 +786,22 @@
           }
         }
       },
+      "Microsoft.Maui.Controls.Maps/8.0.100": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Maui.Maps": "8.0.100"
+        },
+        "compile": {
+          "lib/net8.0-ios18.0/Microsoft.Maui.Controls.Maps.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0-ios18.0/Microsoft.Maui.Controls.Maps.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
       "Microsoft.Maui.Controls.Xaml/8.0.100": {
         "type": "package",
         "dependencies": {
@@ -825,6 +870,19 @@
         },
         "runtime": {
           "lib/net8.0-ios18.0/Microsoft.Maui.Graphics.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
+      "Microsoft.Maui.Maps/8.0.100": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0-ios18.0/Microsoft.Maui.Maps.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0-ios18.0/Microsoft.Maui.Maps.dll": {
             "related": ".pdb;.xml"
           }
         }
@@ -1780,6 +1838,54 @@
         "microsoft.maui.controls.core.nuspec"
       ]
     },
+    "Microsoft.Maui.Controls.Maps/8.0.100": {
+      "sha512": "E8Z6uoGh8a0Z0iX3aRpk58jLWn9C847/v9IkTPuapaiGI4vv00rzPQI4OoxwYqx7StMf8S5LaKjZDMy3sUxDVw==",
+      "type": "package",
+      "path": "microsoft.maui.controls.maps/8.0.100",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "README.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/net8.0-android34.0/Microsoft.Maui.Controls.Maps.dll",
+        "lib/net8.0-android34.0/Microsoft.Maui.Controls.Maps.pdb",
+        "lib/net8.0-android34.0/Microsoft.Maui.Controls.Maps.xml",
+        "lib/net8.0-ios17.0/Microsoft.Maui.Controls.Maps.dll",
+        "lib/net8.0-ios17.0/Microsoft.Maui.Controls.Maps.pdb",
+        "lib/net8.0-ios17.0/Microsoft.Maui.Controls.Maps.xml",
+        "lib/net8.0-ios18.0/Microsoft.Maui.Controls.Maps.dll",
+        "lib/net8.0-ios18.0/Microsoft.Maui.Controls.Maps.pdb",
+        "lib/net8.0-ios18.0/Microsoft.Maui.Controls.Maps.xml",
+        "lib/net8.0-maccatalyst17.0/Microsoft.Maui.Controls.Maps.dll",
+        "lib/net8.0-maccatalyst17.0/Microsoft.Maui.Controls.Maps.pdb",
+        "lib/net8.0-maccatalyst17.0/Microsoft.Maui.Controls.Maps.xml",
+        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.Controls.Maps.dll",
+        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.Controls.Maps.pdb",
+        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.Controls.Maps.xml",
+        "lib/net8.0-tizen7.0/Microsoft.Maui.Controls.Maps.dll",
+        "lib/net8.0-tizen7.0/Microsoft.Maui.Controls.Maps.pdb",
+        "lib/net8.0-tizen7.0/Microsoft.Maui.Controls.Maps.xml",
+        "lib/net8.0-windows10.0.19041/Microsoft.Maui.Controls.Maps.dll",
+        "lib/net8.0-windows10.0.19041/Microsoft.Maui.Controls.Maps.pdb",
+        "lib/net8.0-windows10.0.19041/Microsoft.Maui.Controls.Maps.xml",
+        "lib/net8.0-windows10.0.20348/Microsoft.Maui.Controls.Maps.dll",
+        "lib/net8.0-windows10.0.20348/Microsoft.Maui.Controls.Maps.pdb",
+        "lib/net8.0-windows10.0.20348/Microsoft.Maui.Controls.Maps.xml",
+        "lib/net8.0/Microsoft.Maui.Controls.Maps.dll",
+        "lib/net8.0/Microsoft.Maui.Controls.Maps.pdb",
+        "lib/net8.0/Microsoft.Maui.Controls.Maps.xml",
+        "lib/netstandard2.0/Microsoft.Maui.Controls.Maps.dll",
+        "lib/netstandard2.0/Microsoft.Maui.Controls.Maps.pdb",
+        "lib/netstandard2.0/Microsoft.Maui.Controls.Maps.xml",
+        "lib/netstandard2.1/Microsoft.Maui.Controls.Maps.dll",
+        "lib/netstandard2.1/Microsoft.Maui.Controls.Maps.pdb",
+        "lib/netstandard2.1/Microsoft.Maui.Controls.Maps.xml",
+        "microsoft.maui.controls.maps.8.0.100.nupkg.sha512",
+        "microsoft.maui.controls.maps.nuspec"
+      ]
+    },
     "Microsoft.Maui.Controls.Xaml/8.0.100": {
       "sha512": "GBfjikOi5FBkpQKcYQnzYwImcYMKGR0eSFGcE8rThc9VBaPGGoRq9ttMEGuY5QclVs7NtSmaYpf38ShGLbLcqw==",
       "type": "package",
@@ -2056,6 +2162,54 @@
         "microsoft.maui.graphics.nuspec"
       ]
     },
+    "Microsoft.Maui.Maps/8.0.100": {
+      "sha512": "2ATEdPfyVRsIqILo11K1TVcobJ2utdPh2hyp6GOfnheRq2M7PobO3MHIuZXQWlhqwvhLqsT1HwWH0VHZ0rq5dA==",
+      "type": "package",
+      "path": "microsoft.maui.maps/8.0.100",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "README.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/net8.0-android34.0/Microsoft.Maui.Maps.dll",
+        "lib/net8.0-android34.0/Microsoft.Maui.Maps.pdb",
+        "lib/net8.0-android34.0/Microsoft.Maui.Maps.xml",
+        "lib/net8.0-ios17.0/Microsoft.Maui.Maps.dll",
+        "lib/net8.0-ios17.0/Microsoft.Maui.Maps.pdb",
+        "lib/net8.0-ios17.0/Microsoft.Maui.Maps.xml",
+        "lib/net8.0-ios18.0/Microsoft.Maui.Maps.dll",
+        "lib/net8.0-ios18.0/Microsoft.Maui.Maps.pdb",
+        "lib/net8.0-ios18.0/Microsoft.Maui.Maps.xml",
+        "lib/net8.0-maccatalyst17.0/Microsoft.Maui.Maps.dll",
+        "lib/net8.0-maccatalyst17.0/Microsoft.Maui.Maps.pdb",
+        "lib/net8.0-maccatalyst17.0/Microsoft.Maui.Maps.xml",
+        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.Maps.dll",
+        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.Maps.pdb",
+        "lib/net8.0-maccatalyst18.0/Microsoft.Maui.Maps.xml",
+        "lib/net8.0-tizen7.0/Microsoft.Maui.Maps.dll",
+        "lib/net8.0-tizen7.0/Microsoft.Maui.Maps.pdb",
+        "lib/net8.0-tizen7.0/Microsoft.Maui.Maps.xml",
+        "lib/net8.0-windows10.0.19041/Microsoft.Maui.Maps.dll",
+        "lib/net8.0-windows10.0.19041/Microsoft.Maui.Maps.pdb",
+        "lib/net8.0-windows10.0.19041/Microsoft.Maui.Maps.xml",
+        "lib/net8.0-windows10.0.20348/Microsoft.Maui.Maps.dll",
+        "lib/net8.0-windows10.0.20348/Microsoft.Maui.Maps.pdb",
+        "lib/net8.0-windows10.0.20348/Microsoft.Maui.Maps.xml",
+        "lib/net8.0/Microsoft.Maui.Maps.dll",
+        "lib/net8.0/Microsoft.Maui.Maps.pdb",
+        "lib/net8.0/Microsoft.Maui.Maps.xml",
+        "lib/netstandard2.0/Microsoft.Maui.Maps.dll",
+        "lib/netstandard2.0/Microsoft.Maui.Maps.pdb",
+        "lib/netstandard2.0/Microsoft.Maui.Maps.xml",
+        "lib/netstandard2.1/Microsoft.Maui.Maps.dll",
+        "lib/netstandard2.1/Microsoft.Maui.Maps.pdb",
+        "lib/netstandard2.1/Microsoft.Maui.Maps.xml",
+        "microsoft.maui.maps.8.0.100.nupkg.sha512",
+        "microsoft.maui.maps.nuspec"
+      ]
+    },
     "Microsoft.Maui.Resizetizer/8.0.100": {
       "sha512": "wEVBLYTe/tu30z9yR+tFupXiixqMaxkSp/xqC7FGlV6g9MvYo/wAcwTO+XWay2k/ug5qlxz6MXt5mEac7FMLmA==",
       "type": "package",
@@ -2171,6 +2325,7 @@
       "Microsoft.Extensions.Logging.Debug >= 8.0.1",
       "Microsoft.Maui.Controls >= 8.0.100",
       "Microsoft.Maui.Controls.Compatibility >= 8.0.100",
+      "Microsoft.Maui.Controls.Maps >= 8.0.100",
       "Microsoft.NET.ILLink.Tasks >= 8.0.25"
     ]
   },
@@ -2227,6 +2382,10 @@
             "version": "[8.0.100, )"
           },
           "Microsoft.Maui.Controls.Compatibility": {
+            "target": "Package",
+            "version": "[8.0.100, )"
+          },
+          "Microsoft.Maui.Controls.Maps": {
             "target": "Package",
             "version": "[8.0.100, )"
           },

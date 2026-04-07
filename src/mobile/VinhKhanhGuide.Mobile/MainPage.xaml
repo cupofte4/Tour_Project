@@ -3,14 +3,62 @@
     x:Class="VinhKhanhGuide.Mobile.MainPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:VinhKhanhGuide.Mobile.Models"
     Title="Vinh Khanh Guide">
-    <VerticalStackLayout Padding="24" Spacing="12">
+    <Grid Padding="20" RowDefinitions="Auto,Auto,*" RowSpacing="16">
         <Label
+            Grid.Row="0"
             FontSize="24"
-            HorizontalOptions="Center"
-            Text="Vinh Khanh Guide" />
+            FontAttributes="Bold"
+            Text="Food Stalls" />
         <Label
-            HorizontalOptions="Center"
-            Text="Mobile shell scaffolded for the MVP." />
-    </VerticalStackLayout>
+            Grid.Row="1"
+            Text="{Binding ErrorMessage}"
+            TextColor="IndianRed"
+            IsVisible="{Binding HasError}" />
+
+        <Grid Grid.Row="2">
+            <CollectionView
+                ItemsSource="{Binding Stalls}"
+                SelectionMode="Single"
+                SelectedItem="{Binding SelectedStall, Mode=TwoWay}">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="24" Spacing="8">
+                        <Label
+                            HorizontalTextAlignment="Center"
+                            Text="No stalls found." />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:StallSummary">
+                        <Frame
+                            Margin="0,0,0,12"
+                            Padding="16"
+                            BorderColor="#D9D9D9"
+                            HasShadow="False">
+                            <VerticalStackLayout Spacing="6">
+                                <Label
+                                    FontSize="18"
+                                    FontAttributes="Bold"
+                                    Text="{Binding Name}" />
+                                <Label
+                                    FontSize="14"
+                                    Text="{Binding Category}" />
+                                <Label
+                                    FontSize="14"
+                                    Text="{Binding AverageRatingText}"
+                                    TextColor="#666666" />
+                            </VerticalStackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <ActivityIndicator
+                HorizontalOptions="Center"
+                VerticalOptions="Center"
+                IsRunning="{Binding IsLoading}"
+                IsVisible="{Binding IsLoading}" />
+        </Grid>
+    </Grid>
 </ContentPage>

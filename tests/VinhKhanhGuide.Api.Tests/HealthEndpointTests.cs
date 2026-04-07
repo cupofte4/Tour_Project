@@ -2,11 +2,11 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace VinhKhanhGuide.Api.Tests;
 
-public class HealthEndpointTests : IClassFixture<WebApplicationFactory<Program>>
+public class HealthEndpointTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly WebApplicationFactory<Program> _factory;
 
-    public HealthEndpointTests(WebApplicationFactory<Program> factory)
+    public HealthEndpointTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
     }

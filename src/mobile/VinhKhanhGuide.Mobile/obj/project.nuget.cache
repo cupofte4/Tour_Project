@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "j/W2vWCh7L8=",
+  "dgSpecHash": "HE15N2PZkcU=",
   "success": true,
   "projectFilePath": "/Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/VinhKhanhGuide.Mobile.csproj",
   "expectedPackageFiles": [
@@ -17,10 +17,12 @@
     "/Users/tranhau/.nuget/packages/microsoft.maui.controls.build.tasks/8.0.100/microsoft.maui.controls.build.tasks.8.0.100.nupkg.sha512",
     "/Users/tranhau/.nuget/packages/microsoft.maui.controls.compatibility/8.0.100/microsoft.maui.controls.compatibility.8.0.100.nupkg.sha512",
     "/Users/tranhau/.nuget/packages/microsoft.maui.controls.core/8.0.100/microsoft.maui.controls.core.8.0.100.nupkg.sha512",
+    "/Users/tranhau/.nuget/packages/microsoft.maui.controls.maps/8.0.100/microsoft.maui.controls.maps.8.0.100.nupkg.sha512",
     "/Users/tranhau/.nuget/packages/microsoft.maui.controls.xaml/8.0.100/microsoft.maui.controls.xaml.8.0.100.nupkg.sha512",
     "/Users/tranhau/.nuget/packages/microsoft.maui.core/8.0.100/microsoft.maui.core.8.0.100.nupkg.sha512",
     "/Users/tranhau/.nuget/packages/microsoft.maui.essentials/8.0.100/microsoft.maui.essentials.8.0.100.nupkg.sha512",
     "/Users/tranhau/.nuget/packages/microsoft.maui.graphics/8.0.100/microsoft.maui.graphics.8.0.100.nupkg.sha512",
+    "/Users/tranhau/.nuget/packages/microsoft.maui.maps/8.0.100/microsoft.maui.maps.8.0.100.nupkg.sha512",
     "/Users/tranhau/.nuget/packages/microsoft.maui.resizetizer/8.0.100/microsoft.maui.resizetizer.8.0.100.nupkg.sha512",
     "/Users/tranhau/.nuget/packages/microsoft.net.illink.tasks/8.0.25/microsoft.net.illink.tasks.8.0.25.nupkg.sha512"
   ],
