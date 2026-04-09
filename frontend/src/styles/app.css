@@ -7,7 +7,7 @@ body {
 
 /* Navbar */
 .navbar {
-  background: linear-gradient(135deg, #1e88e5, #1565c0);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: white;
   padding: 0 24px;
   height: 56px;
@@ -111,8 +111,8 @@ body {
 .panel-title {
   font-size: 16px;
   font-weight: bold;
-  color: #1565c0;
-  border-bottom: 2px solid #e3f2fd;
+  color: #2563eb;
+  border-bottom: 2px solid #eff6ff;
   padding-bottom: 8px;
 }
 
@@ -123,7 +123,7 @@ body {
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  background: #1e88e5;
+  background: #2563eb;
   color: white;
   font-weight: 500;
   transition: background 0.2s ease;
@@ -131,6 +131,11 @@ body {
 
 .btn-start-tour:hover {
   background: #1565c0; /* Đổi sang màu xanh đậm hơn khi trỏ chuột */
+}
+
+/* Theme override: blue hover */
+.btn-start-tour:hover {
+  background: #1d4ed8;
 }
 
 /* Location card */
@@ -150,10 +155,10 @@ body {
   font-size: 20px;
   font-weight: bold;
   color: #1a237e;
-  background: linear-gradient(135deg, #e3f2fd, #f0f4ff);
+  background: linear-gradient(135deg, #eff6ff, #ffffff);
   padding: 12px 16px;
   border-radius: 10px;
-  border-left: 4px solid #1e88e5;
+  border-left: 4px solid #2563eb;
   letter-spacing: 0.3px;
 }
 
@@ -258,7 +263,7 @@ body {
 }
 
 .reviews-average {
-  color: #ff9800;
+  color: #2563eb;
   font-size: 18px;
   letter-spacing: 1px;
 }
@@ -289,7 +294,7 @@ body {
   border: none;
   border-radius: 10px;
   padding: 10px 14px;
-  background: linear-gradient(135deg, #ff8a00, #ff6f00);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: white;
   font-weight: 700;
   cursor: pointer;
@@ -406,8 +411,8 @@ audio {
   color: #444;
 }
 
-.lang-btn:hover { border-color: #1e88e5; color: #1e88e5; }
-.lang-btn.active { background: #1e88e5; color: white; border-color: #1e88e5; font-weight: bold; }
+.lang-btn:hover { border-color: #1d4ed8; color: #1d4ed8; }
+.lang-btn.active { background: #2563eb; color: white; border-color: #2563eb; font-weight: bold; }
 
 /* TTS controls */
 .tts-controls {
@@ -428,7 +433,7 @@ audio {
 }
 
 .tts-btn:hover { opacity: 0.85; }
-.tts-btn.play { background: #1e88e5; color: white; }
+.tts-btn.play { background: #2563eb; color: white; }
 .tts-btn.stop { background: #f5f5f5; color: #555; border: 1px solid #ddd; }
 
 /* Image grid */
@@ -501,7 +506,7 @@ audio {
    ==================================== */
 .travel-sidebar {
   width: 250px;
-  background-color: #e8f1f8;
+  background-color: #eff6ff;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
@@ -522,7 +527,7 @@ audio {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background-color: #1e88e5;
+  background-color: #2563eb;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -577,14 +582,14 @@ audio {
 }
 
 .menu-btn:hover {
-  background-color: #e3f2fd;
-  color: #1e88e5;
+  background-color: #eff6ff;
+  color: #1d4ed8;
   font-weight: 500;
 }
 
 .menu-btn-active {
-  background-color: #d8ecfb;
-  color: #1565c0;
+  background-color: #eff6ff;
+  color: #2563eb;
   font-weight: 600;
 }
 

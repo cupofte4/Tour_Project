@@ -64,8 +64,8 @@
 
 .avatar-frame.editable {
   cursor: pointer;
-  border-color: #1565c0;
-  box-shadow: 0 4px 12px rgba(21, 101, 192, 0.15);
+  border-color: #2563eb;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
 }
 
 .avatar-image {
@@ -202,9 +202,9 @@
 
 .form-group input.editing:focus,
 .form-group select.editing:focus {
-  border-color: #1565c0;
+  border-color: #2563eb;
   background-color: #fff;
-  box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.1);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 /* ==========================================
@@ -243,36 +243,37 @@
 
 /* Edit Button (Thay đổi thông tin) */
 .btn-edit {
-  background-color: #90caf9;
-  color: #fff;
+  background-color: #eff6ff;
+  color: #2563eb;
 }
 
 .btn-edit:hover {
-  background-color: #64b5f6;
-  box-shadow: 0 4px 12px rgba(144, 202, 249, 0.3);
+  background-color: #2563eb;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
   transform: translateY(-2px);
 }
 
 .btn-edit:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(144, 202, 249, 0.2);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
 }
 
 /* Save Button (Lưu thông tin) */
 .btn-save {
-  background-color: #1565c0;
+  background-color: #2563eb;
   color: #fff;
 }
 
 .btn-save:hover {
-  background-color: #0d47a1;
-  box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+  background-color: #1d4ed8;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
   transform: translateY(-2px);
 }
 
 .btn-save:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(21, 101, 192, 0.2);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
 }
 
 /* Cancel Button (Hủy) */

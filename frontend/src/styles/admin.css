@@ -674,7 +674,7 @@ a {
 .preview-audio-btn {
   border: none;
   background: #f1f3f5;
-  color: #1e88e5;
+  color: #2563eb;
   font-size: 12px;
   padding: 4px 8px;
   border-radius: 4px;
@@ -687,7 +687,7 @@ a {
 }
 
 .preview-audio-btn:hover {
-  background: #e9ecef;
+  background: #eff6ff;
 }
 
 .preview-audio-btn.is-playing {
