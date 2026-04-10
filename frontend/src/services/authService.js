@@ -18,12 +18,21 @@ export async function login(username, password) {
 }
 
 export async function register(fullName, username, password) {
+  let role = arguments.length > 3 ? arguments[3] : undefined;
+  if (!role) role = "user";
+
   const res = await fetch(`${API_URL}/auth/register`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ fullName, username, password }),
+    body: JSON.stringify({
+      fullName,
+      full_name: fullName,
+      username,
+      password,
+      role,
+    }),
   });
 
   if (res.status === 400) return null;

@@ -1,6 +1,8 @@
 CREATE DATABASE IF NOT EXISTS tourdb;
 USE tourdb;
 
+DROP TABLE IF EXISTS LocationManagerAssignments;
+DROP TABLE IF EXISTS LocationStats;
 DROP TABLE IF EXISTS Locations;
 DROP TABLE IF EXISTS Users;
 
@@ -20,6 +22,7 @@ INSERT INTO Users (Username, Password, FullName, Phone, Gender, Avatar, Role, Is
   ('nguyenvana', '123456', 'Nguyễn Văn A', NULL, NULL, NULL, 'user', b'0'),
   ('tranthib', 'password123', 'Trần Thị B', NULL, NULL, NULL, 'user', b'0'),
   ('traveler99', 'dulichvietnam', 'Du Khách 99', NULL, NULL, NULL, 'user', b'0'),
+  ('manager1', 'manager123', 'Business Manager', '0911000000', NULL, NULL, 'manager', b'0'),
   ('admin', 'admin123', 'Administrator', '0900000000', 'Nam', NULL, 'admin', b'0');
 
 CREATE TABLE Locations (
@@ -37,6 +40,62 @@ CREATE TABLE Locations (
     TextEn LONGTEXT CHARACTER SET utf8mb4 NULL,
     TextZh LONGTEXT CHARACTER SET utf8mb4 NULL,
     TextDe LONGTEXT CHARACTER SET utf8mb4 NULL
+);
+
+CREATE TABLE LocationStats (
+    Id INT PRIMARY KEY AUTO_INCREMENT,
+    LocationId INT NOT NULL,
+    StatDate DATE NOT NULL,
+    ViewsCount INT NOT NULL DEFAULT 0,
+    AudioPlaysCount INT NOT NULL DEFAULT 0,
+    CONSTRAINT FK_LocationStats_Locations FOREIGN KEY (LocationId) REFERENCES Locations(Id) ON DELETE CASCADE,
+    UNIQUE KEY UX_LocationStats_Location_Date (LocationId, StatDate),
+    KEY IX_LocationStats_StatDate (StatDate)
+);
+
+INSERT INTO LocationStats (LocationId, StatDate, ViewsCount, AudioPlaysCount) VALUES
+-- Location 1
+(1, '2026-04-05', 120, 95),
+(1, '2026-04-06', 150, 110),
+(1, '2026-04-07', 180, 140),
+(1, '2026-04-08', 200, 170),
+(1, '2026-04-09', 230, 190),
+
+-- Location 2
+(2, '2026-04-05', 90, 70),
+(2, '2026-04-06', 110, 85),
+(2, '2026-04-07', 130, 100),
+(2, '2026-04-08', 160, 120),
+(2, '2026-04-09', 180, 150),
+
+-- Location 3
+(3, '2026-04-05', 60, 40),
+(3, '2026-04-06', 75, 55),
+(3, '2026-04-07', 95, 70),
+(3, '2026-04-08', 120, 90),
+(3, '2026-04-09', 140, 110),
+
+-- Location 4
+(4, '2026-04-05', 200, 160),
+(4, '2026-04-06', 240, 190),
+(4, '2026-04-07', 280, 220),
+(4, '2026-04-08', 310, 250),
+(4, '2026-04-09', 350, 300),
+
+-- Location 5
+(5, '2026-04-05', 50, 30),
+(5, '2026-04-06', 65, 45),
+(5, '2026-04-07', 80, 60),
+(5, '2026-04-08', 100, 75),
+(5, '2026-04-09', 120, 95);
+
+CREATE TABLE LocationManagerAssignments (
+    Id INT PRIMARY KEY AUTO_INCREMENT,
+    ManagerId INT NOT NULL,
+    LocationId INT NOT NULL,
+    CONSTRAINT FK_LocationManagerAssignments_Users FOREIGN KEY (ManagerId) REFERENCES Users(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_LocationManagerAssignments_Locations FOREIGN KEY (LocationId) REFERENCES Locations(Id) ON DELETE CASCADE,
+    UNIQUE KEY UX_LocationManagerAssignments_Manager_Location (ManagerId, LocationId)
 );
 
 INSERT INTO Locations (

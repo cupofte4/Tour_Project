@@ -50,6 +50,15 @@ namespace Tour_Project.Controllers
             if (!string.IsNullOrWhiteSpace(request.Password))
                 user.Password = request.Password.Trim();
 
+            if (!string.IsNullOrWhiteSpace(request.Role))
+            {
+                if (normalizedRole == Roles.Admin)
+                    return BadRequest(new { message = "KhÃ´ng thá»ƒ Ä‘á»•i role cá»§a admin" });
+
+                user.Role = Roles.Normalize(request.Role);
+                normalizedRole = Roles.Normalize(user.Role);
+            }
+
             user.IsLocked = request.IsLocked;
             _context.SaveChanges();
 

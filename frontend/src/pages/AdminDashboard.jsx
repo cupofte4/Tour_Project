@@ -16,6 +16,8 @@ import {
   LuTrash2,
   LuUpload,
   LuUsers,
+  LuUserCog,
+  LuLink2,
 } from "react-icons/lu";
 import { FaStop, FaVolumeUp } from "react-icons/fa";
 import AdminNavbar, { AdminSidebar } from "../components/AdminNavbar";
@@ -28,11 +30,18 @@ import {
 import { speak, stop } from "../services/ttsService";
 import { uploadImages } from "../services/uploadService";
 import { getAllUsers, updateAdminUser } from "../services/userService";
+import {
+  assignLocationToManager,
+  getAllAssignments,
+  unassignLocationFromManager,
+} from "../services/assignmentService";
 import "../styles/admin.css";
 
 const DASHBOARD_TABS = [
   { key: "overview", label: "Tổng quan", icon: LuLayoutGrid },
   { key: "users", label: "Người dùng", icon: LuUsers },
+  { key: "managers", label: "Managers", icon: LuUserCog },
+  { key: "assignments", label: "Phân công", icon: LuLink2 },
   { key: "locations", label: "Địa điểm", icon: LuMapPinned },
 ];
 
@@ -96,6 +105,7 @@ function AdminDashboard() {
   const [activeMenu, setActiveMenu] = useState("overview");
 
   const [userSearch, setUserSearch] = useState("");
+  const [managerSearch, setManagerSearch] = useState("");
   const [locationSearch, setLocationSearch] = useState("");
 
   const [users, setUsers] = useState([]);
@@ -113,6 +123,12 @@ function AdminDashboard() {
   const [locationForm, setLocationForm] = useState(createEmptyLocationForm());
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [playingLang, setPlayingLang] = useState("");
+
+  const [assignments, setAssignments] = useState([]);
+  const [isLoadingAssignments, setIsLoadingAssignments] = useState(true);
+  const [assignmentError, setAssignmentError] = useState("");
+  const [assignmentNotice, setAssignmentNotice] = useState("");
+  const [selectedManagerId, setSelectedManagerId] = useState("");
 
   const galleryImages = useMemo(
     () => parseImageList(locationForm.images),
@@ -147,6 +163,7 @@ function AdminDashboard() {
     if (!isAuthorized) return;
     loadUsers();
     loadLocations();
+    loadAssignments();
   }, [isAuthorized]);
 
   useEffect(() => {
@@ -182,6 +199,22 @@ function AdminDashboard() {
       setLocationError("Không tải được danh sách địa điểm từ backend.");
     } finally {
       setIsLoadingLocations(false);
+    }
+  };
+
+  const loadAssignments = async () => {
+    setIsLoadingAssignments(true);
+    setAssignmentError("");
+
+    try {
+      const data = await getAllAssignments();
+      setAssignments(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Failed to load assignments:", error);
+      setAssignmentError("Không tải được danh sách phân công.");
+      setAssignments([]);
+    } finally {
+      setIsLoadingAssignments(false);
     }
   };
 
@@ -229,6 +262,7 @@ function AdminDashboard() {
     try {
       const updatedUser = await updateAdminUser(userForm.id, {
         password: userForm.password.trim() || null,
+        role: userForm.role || null,
         isLocked: userForm.isLocked,
       });
 
@@ -254,6 +288,7 @@ function AdminDashboard() {
     try {
       const updatedUser = await updateAdminUser(targetUser.id, {
         password: null,
+        role: null,
         isLocked: !targetUser.isLocked,
       });
 
@@ -485,6 +520,20 @@ function AdminDashboard() {
     );
   }, [userSearch, users]);
 
+  const filteredManagers = useMemo(() => {
+    const keyword = managerSearch.trim().toLowerCase();
+    const managers = users.filter(
+      (item) => (item.role || "").toLowerCase() === "manager",
+    );
+
+    if (!keyword) return managers;
+    return managers.filter((item) =>
+      `${item.fullName || ""} ${item.username || ""}`
+        .toLowerCase()
+        .includes(keyword),
+    );
+  }, [managerSearch, users]);
+
   const filteredLocations = useMemo(() => {
     const keyword = locationSearch.trim().toLowerCase();
     if (!keyword) return locations;
@@ -523,25 +572,45 @@ function AdminDashboard() {
       ? "Dashboard overview"
       : activeMenu === "users"
         ? "User management"
-        : "Location management";
+        : activeMenu === "managers"
+          ? "Manager management"
+          : activeMenu === "assignments"
+            ? "Location assignment"
+            : "Location management";
 
   const dashboardSubtitle =
     activeMenu === "overview"
       ? "Follow usage metrics and destination coverage across the guide system."
       : activeMenu === "users"
         ? "Review accounts, password resets, and locking status from one place."
-        : "Create, edit, and publish destination data that the frontend can consume immediately.";
+        : activeMenu === "managers"
+          ? "Manage business accounts and grant manager role to selected users."
+          : activeMenu === "assignments"
+            ? "Assign locations to managers for content ownership and operations."
+            : "Create, edit, and publish destination data that the frontend can consume immediately.";
 
-  const showSearch = activeMenu !== "overview";
-  const searchValue = activeMenu === "users" ? userSearch : locationSearch;
+  const showSearch =
+    activeMenu === "users" ||
+    activeMenu === "managers" ||
+    activeMenu === "locations";
+  const searchValue =
+    activeMenu === "users"
+      ? userSearch
+      : activeMenu === "managers"
+        ? managerSearch
+        : locationSearch;
   const searchPlaceholder =
     activeMenu === "users"
       ? "Tìm theo tên người dùng"
-      : "Tìm theo tên địa điểm";
+      : activeMenu === "managers"
+        ? "Tìm theo manager"
+        : "Tìm theo tên địa điểm";
 
   const handleNavbarSearchChange = (value) => {
     if (activeMenu === "users") {
       setUserSearch(value);
+    } else if (activeMenu === "managers") {
+      setManagerSearch(value);
     } else if (activeMenu === "locations") {
       setLocationSearch(value);
     }
@@ -673,11 +742,23 @@ function AdminDashboard() {
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="role">Role</label>
-                <input
-                  id="role"
-                  value={(userForm.role || "user").toUpperCase()}
-                  disabled
-                />
+                {(userForm.role || "").toLowerCase() === "admin" ? (
+                  <input
+                    id="role"
+                    value={(userForm.role || "admin").toUpperCase()}
+                    disabled
+                  />
+                ) : (
+                  <select
+                    id="role"
+                    name="role"
+                    value={(userForm.role || "user").toLowerCase()}
+                    onChange={handleUserFormChange}
+                  >
+                    <option value="user">USER</option>
+                    <option value="manager">MANAGER</option>
+                  </select>
+                )}
               </div>
               <div className="form-group">
                 <label htmlFor="password">Mật khẩu mới</label>
@@ -837,6 +918,434 @@ function AdminDashboard() {
     </section>
   );
 
+  const handlePromoteToManager = async (targetUser) => {
+    setUserError("");
+    setUserNotice("");
+
+    try {
+      const updatedUser = await updateAdminUser(targetUser.id, {
+        password: null,
+        role: "manager",
+        isLocked: !!targetUser.isLocked,
+      });
+
+      setUsers((current) =>
+        current.map((item) =>
+          item.id === updatedUser.id ? updatedUser : item,
+        ),
+      );
+      setUserNotice("Đã cấp quyền manager.");
+    } catch (error) {
+      console.error("Failed to promote manager:", error);
+      setUserError(error.message || "Không cấp quyền manager được.");
+    }
+  };
+
+  const handleDemoteToUser = async (targetUser) => {
+    setUserError("");
+    setUserNotice("");
+
+    try {
+      const updatedUser = await updateAdminUser(targetUser.id, {
+        password: null,
+        role: "user",
+        isLocked: !!targetUser.isLocked,
+      });
+
+      setUsers((current) =>
+        current.map((item) =>
+          item.id === updatedUser.id ? updatedUser : item,
+        ),
+      );
+      setUserNotice("Đã hạ role về user.");
+    } catch (error) {
+      console.error("Failed to demote manager:", error);
+      setUserError(error.message || "Không hạ role được.");
+    }
+  };
+
+  const renderManagersTab = () => {
+    const eligibleUsers = filteredUsers.filter(
+      (item) => (item.role || "").toLowerCase() === "user",
+    );
+
+    return (
+      <section className="admin-grid">
+        <div className="table-card shell-card">
+          <div className="section-heading">
+            <div>
+              <p className="section-eyebrow">Managers</p>
+              <h2 className="section-title">Danh sách managers</h2>
+            </div>
+            <button type="button" className="ghost-action" onClick={loadUsers}>
+              <LuRefreshCw size={16} />
+              <span>Tải lại</span>
+            </button>
+          </div>
+
+          {userError && (
+            <div className="admin-feedback admin-feedback-error">{userError}</div>
+          )}
+          {userNotice && (
+            <div className="admin-feedback admin-feedback-success">
+              {userNotice}
+            </div>
+          )}
+
+          {isLoadingUsers ? (
+            <div className="admin-empty-state">
+              <div className="admin-empty-state-icon">
+                <LuLoaderCircle size={26} className="spin" />
+              </div>
+              <h3>Đang tải managers</h3>
+              <p>Danh sách managers đang được đồng bộ từ backend.</p>
+            </div>
+          ) : filteredManagers.length === 0 ? (
+            <div className="admin-empty-state">
+              <div className="admin-empty-state-icon">
+                <LuFolderOpen size={26} />
+              </div>
+              <h3>Chưa có manager</h3>
+              <p>Cấp quyền manager cho một user để quản lý theo doanh nghiệp.</p>
+            </div>
+          ) : (
+            <table className="users-table">
+              <thead>
+                <tr>
+                  <th>STT</th>
+                  <th>Họ và tên</th>
+                  <th>Username</th>
+                  <th>Trạng thái</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredManagers.map((member, index) => {
+                  const status = getUserStatus(member);
+                  return (
+                    <tr key={member.id}>
+                      <td>{index + 1}</td>
+                      <td>
+                        <div className="table-user">
+                          <div className="table-user-avatar">
+                            {member.fullName?.charAt(0) || "M"}
+                          </div>
+                          <div className="table-user-copy">
+                            <strong>{member.fullName}</strong>
+                            <span>{member.username}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td>{member.username}</td>
+                      <td>
+                        <span className={`status-pill status-${status.key}`}>
+                          {status.label}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="table-actions">
+                          <button
+                            type="button"
+                            className="action-btn"
+                            onClick={() => startEditingUser(member)}
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            type="button"
+                            className="action-btn action-btn-muted"
+                            onClick={() => handleDemoteToUser(member)}
+                          >
+                            Hạ role
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        <div className="table-card shell-card">
+          <div className="section-heading">
+            <div>
+              <p className="section-eyebrow">Promote</p>
+              <h2 className="section-title">Cấp quyền manager</h2>
+            </div>
+          </div>
+
+          {isLoadingUsers ? (
+            <div className="admin-empty-state">
+              <div className="admin-empty-state-icon">
+                <LuLoaderCircle size={26} className="spin" />
+              </div>
+              <h3>Đang tải users</h3>
+              <p>Danh sách users đang được đồng bộ từ backend.</p>
+            </div>
+          ) : eligibleUsers.length === 0 ? (
+            <div className="admin-empty-state">
+              <div className="admin-empty-state-icon">
+                <LuFolderOpen size={26} />
+              </div>
+              <h3>Không có user khả dụng</h3>
+              <p>Tạo user mới hoặc xóa bộ lọc tìm kiếm.</p>
+            </div>
+          ) : (
+            <table className="users-table">
+              <thead>
+                <tr>
+                  <th>STT</th>
+                  <th>Họ và tên</th>
+                  <th>Username</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                {eligibleUsers.map((member, index) => (
+                  <tr key={member.id}>
+                    <td>{index + 1}</td>
+                    <td>{member.fullName}</td>
+                    <td>{member.username}</td>
+                    <td>
+                      <div className="table-actions">
+                        <button
+                          type="button"
+                          className="action-btn"
+                          onClick={() => handlePromoteToManager(member)}
+                        >
+                          Cấp quyền
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </section>
+    );
+  };
+
+  const renderAssignmentsTab = () => {
+    const managerId = selectedManagerId ? Number(selectedManagerId) : null;
+    const managerList = users.filter(
+      (item) => (item.role || "").toLowerCase() === "manager",
+    );
+    const assignedLocationIds = new Set(
+      assignments
+        .filter((item) => item.managerId === managerId)
+        .map((item) => item.locationId),
+    );
+
+    const availableLocations = locations.filter(
+      (item) => managerId && !assignedLocationIds.has(item.id),
+    );
+
+    const assignedLocations = locations.filter((item) =>
+      managerId ? assignedLocationIds.has(item.id) : false,
+    );
+
+    const handleAssign = async (locationId) => {
+      if (!managerId) return;
+      setAssignmentError("");
+      setAssignmentNotice("");
+
+      try {
+        await assignLocationToManager(managerId, locationId);
+        await loadAssignments();
+        setAssignmentNotice("Đã phân công địa điểm.");
+      } catch (error) {
+        console.error("Failed to assign location:", error);
+        setAssignmentError(error.message || "Không phân công được địa điểm.");
+      }
+    };
+
+    const handleUnassign = async (locationId) => {
+      if (!managerId) return;
+      setAssignmentError("");
+      setAssignmentNotice("");
+
+      try {
+        await unassignLocationFromManager(managerId, locationId);
+        await loadAssignments();
+        setAssignmentNotice("Đã gỡ phân công.");
+      } catch (error) {
+        console.error("Failed to unassign location:", error);
+        setAssignmentError(error.message || "Không gỡ phân công được.");
+      }
+    };
+
+    return (
+      <section className="admin-grid">
+        <div className="table-card shell-card">
+          <div className="section-heading">
+            <div>
+              <p className="section-eyebrow">Assignment</p>
+              <h2 className="section-title">Chọn manager</h2>
+            </div>
+            <button
+              type="button"
+              className="ghost-action"
+              onClick={loadAssignments}
+            >
+              <LuRefreshCw size={16} />
+              <span>Tải lại</span>
+            </button>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="managerId">Manager</label>
+            <select
+              id="managerId"
+              value={selectedManagerId}
+              onChange={(event) => setSelectedManagerId(event.target.value)}
+            >
+              <option value="">-- Chọn manager --</option>
+              {managerList.map((member) => (
+                <option key={member.id} value={String(member.id)}>
+                  {member.fullName} ({member.username})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {assignmentError && (
+            <div className="admin-feedback admin-feedback-error">
+              {assignmentError}
+            </div>
+          )}
+          {assignmentNotice && (
+            <div className="admin-feedback admin-feedback-success">
+              {assignmentNotice}
+            </div>
+          )}
+
+          {!selectedManagerId ? (
+            <div className="admin-empty-state compact-empty-state">
+              <div className="admin-empty-state-icon">
+                <LuLink2 size={24} />
+              </div>
+              <h3>Chưa chọn manager</h3>
+              <p>Chọn manager để phân công địa điểm quản lý.</p>
+            </div>
+          ) : isLoadingAssignments || isLoadingLocations ? (
+            <div className="admin-empty-state">
+              <div className="admin-empty-state-icon">
+                <LuLoaderCircle size={26} className="spin" />
+              </div>
+              <h3>Đang tải dữ liệu phân công</h3>
+              <p>Đang đồng bộ danh sách địa điểm và phân công hiện tại.</p>
+            </div>
+          ) : assignedLocations.length === 0 ? (
+            <div className="admin-empty-state compact-empty-state">
+              <div className="admin-empty-state-icon">
+                <LuFolderOpen size={24} />
+              </div>
+              <h3>Chưa có địa điểm nào</h3>
+              <p>Chọn một địa điểm bên phải để phân công.</p>
+            </div>
+          ) : (
+            <table className="users-table">
+              <thead>
+                <tr>
+                  <th>STT</th>
+                  <th>Tên địa điểm</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                {assignedLocations.map((item, index) => (
+                  <tr key={item.id}>
+                    <td>{index + 1}</td>
+                    <td>{item.name}</td>
+                    <td>
+                      <div className="table-actions">
+                        <button
+                          type="button"
+                          className="action-btn action-btn-muted"
+                          onClick={() => handleUnassign(item.id)}
+                        >
+                          Gỡ
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        <div className="table-card shell-card">
+          <div className="section-heading">
+            <div>
+              <p className="section-eyebrow">Available</p>
+              <h2 className="section-title">Địa điểm khả dụng</h2>
+            </div>
+          </div>
+
+          {!selectedManagerId ? (
+            <div className="admin-empty-state">
+              <div className="admin-empty-state-icon">
+                <LuFolderOpen size={26} />
+              </div>
+              <h3>Chọn manager trước</h3>
+              <p>Danh sách địa điểm sẽ hiển thị sau khi chọn manager.</p>
+            </div>
+          ) : isLoadingLocations ? (
+            <div className="admin-empty-state">
+              <div className="admin-empty-state-icon">
+                <LuLoaderCircle size={26} className="spin" />
+              </div>
+              <h3>Đang tải địa điểm</h3>
+              <p>Danh sách địa điểm đang được đồng bộ từ backend.</p>
+            </div>
+          ) : availableLocations.length === 0 ? (
+            <div className="admin-empty-state">
+              <div className="admin-empty-state-icon">
+                <LuFolderOpen size={26} />
+              </div>
+              <h3>Không còn địa điểm để phân công</h3>
+              <p>Tất cả địa điểm đã được gán cho manager này.</p>
+            </div>
+          ) : (
+            <table className="users-table">
+              <thead>
+                <tr>
+                  <th>STT</th>
+                  <th>Tên địa điểm</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                {availableLocations.map((item, index) => (
+                  <tr key={item.id}>
+                    <td>{index + 1}</td>
+                    <td>{item.name}</td>
+                    <td>
+                      <div className="table-actions">
+                        <button
+                          type="button"
+                          className="action-btn"
+                          onClick={() => handleAssign(item.id)}
+                        >
+                          Gán
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </section>
+    );
+  };
+
   const renderPreviewButton = (text, langCode) => (
     <button
       type="button"
@@ -983,11 +1492,9 @@ function AdminDashboard() {
                 name="name"
                 value={locationForm.name}
                 onChange={handleLocationInputChange}
+                required
               />
             </div>
-          </div>
-
-          <div className="form-row">
             <div className="form-group">
               <label htmlFor="address">Địa chỉ quán</label>
               <input
@@ -998,6 +1505,9 @@ function AdminDashboard() {
                 placeholder="Ví dụ: 123 Nguyễn Huệ, Quận 1, TP.HCM"
               />
             </div>
+          </div>
+
+          <div className="form-row">
             <div className="form-group">
               <label htmlFor="phone">Số điện thoại</label>
               <input
@@ -1008,88 +1518,15 @@ function AdminDashboard() {
                 placeholder="Ví dụ: 0901234567"
               />
             </div>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="description">Mô tả ngắn</label>
-            <textarea
-              id="description"
-              name="description"
-              value={locationForm.description}
-              onChange={handleLocationInputChange}
-            />
-          </div>
-          <div className="form-row location-media-grid">
             <div className="form-group">
-              <label>Danh sách ảnh</label>
+              <label htmlFor="image">Ảnh đại diện (URL)</label>
               <input
-                ref={galleryInputRef}
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden-file-input"
-                onChange={(event) => handleGalleryUpload(event.target.files)}
+                id="image"
+                name="image"
+                value={locationForm.image}
+                onChange={handleLocationInputChange}
+                placeholder="https://..."
               />
-              <button
-                type="button"
-                className={`upload-dropzone ${isUploadingGallery ? "is-uploading" : ""}`}
-                onClick={() => galleryInputRef.current?.click()}
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={(event) => {
-                  event.preventDefault();
-                  handleGalleryUpload(event.dataTransfer.files);
-                }}
-              >
-                <span className="upload-dropzone-icon">
-                  {isUploadingGallery ? (
-                    <LuLoaderCircle size={20} className="spin" />
-                  ) : (
-                    <LuUpload size={20} />
-                  )}
-                </span>
-                <span className="upload-dropzone-copy">
-                  <strong>
-                    {isUploadingGallery
-                      ? "Đang tải danh sách ảnh..."
-                      : "Thả nhiều ảnh vào đây"}
-                  </strong>
-                  <span>Hoặc bấm để chọn nhiều ảnh cùng lúc</span>
-                </span>
-              </button>
-              <div className="upload-inline-hint">
-                {galleryImages.length > 0
-                  ? "Frontend sẽ tự dùng ảnh đầu tiên trong danh sách làm ảnh hiển thị chính."
-                  : "Chưa có ảnh trong gallery. Bạn có thể thả nhiều ảnh cùng lúc."}
-              </div>
-              {galleryImages.length > 0 ? (
-                <div className="gallery-preview-grid">
-                  {galleryImages.map((imageUrl, index) => (
-                    <article
-                      key={`${imageUrl}-${index}`}
-                      className="gallery-preview-card"
-                    >
-                      <img src={imageUrl} alt={`Ảnh địa điểm ${index + 1}`} />
-                      <div className="gallery-preview-actions">
-                        {index === 0 ? (
-                          <span className="status-pill status-active">
-                            Ảnh chính
-                          </span>
-                        ) : (
-                          <span className="status-pill">Ảnh phụ</span>
-                        )}
-                        <button
-                          type="button"
-                          className="icon-action-btn"
-                          onClick={() => removeGalleryImage(imageUrl)}
-                          aria-label="Xóa ảnh khỏi danh sách"
-                        >
-                          <LuTrash2 size={14} />
-                        </button>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              ) : null}
             </div>
           </div>
 
@@ -1112,6 +1549,58 @@ function AdminDashboard() {
                 onChange={handleLocationInputChange}
               />
             </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="description">Mô tả ngắn</label>
+            <textarea
+              id="description"
+              name="description"
+              value={locationForm.description}
+              onChange={handleLocationInputChange}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <div className="preview-label-row">
+              <label>Gallery</label>
+              <button
+                type="button"
+                className="btn action-btn-muted"
+                onClick={() => galleryInputRef.current?.click()}
+                disabled={isUploadingGallery}
+              >
+                <LuUpload size={16} />
+                <span>Upload</span>
+              </button>
+              <input
+                ref={galleryInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                hidden
+                onChange={(event) => handleGalleryUpload(event.target.files)}
+              />
+            </div>
+
+            {galleryImages.length > 0 && (
+              <div className="gallery-grid">
+                {galleryImages.map((url) => (
+                  <div key={url} className="gallery-item">
+                    <img src={url} alt="gallery" />
+                    <button
+                      type="button"
+                      className="gallery-remove"
+                      onClick={() => removeGalleryImage(url)}
+                      aria-label="Remove"
+                    >
+                      <LuTrash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <br />
           <h2 class="section-title">Nội dung thuyết minh</h2>
@@ -1264,6 +1753,8 @@ function AdminDashboard() {
             </>
           )}
           {activeMenu === "users" && renderUsersTab()}
+          {activeMenu === "managers" && renderManagersTab()}
+          {activeMenu === "assignments" && renderAssignmentsTab()}
           {activeMenu === "locations" && renderLocationsTab()}
         </div>
       </main>

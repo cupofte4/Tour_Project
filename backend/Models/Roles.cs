@@ -4,6 +4,7 @@ namespace Tour_Project.Models
     {
         public const string Admin = "admin";
         public const string User = "user";
+        public const string Manager = "manager";
 
         public static string Normalize(string? role)
         {
@@ -12,9 +13,9 @@ namespace Tour_Project.Models
             {
                 "admin" => Admin,
                 "user" => User,
+                "manager" => Manager,
                 _ => User
             };
         }
     }
 }
-

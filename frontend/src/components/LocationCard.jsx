@@ -266,7 +266,7 @@ function LocationCard({ location, lang, onLocationUpdated }) {
               >
                 <div className="review-item-top">
                   <strong>{review.author || "Khách"}</strong>
-                  <span>{renderStars(Number(review.rating) || 0)}</span>
+                  <span style={{ color: "rgb(236, 236, 8)" }}>{renderStars(Number(review.rating) || 0)}</span>
                 </div>
                 <p>{review.comment}</p>
                 <small>{formatReviewDate(review.createdAt)}</small>

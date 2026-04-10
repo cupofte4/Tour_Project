@@ -6,15 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ứng Dụng Thuyết Minh Du Lịch GPS — PRD</title>
     <link rel="icon"
-        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%232563eb' d='M32 2c11.6 0 21 9.4 21 21 0 15.7-18.2 35.4-19 36.2-.5.5-1.4.5-1.9 0-.8-.8-19-20.5-19-36.2C13 11.4 20.4 2 32 2z'/%3E%3Ccircle cx='32' cy='23' r='9' fill='white'/%3E%3C/svg%3E" />
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%230f766e' d='M32 2c11.6 0 21 9.4 21 21 0 15.7-18.2 35.4-19 36.2-.5.5-1.4.5-1.9 0-.8-.8-19-20.5-19-36.2C13 11.4 20.4 2 32 2z'/%3E%3Ccircle cx='32' cy='23' r='9' fill='white'/%3E%3C/svg%3E" />
     <style>
         :root {
-            --primary: #2563eb;
-            --primary-light: #2563eb;
-            --primary-dark: #1d4ed8;
+            --primary: #0f766e;
+            --primary-light: #0f766e;
+            --primary-dark: #115e59;
             --accent: #00838f;
             --accent-light: #4fb3bf;
-            --primary-gradient: linear-gradient(135deg, #6aa0f8, #1d4ed8);
+            --primary-gradient: linear-gradient(135deg, #10b981, #115e59);
             --bg: #fafafa;
             --surface: #ffffff;
             --text: #212121;
@@ -23,7 +23,7 @@
             --code-bg: #263238;
             --code-text: #eeffff;
             --success: #2e7d32;
-            --warning: #2563eb;
+            --warning: #0f766e;
             --info: #1565c0;
         }
 
@@ -995,7 +995,7 @@
                 </div>
             </div>
             <div class="tier-item">
-                <div class="tier-label" style="background:#2563eb;">Tier 3</div>
+                <div class="tier-label" style="background:#0f766e;">Tier 3</div>
                 <div class="tier-content">
                     <strong>On-device Speech Synthesis</strong>
                     <span><code>window.speechSynthesis</code> — fallback cuối cùng khi offline và không có audio file; đảm bảo luôn “có tiếng nói”.</span>
@@ -1054,7 +1054,7 @@
                 </div>
             </div>
             <div class="tier-item">
-                <div class="tier-label" style="background:#2563eb;">Tier 3</div>
+                <div class="tier-label" style="background:#0f766e;">Tier 3</div>
                 <div class="tier-content">
                     <strong>Nguyên bản tiếng Việt (VI)</strong>
                     <span>Lớp phòng thủ cuối cho nội dung. Nếu thiếu audio, hệ thống có thể dùng TTS on-device để đảm bảo phát được.</span>
@@ -1151,12 +1151,13 @@
                 </ul>
             </div>
             <div class="card">
-                <h3>🛡️ RBAC (user/admin)</h3>
+                <h3>🛡️ RBAC (user/manager/admin)</h3>
                 <ul>
-                    <li>Role nằm trong bảng <code>Users.Role</code>: <strong>user</strong>, <strong>admin</strong></li>
+                    <li>Role nằm trong bảng <code>Users.Role</code>: <strong>user</strong>, <strong>manager</strong>, <strong>admin</strong></li>
                     <li>User: xem bản đồ, xem địa điểm, nghe audio, quản lý yêu thích</li>
-                    <li>Admin: CRUD Locations, upload audio, quản lý Users</li>
-                    <li>API guard: <code>require_role("admin")</code> cho các route <code>/api/admin/*</code></li>
+                    <li>Manager: quản lý các địa điểm được gán (CRUD nội dung), quản lý thuyết minh (TextVi/En/Zh/De), xem thống kê theo thời gian</li>
+                    <li>Admin: CRUD Locations, quản lý Users/Managers, phân công địa điểm cho manager</li>
+                    <li>API guard: <code>require_role("admin")</code> cho <code>/api/admin/*</code>, <code>require_role("manager")</code> cho <code>/api/manager/*</code></li>
                 </ul>
             </div>
         </div>
@@ -1184,8 +1185,12 @@
                         <td>add, remove, list</td>
                     </tr>
                     <tr>
+                        <td><code>manager</code></td>
+                        <td>owned_locations_crud, audio_content_manage, stats_timeseries</td>
+                    </tr>
+                    <tr>
                         <td><code>admin</code></td>
-                        <td>locations_crud, audio_upload, users_manage</td>
+                        <td>locations_crud, users_manage, managers_manage, assignments_manage</td>
                     </tr>
                 </tbody>
             </table>
@@ -1205,11 +1210,16 @@
                     <tr>
                         <td><strong>admin</strong></td>
                         <td>0</td>
-                        <td>Quản trị hệ thống: quản lý Locations/Audio/Users</td>
+                        <td>Quản trị hệ thống: quản lý Locations/Audio/Users/Managers, phân công địa điểm</td>
+                    </tr>
+                    <tr>
+                        <td><strong>manager</strong></td>
+                        <td>1</td>
+                        <td>Quản lý địa điểm được gán: CRUD nội dung, quản lý text thuyết minh đa ngôn ngữ, theo dõi thống kê (views/audio plays)</td>
                     </tr>
                     <tr>
                         <td><strong>user</strong></td>
-                        <td>1</td>
+                        <td>2</td>
                         <td>Sử dụng app: bản đồ + GPS, danh sách địa điểm, auto audio, favorites</td>
                     </tr>
                 </tbody>
@@ -1457,14 +1467,14 @@
     <!-- ADMIN -->
     <section id="admin">
         <div class="section-header">
-            <div class="icon" style="background:#eff6ff;color:#2563eb;">👨‍💼</div>
+            <div class="icon" style="background:#eff6ff;color:#0f766e;">👨‍💼</div>
             <div>
                 <div class="section-num">Chapter 11</div>
                 <h2>Admin Dashboard (CMS)</h2>
             </div>
         </div>
 
-        <p style="margin-bottom:1.5rem;color:var(--text-secondary);">Admin là nơi quản trị toàn bộ dữ liệu địa điểm: nội dung thuyết minh, tọa độ, ảnh, audio theo ngôn ngữ, và quản lý người dùng. Mục tiêu là đảm bảo dữ liệu “đúng, đủ, nhất quán” để auto-play hoạt động tin cậy.</p>
+        <p style="margin-bottom:1.5rem;color:var(--text-secondary);">Admin là nơi quản trị toàn bộ dữ liệu địa điểm và phân quyền: nội dung thuyết minh, tọa độ, ảnh, audio theo ngôn ngữ, quản lý người dùng/manager và phân công địa điểm cho manager. Mục tiêu là đảm bảo dữ liệu “đúng, đủ, nhất quán” để auto-play hoạt động tin cậy.</p>
 
         <div class="card-grid">
             <div class="card">
@@ -1479,10 +1489,19 @@
             <div class="card">
                 <h3>👤 User Management</h3>
                 <ul>
-                    <li>Danh sách Users, xem trạng thái và role (user/admin)</li>
+                    <li>Danh sách Users, xem trạng thái và role (user/manager/admin)</li>
                     <li>Khóa/mở khóa tài khoản: <code>IsLocked</code></li>
                     <li>Reset mật khẩu (theo quy trình nội bộ) và log thao tác quản trị</li>
-                    <li>Theo dõi cơ bản: số lượt phát theo địa điểm (PlayHistory) để cải thiện nội dung</li>
+                    <li>Quản lý manager: cấp/thu role manager, kiểm soát truy cập theo doanh nghiệp</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>🔗 Assignment Management</h3>
+                <ul>
+                    <li>Phân công địa điểm cho manager: bảng <code>LocationManagerAssignments</code></li>
+                    <li>Cho phép 1 manager quản lý nhiều địa điểm; tránh trùng phân công bằng unique key</li>
+                    <li>Tra cứu nhanh: manager → danh sách địa điểm đã gán / địa điểm khả dụng</li>
+                    <li>Mục tiêu: tách quyền “quản trị hệ thống” (admin) và “quản trị nội dung theo doanh nghiệp” (manager)</li>
                 </ul>
             </div>
             <div class="card">
@@ -1810,7 +1829,7 @@ sequenceDiagram
                     <li>✅ MySQL: free local / self-hosted database</li>
                     <li>✅ Workbox: service worker toolkit (offline support)</li>
                     <li>✅ IndexedDB: local storage (offline data)</li>
-                    <li>✅ Web Speech API: free TTS fallback (browser)</li>>
+                    <li>✅ Web Speech API: free TTS fallback (browser)</li>
                     <li>⚠️ Storage: audio + images (low cost at small scale)</li>
             </div>
         </div>

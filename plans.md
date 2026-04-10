@@ -4,26 +4,46 @@
 ## 1. Mô tả dự án
 Xây dựng ứng dụng thuyết minh du lịch sử dụng GPS. Khi người dùng đến gần một địa điểm du lịch, ứng dụng sẽ tự động phát nội dung thuyết minh bằng âm thanh theo ngôn ngữ đã chọn.
 
+Hệ thống mở rộng:
+- Hỗ trợ chủ quản lý sạp (manager)
+- Cho phép quản lý sạp và nội dung thuyết minh riêng
+
 ---
 
 # 2. Chức năng chính
 
 ## Đối với người dùng
 - Đăng ký / đăng nhập
+- Chọn loại tài khoản khi đăng ký:
+  - Tôi muốn trải nghiệm app → user
+  - Tôi muốn kinh doanh → manager
 - Xem bản đồ
 - Xem danh sách địa điểm
 - Nghe thuyết minh tự động khi đến gần địa điểm
 - Chọn ngôn ngữ
 - Xem danh sách địa điểm yêu thích
 
-## Đối với quản trị viên
+## Đối với chủ quản lý sạp (Manager) 🔥 NEW
+- Truy cập dashboard riêng
+- Xem danh sách sạp sở hữu
+- Thêm / sửa / xoá sạp
+- Quản lý nội dung thuyết minh của sạp
+- Xem thống kê:
+  - lượt truy cập
+  - lượt nghe audio
+  - dữ liệu theo thời gian
+
+## Đối với quản trị viên (Admin)
 - Thêm địa điểm du lịch
 - Chỉnh sửa nội dung thuyết minh
 - Quản lý người dùng
+- Quản lý chủ sạp (manager) 🔥 NEW
+- Gán sạp có sẵn cho manager 🔥 NEW
 
 ---
 
 # 3. Database
+
 ## Bảng Locations
 - Id
 - Name
@@ -39,6 +59,7 @@ Xây dựng ứng dụng thuyết minh du lịch sử dụng GPS. Khi người d
 - TextEn
 - TextZh
 - TextDe
+- ManagerId 🔥 NEW (sạp thuộc manager nào)
 
 ## Bảng Users
 - Id
@@ -48,7 +69,7 @@ Xây dựng ứng dụng thuyết minh du lịch sử dụng GPS. Khi người d
 - Phone
 - Gender
 - Avatar
-- Role
+- Role (user | manager | admin) 🔥 UPDATED
 - IsLocked
 
 ---
@@ -60,7 +81,7 @@ Xây dựng ứng dụng thuyết minh du lịch sử dụng GPS. Khi người d
 - [ ] Setup Frontend
 - [ ] Setup Backend API
 - [ ] Kết nối Database
-- [ ] Login / Register API
+- [ ] Login / Register API (có chọn role)
 
 ## Phase 2 – User Features
 - [ ] Hiển thị bản đồ
@@ -71,14 +92,23 @@ Xây dựng ứng dụng thuyết minh du lịch sử dụng GPS. Khi người d
 - [ ] Chọn ngôn ngữ thuyết minh
 - [ ] Địa điểm yêu thích
 
-## Phase 3 – Admin Features
+## Phase 3 – Manager Features 🔥 NEW
+- [ ] Manager Dashboard UI
+- [ ] API lấy danh sách sạp theo manager
+- [ ] CRUD sạp
+- [ ] API thống kê (views, audio plays)
+- [ ] Quản lý nội dung thuyết minh
+
+## Phase 4 – Admin Features
 - [ ] Thêm địa điểm
 - [ ] Sửa địa điểm
 - [ ] Xóa địa điểm
 - [ ] Quản lý người dùng
 - [ ] Upload audio thuyết minh
+- [ ] Quản lý manager 🔥 NEW
+- [ ] Gán sạp cho manager 🔥 NEW
 
-## Phase 4 – Hoàn thiện
+## Phase 5 – Hoàn thiện
 - [ ] UI/UX
 - [ ] Testing
 - [ ] Fix bug
@@ -97,17 +127,20 @@ Xây dựng ứng dụng thuyết minh du lịch sử dụng GPS. Khi người d
 3. GPS + Geofence + Audio Narration
 4. Content Module / POI Management
 5. Audio / TTS System
-6. Authentication & RBAC
-7. Localization / Multi-language
-8. Offline / PWA
-9. Map System
-10. Admin Dashboard
-11. Design Patterns
-12. End-to-End Flow
+6. Authentication & RBAC (user / manager / admin)
+7. Manager Dashboard 🔥 NEW
+8. Localization / Multi-language
+9. Offline / PWA
+10. Map System
+11. Admin Dashboard
+12. Design Patterns
+13. End-to-End Flow
 
 ---
 
 # 6. User Flow
+
+### User
 1. User mở app
 2. App lấy vị trí GPS
 3. App hiển thị các địa điểm gần
@@ -116,6 +149,17 @@ Xây dựng ứng dụng thuyết minh du lịch sử dụng GPS. Khi người d
 6. App tự động phát audio thuyết minh
 7. Lưu lịch sử / yêu thích
 
+### Manager 🔥 NEW
+1. Manager đăng nhập
+2. Truy cập dashboard
+3. Quản lý sạp
+4. Xem thống kê hoạt động
+
+### Admin
+1. Admin đăng nhập
+2. Quản lý hệ thống
+3. Gán sạp cho manager
+
 ---
 
 # 7. Mốc thời gian dự kiến
@@ -123,13 +167,13 @@ Xây dựng ứng dụng thuyết minh du lịch sử dụng GPS. Khi người d
 | Tuần | Công việc |
 |-----|-----------|
 | 1 | Setup project |
-| 2 | Login / Register |
+| 2 | Login / Register + Role |
 | 3 | Map + GPS |
 | 4 | Locations API |
 | 5 | Audio auto play |
 | 6 | Favorite |
-| 7 | Admin |
-| 8 | UI |
+| 7 | Manager Dashboard 🔥 |
+| 8 | Admin nâng cao |
 | 9 | Testing |
 | 10 | Báo cáo |
 

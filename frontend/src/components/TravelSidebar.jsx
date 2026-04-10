@@ -95,7 +95,7 @@ const TravelSidebar = () => {
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
           ) : (
-            <FaUserCircle size={56} color="#1e88e5" />
+            <FaUserCircle size={56} color="rgb(30, 75, 115)" />
           )}
         </div>
         <h3 className="user-name">{userInfo?.fullName || "User"}</h3>

@@ -8,6 +8,7 @@ function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState("user");
   const [errorMsg, setErrorMsg] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -60,7 +61,7 @@ function Register() {
         return;
       }
 
-      const result = await register(fullName, username, password);
+      const result = await register(fullName, username, password, role);
 
       if (result) {
         navigate("/login", {
@@ -125,7 +126,32 @@ function Register() {
 
             <form onSubmit={handleRegister} className="login-form">
               <div className="form-group">
-                <label htmlFor="fullName">Full name</label>
+                <label>Loại tài khoản</label>
+                <div className="role-options" role="radiogroup" aria-label="Role selection">
+                  <label className="role-option">
+                    <input
+                      type="radio"
+                      name="role"
+                      value="user"
+                      checked={role === "user"}
+                      onChange={() => setRole("user")}
+                    />
+                    <span>Tôi muốn trải nghiệm app</span>
+                  </label>
+                  <label className="role-option">
+                    <input
+                      type="radio"
+                      name="role"
+                      value="manager"
+                      checked={role === "manager"}
+                      onChange={() => setRole("manager")}
+                    />
+                    <span>Tôi muốn kinh doanh</span>
+                  </label>
+                </div>
+              </div>
+              <div className="form-group">
+                <label htmlFor="fullName">Họ và Tên</label>
                 <input
                   type="text"
                   id="fullName"
@@ -137,7 +163,7 @@ function Register() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="username">Username</label>
+                <label htmlFor="username">Tên tài khoản</label>
                 <input
                   type="text"
                   id="username"
@@ -149,7 +175,7 @@ function Register() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="password">Password</label>
+                <label htmlFor="password">Mật khẩu</label>
                 <input
                   type="password"
                   id="password"
@@ -161,7 +187,7 @@ function Register() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="confirmPassword">Confirm password</label>
+                <label htmlFor="confirmPassword">Xác nhận mật khẩu</label>
                 <input
                   type="password"
                   id="confirmPassword"
@@ -178,9 +204,9 @@ function Register() {
             </form>
 
             <p className="login-footer">
-              Already have an account?
+              Đã có tài khoản?
               <a href="/login" className="signup-link">
-                Log in
+                Đăng nhập ngay
               </a>
             </p>
           </div>

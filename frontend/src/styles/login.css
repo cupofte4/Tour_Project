@@ -339,6 +339,42 @@
   color: #31284a;
 }
 
+.role-options {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.role-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #e5def5;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #231d37;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.role-option input {
+  width: 16px;
+  height: 16px;
+  accent-color: #0f766e;
+}
+
+.role-option:hover {
+  border-color: rgba(15, 118, 110, 0.5);
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.1);
+  transform: translateY(-1px);
+}
+
+.role-option span {
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .form-input {
   width: 100%;
   padding: 15px 16px;

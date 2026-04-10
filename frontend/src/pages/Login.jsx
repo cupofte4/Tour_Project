@@ -64,6 +64,8 @@ function Login() {
 
       if (normalizedUser.role === "admin") {
         navigate("/admin/dashboard", { replace: true });
+      } else if (normalizedUser.role === "manager") {
+        navigate("/manager/dashboard", { replace: true });
       } else {
         navigate("/", { replace: true });
       }
@@ -108,7 +110,7 @@ function Login() {
             </div>
 
             <div className="login-header">
-              <h2 className="login-title">Log in to Travel Audio Guide</h2>
+              <h2 className="login-title">Kết nối tới Travel Audio Guide</h2>
               <p className="login-subtitle">
                 Mở hành trình khám phá bằng những câu chuyện âm thanh tại mỗi điểm đến.
               </p>
@@ -130,7 +132,7 @@ function Login() {
 
             <form onSubmit={handleLogin} className="login-form">
               <div className="form-group">
-                <label htmlFor="username">Username</label>
+                <label htmlFor="username">Tên tài khoản</label>
                 <input
                   type="text"
                   id="username"
@@ -143,7 +145,7 @@ function Login() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="password">Password</label>
+                <label htmlFor="password">Mật khẩu</label>
                 <input
                   type="password"
                   id="password"
@@ -163,11 +165,11 @@ function Login() {
                     checked={rememberMe}
                     onChange={(event) => setRememberMe(event.target.checked)}
                   />
-                  <span>Remember me</span>
+                  <span>Nhớ tài khoản</span>
                 </label>
 
                 <a href="#forgot" className="meta-link">
-                  Forgot password?
+                  Quên mật khẩu?
                 </a>
               </div>
 
@@ -177,9 +179,9 @@ function Login() {
             </form>
 
             <p className="login-footer">
-              New here?
+              Chưa có tài khoản?
               <a href="/register" className="signup-link">
-                Sign up
+                Đăng ký ngay
               </a>
             </p>
           </div>

@@ -69,6 +69,10 @@ function Home() {
         navigate("/admin/dashboard", { replace: true });
         return;
       }
+      if (role === "manager") {
+        navigate("/manager/dashboard", { replace: true });
+        return;
+      }
     } catch {
       // Ignore parse errors and let Home handle as normal user.
     }

@@ -41,15 +41,37 @@ namespace Tour_Project.Controllers
         }
 
         [HttpPost("register")]
-        public IActionResult Register(User user)
+        public IActionResult Register([FromBody] RegisterRequest request)
         {
+            if (string.IsNullOrWhiteSpace(request.FullName) ||
+                string.IsNullOrWhiteSpace(request.Username) ||
+                string.IsNullOrWhiteSpace(request.Password))
+            {
+                return BadRequest(new { message = "Vui lÃ²ng nháº­p Ä‘áº§y Ä‘á»§ thÃ´ng tin" });
+            }
+
             // Check if username already exists
-            var existingUser = _context.Users.FirstOrDefault(x => x.Username == user.Username);
+            var existingUser = _context.Users.FirstOrDefault(x => x.Username == request.Username);
             if (existingUser != null)
                 return BadRequest(new { message = "Tên đăng nhập đã tồn tại" });
 
-            // Set default role as 'user'
-            user.Role = Roles.User;
+            var roleRaw = (request.Role ?? string.Empty).Trim();
+            var roleNormalized = roleRaw.ToLowerInvariant();
+            var selectedRole =
+                roleNormalized == Roles.Manager ||
+                roleRaw.Equals("Tôi muốn kinh doanh", StringComparison.OrdinalIgnoreCase) ||
+                roleRaw.Equals("Toi muon kinh doanh", StringComparison.OrdinalIgnoreCase)
+                    ? Roles.Manager
+                    : Roles.User;
+
+            var user = new User
+            {
+                FullName = request.FullName.Trim(),
+                Username = request.Username.Trim(),
+                Password = request.Password.Trim(),
+                Role = selectedRole,
+                IsLocked = false
+            };
             
             _context.Users.Add(user);
             _context.SaveChanges();
@@ -105,5 +127,13 @@ namespace Tour_Project.Controllers
         public string Username { get; set; } = string.Empty;
         public string CurrentPassword { get; set; } = string.Empty;
         public string NewPassword { get; set; } = string.Empty;
+    }
+
+    public class RegisterRequest
+    {
+        public string FullName { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string? Role { get; set; }
     }
 }

@@ -1,25 +1,30 @@
 # PROMPTS STORAGE
 ## Project: GPS Travel Audio Guide App
 
-File này dùng để lưu các prompt hiệu quả khi làm việc với AI để đảm bảo code và kiến trúc dự án nhất quán.
-
 ---
 
 # 1. Generate Backend API
 Prompt:
-"Generate FastAPI backend structure for a GPS travel audio guide app with authentication, locations, favorites and admin management."
+"Generate FastAPI backend structure for a GPS travel audio guide app with authentication, locations, favorites, manager dashboard and admin management."
 
 ---
 
 # 2. Generate Database Models
 Prompt:
-"Create SQLAlchemy models for Users and Locations tables with multilingual description fields and GPS coordinates."
+"Create SQLAlchemy models for Users, Locations and Manager system with role-based access (user, manager, admin). Locations must belong to a manager."
 
 ---
 
-# 3. Generate Login API
+# 3. Generate Login API (UPDATED)
 Prompt:
-"Write FastAPI login and register API with JWT authentication and password hashing."
+"Write FastAPI login and register API with JWT authentication.
+
+Requirements:
+- Register must include role selection:
+  + user (experience app)
+  + manager (business)
+- Hash password
+- Validate input"
 
 ---
 
@@ -41,25 +46,55 @@ Prompt:
 
 ---
 
-# 7. Admin Dashboard
+# 7. Admin Dashboard (UPDATED)
 Prompt:
-"Generate admin dashboard UI to manage locations, edit description, upload audio and manage users."
+"Generate admin dashboard UI to:
+- manage locations
+- manage users
+- manage managers
+- assign locations to managers"
 
 ---
 
-# 8. Project Structure
+# 8. Manager Dashboard 🔥 NEW
 Prompt:
-"Generate full project folder structure for React Frontend + FastAPI Backend + MySQL database for GPS audio travel guide app."
+"Generate manager dashboard UI with:
+
+- Sidebar layout
+- Pages:
+  + My Locations
+  + Statistics
+
+- Responsive
+- Clean UI
+- Call backend APIs
+- list of owned locations (stalls)
+- CRUD locations
+- manage audio content
+- view statistics (views count, audio plays count, time-based data)
+Data source: location_stats table"
 
 ---
 
-# 9. API Design Prompt
+# 9. Project Structure
 Prompt:
-"Design REST API endpoints for authentication, locations, favorites, history and admin management."
+"Generate full project folder structure for React Frontend + FastAPI Backend + MySQL database including manager module."
 
 ---
 
-# 10. PRD Prompt
+# 10. API Design Prompt (UPDATED)
+Prompt:
+"Design REST API endpoints for:
+- authentication
+- locations
+- favorites
+- manager dashboard
+- admin management
+- assign location to manager"
+
+---
+
+# 10. PRD Prompt (UPDATED)
 Prompt:
 "Write a Product Requirements Document (PRD) for my project.
 However, you MUST use my existing HTML presentation template and KEEP the layout and CSS exactly the same.
@@ -77,25 +112,78 @@ IMPORTANT RULES:
 * You may add more cards/tables using existing classes
 * The output must be a full HTML file
 
+---
+
 My project:
+
 A GPS-based tourism narration application.
+
+Core idea:
 When users enter a location (geofence), the app automatically plays audio narration about that place.
-The system supports multiple languages, offline mode, maps, admin content management, and AI-assisted content writing.
 
-Rewrite the content of the sections to match my system:
+Technology:
+- Frontend: React (PWA)
+- Backend: FastAPI
+- Database: MySQL
+- Map: Google Maps API
+- Audio: Text-to-Speech (TTS)
 
-- Overview
-- Startup Flow
+System capabilities:
+- GPS tracking
+- Geofencing
+- Auto audio playback
+- Multi-language support (VI, EN, ZH, DE)
+- Offline support (PWA)
+- Admin content management
+
+---
+
+## 🔥 NEW SYSTEM EXTENSIONS (MUST INCLUDE)
+
+### Role-Based System:
+- user (default)
+- manager (NEW)
+- admin
+
+### Manager Module:
+- Each manager owns and manages multiple locations (stalls)
+- Manager dashboard:
+  - Manage owned locations (CRUD)
+  - Manage narration content
+  - View statistics:
+    + view count
+    + audio play count
+    + time-based analytics
+
+### Admin Module (Extended):
+- Manage users
+- Manage managers
+- Assign existing locations to managers
+- Control system-wide data
+
+### Registration Flow (UPDATED):
+- User selects role during registration:
+  - "I want to experience the app" → user
+  - "I want to do business" → manager
+
+---
+
+Rewrite the content of the sections to match my FULL system:
+
+- Overview (include full architecture + roles)
+- Startup Flow (include role-based flow)
 - GPS / Geofence / Audio
-- Content Module
+- Content Module (include manager ownership)
 - Audio / TTS
-- Authentication / RBAC
+- Authentication / RBAC (IMPORTANT: include user, manager, admin)
 - Localization
 - Offline / PWA
 - Map System
-- Admin Dashboard
+- Admin Dashboard (include manager management + assign logic)
 - Design Patterns
-- End-to-End Flow
+- End-to-End Flow (include user + manager + admin flows)
+
+---
 
 Writing style:
 
@@ -106,33 +194,41 @@ Writing style:
 * Suitable for university graduation project
 * Professional engineering documentation
 
+---
+
 OUTPUT REQUIREMENT:
 
 Do NOT create new sections.
 Do NOT change layout.
-Only rewrite the content inside these sections to match my GPS tourism narration system.
+Only rewrite the content inside these sections to match my updated system.
 
 The HTML template structure IS the PRD structure.
+
 Return the FULL HTML file with updated content.
 Do NOT explain anything.
 Do NOT use markdown.
 Only return HTML."
 
----
-
-# 11. UI Prompt
+# 12. UI Prompt (UPDATED)
 Prompt:
-"Design modern UI for travel guide app including map screen, location list, location detail and audio player."
+"Design UI for:
+- User app (map + audio)
+- Manager dashboard
+- Admin dashboard
+Modern, responsive, grid-based layout."
 
 ---
 
-# 12. Sequence Flow Prompt
+# 13. Sequence Flow Prompt
 Prompt:
-"Write system sequence diagram flow for GPS travel audio guide app from user opening app to auto playing audio when near location."
+"Write system sequence diagram including:
+- user flow
+- manager flow
+- admin assigning locations to manager"
 
 ---
 
-# 13. Consistency Rules
+# 14. Consistency Rules (UPDATED)
 Luôn giữ thống nhất:
 - Backend: FastAPI
 - Frontend: ReactJS
@@ -140,16 +236,21 @@ Luôn giữ thống nhất:
 - Map: Google Maps
 - GPS trigger distance: 50m
 - Languages: VI, EN, ZH, DE
-- Roles: user, admin
+- Roles:
+  - user
+  - manager 🔥
+  - admin
 
 ---
 
-# 14. Core Features Reminder
+# 15. Core Features Reminder (UPDATED)
+
 Main Features:
-- Authentication
+- Authentication (role-based)
 - Map + GPS
 - Locations
 - Auto audio
 - Favorites
+- Manager dashboard 🔥
 - Admin management
 - Multilingual audio

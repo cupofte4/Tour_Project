@@ -11,5 +11,7 @@ namespace Tour_Project.Data
 
         public DbSet<Location> Locations { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<LocationManagerAssignment> LocationManagerAssignments { get; set; }
+        public DbSet<LocationStat> LocationStats { get; set; }
     }
 }
