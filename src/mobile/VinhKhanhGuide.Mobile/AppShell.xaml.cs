@@ -7,5 +7,6 @@ public partial class AppShell : Shell
         InitializeComponent();
         Routing.RegisterRoute("stall-detail", typeof(Views.StallDetailPage));
         Routing.RegisterRoute("stall-map", typeof(Views.StallMapPage));
+        Routing.RegisterRoute("settings", typeof(Views.SettingsPage));
     }
 }

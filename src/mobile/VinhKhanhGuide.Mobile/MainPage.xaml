@@ -4,8 +4,9 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:models="clr-namespace:VinhKhanhGuide.Mobile.Models"
+    x:Name="MainPageRoot"
     Title="Vinh Khanh Guide">
-    <Grid Padding="20" RowDefinitions="Auto,Auto,*" RowSpacing="16">
+    <Grid Padding="20" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="16">
         <Label
             Grid.Row="0"
             FontSize="24"
@@ -16,8 +17,19 @@
             Text="{Binding ErrorMessage}"
             TextColor="IndianRed"
             IsVisible="{Binding HasError}" />
+        <VerticalStackLayout Grid.Row="2" Spacing="8">
+            <Picker
+                Title="Preview Language"
+                ItemsSource="{Binding SupportedPreviewLanguages}"
+                ItemDisplayBinding="{Binding DisplayName}"
+                SelectedItem="{Binding SelectedPreviewLanguage}" />
+            <Label
+                FontSize="13"
+                Text="{Binding PreviewStatusText}"
+                TextColor="#666666" />
+        </VerticalStackLayout>
 
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="3">
             <CollectionView
                 ItemsSource="{Binding Stalls}"
                 SelectionMode="Single"
@@ -48,6 +60,11 @@
                                     FontSize="14"
                                     Text="{Binding AverageRatingText}"
                                     TextColor="#666666" />
+                                <Button
+                                    Text="Preview TTS"
+                                    Clicked="OnPreviewNarrationClicked"
+                                    CommandParameter="{Binding .}"
+                                    HorizontalOptions="Start" />
                             </VerticalStackLayout>
                         </Frame>
                     </DataTemplate>

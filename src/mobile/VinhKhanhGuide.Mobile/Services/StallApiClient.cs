@@ -34,4 +34,11 @@ public class StallApiClient : IStallApiClient
     {
         return _httpClient.GetFromJsonAsync<StallDetail>($"api/stalls/{stallId}", cancellationToken);
     }
+
+    public Task<StallTranslation?> GetStallTranslationAsync(int stallId, string languageCode, CancellationToken cancellationToken = default)
+    {
+        return _httpClient.GetFromJsonAsync<StallTranslation>(
+            $"api/stalls/{stallId}/translation?lang={Uri.EscapeDataString(languageCode)}",
+            cancellationToken);
+    }
 }

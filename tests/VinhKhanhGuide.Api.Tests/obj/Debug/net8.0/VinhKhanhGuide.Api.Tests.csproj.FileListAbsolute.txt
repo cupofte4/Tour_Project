@@ -3,7 +3,6 @@
 /Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/bin/Debug/net8.0/VinhKhanhGuide.Api.runtimeconfig.json
 /Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/bin/Debug/net8.0/appsettings.Development.json
 /Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/bin/Debug/net8.0/appsettings.json
-/Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/bin/Debug/net8.0/VinhKhanhGuide.Api
 /Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/bin/Debug/net8.0/MvcTestingAppManifest.json
 /Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/bin/Debug/net8.0/xunit.runner.visualstudio.testadapter.dll
 /Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/bin/Debug/net8.0/xunit.runner.reporters.netcoreapp10.dll

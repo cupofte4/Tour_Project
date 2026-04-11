@@ -7,7 +7,7 @@ namespace VinhKhanhGuide.Mobile.Views;
 public partial class StallDetailPage : ContentPage
 {
     private readonly StallDetailViewModel _viewModel;
-    private int _stallId;
+    private string _stallId = string.Empty;
 
     public StallDetailPage()
     {
@@ -17,20 +17,25 @@ public partial class StallDetailPage : ContentPage
 
     public string StallId
     {
-        get => _stallId.ToString();
+        get => _stallId;
         set
         {
+            _stallId = value;
+
             if (int.TryParse(value, out var stallId))
             {
-                _stallId = stallId;
+                _ = _viewModel.LoadAsync(stallId);
             }
         }
     }
 
-    protected override async void OnAppearing()
+    private async void OnPlayNarrationClicked(object? sender, EventArgs e)
     {
-        base.OnAppearing();
+        await _viewModel.StartNarrationAsync();
+    }
 
-        await _viewModel.LoadAsync(_stallId);
+    private async void OnStopNarrationClicked(object? sender, EventArgs e)
+    {
+        await _viewModel.StopNarrationAsync();
     }
 }

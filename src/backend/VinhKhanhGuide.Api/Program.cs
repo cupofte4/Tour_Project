@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using VinhKhanhGuide.Application;
+using VinhKhanhGuide.Application.RemoteLocations;
 using VinhKhanhGuide.Infrastructure;
 using VinhKhanhGuide.Infrastructure.Persistence;
 
@@ -18,11 +19,14 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var syncService = scope.ServiceProvider.GetRequiredService<IRemoteLocationSyncService>();
 
     if (dbContext.Database.IsRelational())
     {
         dbContext.Database.Migrate();
     }
+
+    await syncService.SyncAsync();
 }
 
 if (app.Environment.IsDevelopment())

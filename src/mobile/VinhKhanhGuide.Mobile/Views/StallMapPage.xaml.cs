@@ -1,5 +1,6 @@
 using Microsoft.Maui.Controls.Maps;
 using Microsoft.Maui.Maps;
+using System.ComponentModel;
 using VinhKhanhGuide.Mobile.Models;
 using VinhKhanhGuide.Mobile.Services;
 using VinhKhanhGuide.Mobile.ViewModels;
@@ -9,12 +10,14 @@ namespace VinhKhanhGuide.Mobile.Views;
 public partial class StallMapPage : ContentPage
 {
     private readonly StallMapViewModel _viewModel;
-    private IDispatcherTimer? _locationTimer;
+    private bool _hasAppliedInitialMapRegion;
+    private bool _hasCenteredOnUserLocation;
 
     public StallMapPage()
     {
         InitializeComponent();
         BindingContext = _viewModel = ServiceHelper.GetRequiredService<StallMapViewModel>();
+        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
     }
 
     protected override async void OnAppearing()
@@ -22,27 +25,29 @@ public partial class StallMapPage : ContentPage
         base.OnAppearing();
 
         await _viewModel.LoadAsync();
+        await _viewModel.StartLocationTrackingAsync();
         RefreshMap();
-        StartLocationPolling();
     }
 
-    protected override void OnDisappearing()
+    protected override async void OnDisappearing()
     {
         base.OnDisappearing();
-        _locationTimer?.Stop();
+        await _viewModel.StopLocationTrackingAsync();
     }
 
     private void RefreshMap()
     {
         StallsMap.Pins.Clear();
+        var nearestStallId = _viewModel.NearestStall?.Id;
 
         foreach (var stall in _viewModel.Stalls)
         {
+            var isNearestStall = nearestStallId == stall.Id;
             var pin = new Pin
             {
-                Label = stall.Name,
+                Label = isNearestStall ? $"Nearest: {stall.Name}" : stall.Name,
                 Address = stall.Category,
-                Type = PinType.Place,
+                Type = isNearestStall ? PinType.SavedPin : PinType.Place,
                 Location = new Location(stall.Latitude, stall.Longitude)
             };
 
@@ -55,43 +60,88 @@ public partial class StallMapPage : ContentPage
             StallsMap.Pins.Add(pin);
         }
 
-        var center = _viewModel.MapCenter;
-
-        if (center is not null)
+        if (_viewModel.UserLocation is not null)
         {
-            StallsMap.MoveToRegion(MapSpan.FromCenterAndRadius(center, Distance.FromMeters(500)));
+            StallsMap.Pins.Add(new Pin
+            {
+                Label = "You are here",
+                Address = "Current location",
+                Type = PinType.Generic,
+                Location = _viewModel.UserLocation
+            });
         }
-        else if (_viewModel.Stalls.Count > 0)
+
+        ApplyMapRegionIfNeeded();
+    }
+
+    private void ApplyMapRegionIfNeeded()
+    {
+        if (!_hasAppliedInitialMapRegion)
         {
-            var firstStall = _viewModel.Stalls[0];
+            if (_viewModel.UserLocation is not null)
+            {
+                StallsMap.MoveToRegion(MapSpan.FromCenterAndRadius(
+                    _viewModel.UserLocation,
+                    Distance.FromMeters(400)));
+                _hasAppliedInitialMapRegion = true;
+                _hasCenteredOnUserLocation = true;
+                return;
+            }
+
+            var initialCenter = _viewModel.MapCenter;
+
+            if (initialCenter is not null)
+            {
+                StallsMap.MoveToRegion(MapSpan.FromCenterAndRadius(initialCenter, Distance.FromMeters(500)));
+                _hasAppliedInitialMapRegion = true;
+                return;
+            }
+
+            if (_viewModel.Stalls.Count > 0)
+            {
+                var firstStall = _viewModel.Stalls[0];
+                StallsMap.MoveToRegion(MapSpan.FromCenterAndRadius(
+                    new Location(firstStall.Latitude, firstStall.Longitude),
+                    Distance.FromMeters(500)));
+                _hasAppliedInitialMapRegion = true;
+                return;
+            }
+        }
+
+        if (StallMapStateHelper.ShouldCenterOnUserLocation(_hasCenteredOnUserLocation, _viewModel.UserLocation))
+        {
             StallsMap.MoveToRegion(MapSpan.FromCenterAndRadius(
-                new Location(firstStall.Latitude, firstStall.Longitude),
-                Distance.FromMeters(500)));
+                _viewModel.UserLocation!,
+                Distance.FromMeters(400)));
+            _hasCenteredOnUserLocation = true;
+            _hasAppliedInitialMapRegion = true;
         }
     }
 
-    private void StartLocationPolling()
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        _locationTimer ??= Dispatcher.CreateTimer();
-        _locationTimer.Interval = TimeSpan.FromSeconds(5);
-        _locationTimer.Tick -= OnLocationTimerTick;
-        _locationTimer.Tick += OnLocationTimerTick;
-
-        if (!_locationTimer.IsRunning)
+        if (e.PropertyName is nameof(StallMapViewModel.MapCenter)
+            or nameof(StallMapViewModel.StatusMessage)
+            or nameof(StallMapViewModel.UserLocation)
+            or nameof(StallMapViewModel.NearestStall))
         {
-            _locationTimer.Start();
+            RefreshMap();
         }
     }
 
-    private async void OnLocationTimerTick(object? sender, EventArgs e)
+    private async void OnOpenNearestStallClicked(object? sender, EventArgs e)
     {
-        await _viewModel.RefreshLocationAsync();
-        RefreshMap();
+        await _viewModel.OpenNearestStallAsync();
     }
 
     private async void OnOpenNearbyStallClicked(object? sender, EventArgs e)
     {
         await _viewModel.OpenNearbyStallAsync();
+    }
+
+    private async void OnPlayNearbyNarrationClicked(object? sender, EventArgs e)
+    {
+        await _viewModel.StartNearbyStallNarrationAsync();
     }
 
     private void OnDismissNearbyStallClicked(object? sender, EventArgs e)

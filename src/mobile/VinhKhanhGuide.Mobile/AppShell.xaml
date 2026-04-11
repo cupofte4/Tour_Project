@@ -14,5 +14,9 @@
             Title="Map"
             ContentTemplate="{DataTemplate mapViews:StallMapPage}"
             Route="map" />
+        <ShellContent
+            Title="Settings"
+            ContentTemplate="{DataTemplate mapViews:SettingsPage}"
+            Route="settings" />
     </TabBar>
 </Shell>

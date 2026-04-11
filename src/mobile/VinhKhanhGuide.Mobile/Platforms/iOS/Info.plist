@@ -42,6 +42,6 @@
 		</dict>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Your location is used to center the food stall map around you.</string>
+	<string>Your location is used to keep the POI map centered around you while the app is open.</string>
 </dict>
 </plist>

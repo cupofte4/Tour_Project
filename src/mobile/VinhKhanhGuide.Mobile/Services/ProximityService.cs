@@ -7,15 +7,94 @@ public class ProximityService : IProximityService
 {
     private readonly IProximityDistanceCalculator _distanceCalculator;
     private readonly ProximityOptions _options;
+    private readonly ISettingsService _settingsService;
+    private readonly object _syncRoot = new();
     private readonly Dictionary<int, DateTimeOffset> _lastTriggeredAt = [];
+    private readonly Dictionary<int, DateTimeOffset> _enteredAt = [];
     private readonly HashSet<int> _currentlyInsideStalls = [];
 
     public ProximityService(
         IProximityDistanceCalculator distanceCalculator,
-        IOptions<ProximityOptions> options)
+        IOptions<ProximityOptions> options,
+        ISettingsService settingsService)
     {
         _distanceCalculator = distanceCalculator;
         _options = options.Value;
+        _settingsService = settingsService;
+    }
+
+    public NearbyStallNotification? ProcessLocationUpdate(
+        GeoPoint currentLocation,
+        IEnumerable<StallSummary> stalls,
+        DateTimeOffset now)
+    {
+        lock (_syncRoot)
+        {
+            var triggerRadiusMultiplier = _settingsService.GetSettings().TriggerRadiusMultiplier;
+            var eligibleStalls = stalls
+                .Where(stall => stall.IsActive && stall.TriggerRadiusMeters > 0)
+                .Select(stall => new
+                {
+                    Stall = stall,
+                    EffectiveTriggerRadiusMeters = stall.TriggerRadiusMeters * triggerRadiusMultiplier,
+                    DistanceMeters = _distanceCalculator.CalculateMeters(
+                        currentLocation,
+                        new GeoPoint(stall.Latitude, stall.Longitude))
+                })
+                .Where(item => item.DistanceMeters <= item.EffectiveTriggerRadiusMeters)
+                .ToList();
+
+            var insideStallIds = eligibleStalls
+                .Select(item => item.Stall.Id)
+                .ToHashSet();
+
+            _currentlyInsideStalls.RemoveWhere(stallId => !insideStallIds.Contains(stallId));
+
+            foreach (var stalledEntryId in _enteredAt.Keys.Except(insideStallIds).ToList())
+            {
+                _enteredAt.Remove(stalledEntryId);
+            }
+
+            foreach (var item in eligibleStalls)
+            {
+                if (!_enteredAt.ContainsKey(item.Stall.Id))
+                {
+                    _enteredAt[item.Stall.Id] = now;
+                }
+            }
+
+            var triggerableStalls = eligibleStalls
+                .Where(item => !_currentlyInsideStalls.Contains(item.Stall.Id))
+                .Where(item => !_lastTriggeredAt.TryGetValue(item.Stall.Id, out var lastTriggeredAt) ||
+                               now - lastTriggeredAt >= _options.TriggerCooldown)
+                .Where(item => now - _enteredAt[item.Stall.Id] >= _options.TriggerDebounce)
+                .OrderByDescending(item => item.Stall.Priority)
+                .ThenBy(item => item.DistanceMeters)
+                .ToList();
+
+            if (triggerableStalls.Count == 0)
+            {
+                return null;
+            }
+
+            var selectedStall = triggerableStalls[0];
+            _lastTriggeredAt[selectedStall.Stall.Id] = now;
+
+            foreach (var item in eligibleStalls)
+            {
+                _currentlyInsideStalls.Add(item.Stall.Id);
+            }
+
+            return new NearbyStallNotification
+            {
+                StallId = selectedStall.Stall.Id,
+                StallName = selectedStall.Stall.Name,
+                Category = selectedStall.Stall.Category,
+                DistanceMeters = selectedStall.DistanceMeters,
+                TriggerReason = ProximityTriggerReason.EnteredRadius,
+                Timestamp = now
+            };
+        }
     }
 
     public NearbyStallNotification? EvaluateNearbyStall(
@@ -23,50 +102,16 @@ public class ProximityService : IProximityService
         IEnumerable<StallSummary> stalls,
         DateTimeOffset now)
     {
-        var insideStalls = stalls
-            .Select(stall => new
-            {
-                Stall = stall,
-                DistanceMeters = _distanceCalculator.CalculateMeters(
-                    currentLocation,
-                    new GeoPoint(stall.Latitude, stall.Longitude))
-            })
-            .Where(item => item.DistanceMeters <= item.Stall.TriggerRadiusMeters)
-            .OrderBy(item => item.DistanceMeters)
-            .ToList();
+        return ProcessLocationUpdate(currentLocation, stalls, now);
+    }
 
-        var insideStallIds = insideStalls
-            .Select(item => item.Stall.Id)
-            .ToHashSet();
-
-        _currentlyInsideStalls.RemoveWhere(stallId => !insideStallIds.Contains(stallId));
-
-        foreach (var item in insideStalls)
+    public void Reset()
+    {
+        lock (_syncRoot)
         {
-            if (_currentlyInsideStalls.Contains(item.Stall.Id))
-            {
-                continue;
-            }
-
-            if (_lastTriggeredAt.TryGetValue(item.Stall.Id, out var lastTriggeredAt) &&
-                now - lastTriggeredAt < _options.TriggerCooldown)
-            {
-                _currentlyInsideStalls.Add(item.Stall.Id);
-                continue;
-            }
-
-            _lastTriggeredAt[item.Stall.Id] = now;
-            _currentlyInsideStalls.Add(item.Stall.Id);
-
-            return new NearbyStallNotification
-            {
-                StallId = item.Stall.Id,
-                StallName = item.Stall.Name,
-                Category = item.Stall.Category,
-                DistanceMeters = item.DistanceMeters
-            };
+            _lastTriggeredAt.Clear();
+            _enteredAt.Clear();
+            _currentlyInsideStalls.Clear();
         }
-
-        return null;
     }
 }

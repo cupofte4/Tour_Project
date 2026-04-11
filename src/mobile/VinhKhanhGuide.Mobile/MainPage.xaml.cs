@@ -1,4 +1,5 @@
 using VinhKhanhGuide.Mobile.Services;
+using VinhKhanhGuide.Mobile.Models;
 using VinhKhanhGuide.Mobile.ViewModels;
 
 namespace VinhKhanhGuide.Mobile;
@@ -18,5 +19,13 @@ public partial class MainPage : ContentPage
         base.OnAppearing();
 
         await _viewModel.LoadAsync();
+    }
+
+    private async void OnPreviewNarrationClicked(object? sender, EventArgs e)
+    {
+        if (sender is Button { CommandParameter: StallSummary stall })
+        {
+            await _viewModel.PreviewNarrationAsync(stall);
+        }
     }
 }

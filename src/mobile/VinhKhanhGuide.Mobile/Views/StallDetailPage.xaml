@@ -4,6 +4,8 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:models="clr-namespace:VinhKhanhGuide.Mobile.Models"
+    x:DataType="viewModels:StallDetailViewModel"
+    xmlns:viewModels="clr-namespace:VinhKhanhGuide.Mobile.ViewModels"
     Title="Stall Detail">
     <ScrollView>
         <Grid Padding="20" RowDefinitions="Auto,Auto,*" RowSpacing="16">
@@ -19,32 +21,48 @@
                 TextColor="IndianRed"
                 IsVisible="{Binding HasError}" />
 
-            <VerticalStackLayout
-                Grid.Row="2"
-                Spacing="12"
-                BindingContext="{Binding Stall}">
+            <VerticalStackLayout Grid.Row="2" Spacing="12">
+                <Picker
+                    Title="Language"
+                    ItemsSource="{Binding Languages}"
+                    ItemDisplayBinding="{Binding DisplayName}"
+                    SelectedItem="{Binding SelectedLanguage}" />
                 <Image
                     HeightRequest="220"
                     Aspect="AspectFill"
-                    Source="{Binding ImageUrl}" />
+                    Source="{Binding Stall.DisplayImageSource}" />
                 <Label
                     FontSize="26"
                     FontAttributes="Bold"
-                    Text="{Binding Name}" />
+                    Text="{Binding DisplayName}" />
                 <Label
                     FontSize="15"
-                    Text="{Binding Category}" />
+                    Text="{Binding Stall.Category}" />
                 <Label
                     FontSize="15"
-                    Text="{Binding AverageRatingText}"
+                    Text="{Binding Stall.AverageRatingText}"
                     TextColor="#666666" />
                 <Label
                     FontSize="15"
-                    Text="{Binding OpenHours, StringFormat='Open hours: {0}'}" />
+                    Text="{Binding Stall.OpenHours, StringFormat='Open hours: {0}'}" />
                 <Label
                     FontSize="16"
                     LineBreakMode="WordWrap"
-                    Text="{Binding DescriptionVi}" />
+                    Text="{Binding DisplayDescription}" />
+                <HorizontalStackLayout Spacing="10">
+                    <Button
+                        Text="Play Narration"
+                        Clicked="OnPlayNarrationClicked"
+                        IsEnabled="{Binding CanStartNarration}" />
+                    <Button
+                        Text="Stop"
+                        Clicked="OnStopNarrationClicked"
+                        IsEnabled="{Binding CanStopNarration}" />
+                </HorizontalStackLayout>
+                <Label
+                    Text="{Binding NarrationStatusText}"
+                    TextColor="#666666"
+                    IsVisible="{Binding HasNarrationStatus}" />
             </VerticalStackLayout>
         </Grid>
     </ScrollView>

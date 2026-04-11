@@ -4,7 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
-    Title="Stall Map">
+    Title="POI Map">
     <Grid RowDefinitions="Auto,*,Auto" RowSpacing="12" Padding="16">
         <Label
             Grid.Row="0"
@@ -15,45 +15,123 @@
         <Grid Grid.Row="1">
             <maps:Map x:Name="StallsMap" />
 
-            <Frame
+            <VerticalStackLayout
                 Margin="12"
-                Padding="12"
-                BackgroundColor="White"
-                BorderColor="#D9D9D9"
-                CornerRadius="12"
-                HasShadow="True"
+                Spacing="10"
                 HorizontalOptions="Fill"
-                VerticalOptions="Start"
-                IsVisible="{Binding HasNearbyStall}">
-                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="4" ColumnSpacing="12">
-                    <Label
-                        Grid.Row="0"
-                        Grid.Column="0"
-                        FontAttributes="Bold"
-                        Text="{Binding NearbyStall.StallName}" />
-                    <Button
-                        Grid.Row="0"
-                        Grid.Column="1"
-                        Padding="8,0"
-                        Clicked="OnDismissNearbyStallClicked"
-                        Text="X" />
-                    <Label
-                        Grid.Row="1"
-                        Grid.Column="0"
-                        Grid.ColumnSpan="2"
-                        Text="{Binding NearbyStall.Category}" />
-                    <Label
-                        Grid.Row="2"
-                        Grid.Column="0"
-                        Text="{Binding NearbyStall.DistanceText}"
-                        TextColor="#666666" />
-                    <Button
-                        Grid.Row="2"
-                        Grid.Column="1"
-                        Clicked="OnOpenNearbyStallClicked"
-                        Text="Open" />
-                </Grid>
-            </Frame>
+                VerticalOptions="Start">
+                <Frame
+                    Padding="12"
+                    BackgroundColor="#FFF9E8"
+                    BorderColor="#E6C56A"
+                    CornerRadius="12"
+                    HasShadow="True"
+                    IsVisible="{Binding HasNearestStall}">
+                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="4" ColumnSpacing="12">
+                        <Label
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            FontAttributes="Bold"
+                            Text="Nearest POI" />
+                        <Button
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Padding="8,0"
+                            Clicked="OnOpenNearestStallClicked"
+                            Text="Open" />
+                        <Label
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="2"
+                            FontAttributes="Bold"
+                            Text="{Binding NearestStall.Name}" />
+                        <Label
+                            Grid.Row="2"
+                            Grid.Column="0"
+                            Text="{Binding NearestStallDistanceText}"
+                            TextColor="#666666" />
+                    </Grid>
+                </Frame>
+
+                <Frame
+                    Padding="12"
+                    BackgroundColor="White"
+                    BorderColor="#D9D9D9"
+                    CornerRadius="12"
+                    HasShadow="True"
+                    IsVisible="{Binding HasNearbyStall}">
+                    <Grid ColumnDefinitions="72,*,Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="6" ColumnSpacing="12">
+                        <Image
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            Grid.RowSpan="5"
+                            WidthRequest="72"
+                            HeightRequest="72"
+                            Aspect="AspectFill"
+                            Source="{Binding NearbyStall.DisplayImageSource}" />
+                        <Label
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            FontAttributes="Bold"
+                            Text="Nearby POI" />
+                        <Button
+                            Grid.Row="0"
+                            Grid.Column="2"
+                            Padding="8,0"
+                            Clicked="OnOpenNearbyStallClicked"
+                            Text="Open" />
+                        <Button
+                            Grid.Row="0"
+                            Grid.Column="3"
+                            Padding="8,0"
+                            Clicked="OnDismissNearbyStallClicked"
+                            Text="X" />
+                        <Label
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="3"
+                            FontAttributes="Bold"
+                            Text="{Binding NearbyStall.StallName}" />
+                        <Label
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            Text="{Binding NearbyStall.DistanceText}"
+                            TextColor="#666666" />
+                        <Label
+                            Grid.Row="2"
+                            Grid.Column="2"
+                            Grid.ColumnSpan="2"
+                            HorizontalTextAlignment="End"
+                            Text="{Binding NearbyStall.Category}"
+                            TextColor="#666666" />
+                        <Label
+                            Grid.Row="3"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2"
+                            Text="{Binding NearbyStall.PromptText}"
+                            TextColor="#666666" />
+                        <Button
+                            Grid.Row="3"
+                            Grid.Column="3"
+                            Clicked="OnPlayNearbyNarrationClicked"
+                            IsVisible="{Binding NearbyStall.CanStartNarration}"
+                            Text="Listen" />
+                        <Label
+                            Grid.Row="4"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="3"
+                            LineBreakMode="TailTruncation"
+                            MaxLines="3"
+                            Text="{Binding NearbyStall.NarrationText}" />
+                        <Label
+                            Grid.Row="3"
+                            Grid.Column="2"
+                            HorizontalTextAlignment="End"
+                            Text="{Binding NearbyStall.PlaybackStatusText}"
+                            TextColor="#666666" />
+                    </Grid>
+                </Frame>
+            </VerticalStackLayout>
 
             <ActivityIndicator
                 HorizontalOptions="Center"
@@ -64,7 +142,7 @@
 
         <Label
             Grid.Row="2"
-            Text="Tap a pin or nearby card to open stall details."
+            Text="Tap a pin or card to open POI details."
             TextColor="#666666" />
     </Grid>
 </ContentPage>

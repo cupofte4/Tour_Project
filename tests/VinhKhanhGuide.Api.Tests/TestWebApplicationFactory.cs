@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using VinhKhanhGuide.Domain.Entities;
+using Microsoft.Extensions.Options;
+using VinhKhanhGuide.Application.RemoteLocations;
 using VinhKhanhGuide.Infrastructure.Persistence;
-using VinhKhanhGuide.Infrastructure.Persistence.Seeding;
+using VinhKhanhGuide.Infrastructure.RemoteLocations;
+using VinhKhanhGuide.Infrastructure.Translations;
 
 namespace VinhKhanhGuide.Api.Tests;
 
@@ -24,32 +26,39 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
 
             using var scope = services.BuildServiceProvider().CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var options = scope.ServiceProvider.GetRequiredService<IOptions<RemoteLocationImportOptions>>();
+            var syncService = scope.ServiceProvider.GetRequiredService<IRemoteLocationSyncService>();
 
             dbContext.Database.EnsureDeleted();
             dbContext.Database.EnsureCreated();
-
-            if (!dbContext.Stalls.Any())
-            {
-                dbContext.Stalls.AddRange(StallSeedData.Stalls.Select(CreateSeedCopy));
-                dbContext.SaveChanges();
-            }
+            options.Value.SqlSnapshotPath = ResolveFoodGuideSqlPath();
+            syncService.SyncAsync().GetAwaiter().GetResult();
         });
     }
 
-    private static Stall CreateSeedCopy(Stall stall)
+    public void ResetTranslationState()
     {
-        return new Stall
+        using var scope = Services.CreateScope();
+        var fakeTranslator = scope.ServiceProvider.GetRequiredService<FakeTranslationService>();
+        fakeTranslator.Reset();
+    }
+
+    private static string ResolveFoodGuideSqlPath()
+    {
+        var current = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (current is not null)
         {
-            Id = stall.Id,
-            Name = stall.Name,
-            DescriptionVi = stall.DescriptionVi,
-            Latitude = stall.Latitude,
-            Longitude = stall.Longitude,
-            TriggerRadiusMeters = stall.TriggerRadiusMeters,
-            Category = stall.Category,
-            OpenHours = stall.OpenHours,
-            ImageUrl = stall.ImageUrl,
-            AverageRating = stall.AverageRating
-        };
+            var candidate = Path.Combine(current.FullName, "foodguide.sql");
+
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            current = current.Parent;
+        }
+
+        throw new FileNotFoundException("Could not find foodguide.sql for API tests.");
     }
 }
