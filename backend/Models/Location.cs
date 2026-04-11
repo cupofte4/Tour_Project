@@ -16,5 +16,12 @@ namespace Tour_Project.Models
         public string? TextEn { get; set; }
         public string? TextZh { get; set; }
         public string? TextDe { get; set; }
+        public int? ManagerId { get; set; }
+
+        // Navigation properties
+        public User? Manager { get; set; }
+        public ICollection<LocationReview>? Reviews { get; set; }
+        public ICollection<LocationStat>? Stats { get; set; }
+        public ICollection<LocationManagerAssignment>? ManagerAssignments { get; set; }
     }
 }

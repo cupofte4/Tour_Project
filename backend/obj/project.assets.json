@@ -2081,24 +2081,26 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Tea\\.nuget\\packages\\": {}
+    "C:\\Users\\Tran Nhu\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\CNTT_Code\\CSharp\\backend\\backend.csproj",
+      "projectUniqueName": "D:\\Code_CSharp\\Tour_Project\\backend\\backend.csproj",
       "projectName": "backend",
-      "projectPath": "E:\\CNTT_Code\\CSharp\\backend\\backend.csproj",
-      "packagesPath": "C:\\Users\\Tea\\.nuget\\packages\\",
-      "outputPath": "E:\\CNTT_Code\\CSharp\\backend\\obj\\",
+      "projectPath": "D:\\Code_CSharp\\Tour_Project\\backend\\backend.csproj",
+      "packagesPath": "C:\\Users\\Tran Nhu\\.nuget\\packages\\",
+      "outputPath": "D:\\Code_CSharp\\Tour_Project\\backend\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Tea\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\Tran Nhu\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {

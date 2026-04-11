@@ -199,7 +199,7 @@ function Register() {
               </div>
 
               <button type="submit" className="login-btn" disabled={isLoading}>
-                {isLoading ? "Creating account..." : "Create account"}
+                {isLoading ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
               </button>
             </form>
 

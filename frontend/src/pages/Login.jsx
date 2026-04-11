@@ -174,7 +174,7 @@ function Login() {
               </div>
 
               <button type="submit" className="login-btn" disabled={isLoading}>
-                {isLoading ? "Logging in..." : "Log in"}
+                {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
               </button>
             </form>
 

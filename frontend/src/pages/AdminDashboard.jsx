@@ -29,7 +29,7 @@ import {
 } from "../services/locationService";
 import { speak, stop } from "../services/ttsService";
 import { uploadImages } from "../services/uploadService";
-import { getAllUsers, updateAdminUser } from "../services/userService";
+import { getAllUsers, updateAdminUser, createUserAsAdmin } from "../services/userService";
 import {
   assignLocationToManager,
   getAllAssignments,
@@ -114,6 +114,7 @@ function AdminDashboard() {
   const [userError, setUserError] = useState("");
   const [userNotice, setUserNotice] = useState("");
   const [userForm, setUserForm] = useState(createEmptyUserForm());
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
 
   const [locations, setLocations] = useState([]);
   const [isLoadingLocations, setIsLoadingLocations] = useState(true);
@@ -226,7 +227,16 @@ function AdminDashboard() {
 
   const resetUserForm = () => {
     setUserForm(createEmptyUserForm());
+    setIsCreatingUser(false);
     setUserError("");
+  };
+
+  const startCreatingUser = () => {
+    setUserError("");
+    setUserNotice("");
+    setUserForm(createEmptyUserForm());
+    setIsCreatingUser(true);
+    setActiveMenu("users");
   };
 
   const startEditingUser = (targetUser) => {
@@ -240,6 +250,7 @@ function AdminDashboard() {
       isLocked: !!targetUser.isLocked,
       password: "",
     });
+    setIsCreatingUser(false);
     setActiveMenu("users");
   };
 
@@ -253,29 +264,49 @@ function AdminDashboard() {
 
   const handleUserSubmit = async (event) => {
     event.preventDefault();
-    if (!userForm.id) return;
 
     setIsSavingUser(true);
     setUserError("");
     setUserNotice("");
 
     try {
-      const updatedUser = await updateAdminUser(userForm.id, {
-        password: userForm.password.trim() || null,
-        role: userForm.role || null,
-        isLocked: userForm.isLocked,
-      });
+      if (isCreatingUser) {
+        // Create new user
+        if (!userForm.fullName.trim() || !userForm.username.trim() || !userForm.password.trim()) {
+          throw new Error("Vui lòng nhập đầy đủ thông tin (Họ tên, Username, Mật khẩu)");
+        }
 
-      setUsers((current) =>
-        current.map((item) =>
-          item.id === updatedUser.id ? updatedUser : item,
-        ),
-      );
-      setUserForm((current) => ({ ...current, password: "" }));
-      setUserNotice("Đã cập nhật tài khoản người dùng.");
+        const newUser = await createUserAsAdmin({
+          fullName: userForm.fullName.trim(),
+          username: userForm.username.trim(),
+          password: userForm.password.trim(),
+          role: userForm.role || "user",
+        });
+
+        setUsers((current) => [newUser, ...current]);
+        resetUserForm();
+        setUserNotice("Đã tạo tài khoản người dùng mới.");
+      } else {
+        // Update existing user
+        if (!userForm.id) return;
+
+        const updatedUser = await updateAdminUser(userForm.id, {
+          password: userForm.password.trim() || null,
+          role: userForm.role || null,
+          isLocked: userForm.isLocked,
+        });
+
+        setUsers((current) =>
+          current.map((item) =>
+            item.id === updatedUser.id ? updatedUser : item,
+          ),
+        );
+        setUserForm((current) => ({ ...current, password: "" }));
+        setUserNotice("Đã cập nhật tài khoản người dùng.");
+      }
     } catch (error) {
-      console.error("Failed to update user:", error);
-      setUserError(error.message || "Không cập nhật được người dùng.");
+      console.error("Failed to process user:", error);
+      setUserError(error.message || "Không thể xử lý tài khoản người dùng.");
     } finally {
       setIsSavingUser(false);
     }
@@ -703,11 +734,23 @@ function AdminDashboard() {
           <div>
             <p className="section-eyebrow">Account control</p>
             <h2 className="section-title">
-              {userForm.id
-                ? "Chỉnh sửa người dùng"
-                : "Chọn người dùng để chỉnh sửa"}
+              {isCreatingUser
+                ? "Tạo tài khoản người dùng mới"
+                : userForm.id
+                  ? "Chỉnh sửa người dùng"
+                  : "Chọn người dùng để chỉnh sửa"}
             </h2>
           </div>
+          {!isCreatingUser && (
+            <button
+              type="button"
+              className="ghost-action"
+              onClick={startCreatingUser}
+            >
+              <LuPlus size={16} />
+              <span>Tạo người dùng</span>
+            </button>
+          )}
           <button
             type="button"
             className="ghost-action"
@@ -727,16 +770,30 @@ function AdminDashboard() {
           </div>
         )}
 
-        {userForm.id ? (
+        {isCreatingUser || userForm.id ? (
           <form className="user-form" onSubmit={handleUserSubmit}>
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="fullName">Họ và tên</label>
-                <input id="fullName" value={userForm.fullName} disabled />
+                <input
+                  id="fullName"
+                  name="fullName"
+                  value={userForm.fullName}
+                  onChange={handleUserFormChange}
+                  disabled={!isCreatingUser && userForm.id}
+                  placeholder="Nhập họ và tên"
+                />
               </div>
               <div className="form-group">
                 <label htmlFor="username">Username</label>
-                <input id="username" value={userForm.username} disabled />
+                <input
+                  id="username"
+                  name="username"
+                  value={userForm.username}
+                  onChange={handleUserFormChange}
+                  disabled={!isCreatingUser && userForm.id}
+                  placeholder="Nhập tên đăng nhập"
+                />
               </div>
             </div>
             <div className="form-row">
@@ -761,31 +818,39 @@ function AdminDashboard() {
                 )}
               </div>
               <div className="form-group">
-                <label htmlFor="password">Mật khẩu mới</label>
+                <label htmlFor="password">
+                  {isCreatingUser ? "Mật khẩu" : "Mật khẩu mới"}
+                </label>
                 <input
                   id="password"
                   name="password"
                   type="password"
                   value={userForm.password}
-                  placeholder="Để trống nếu không đổi mật khẩu"
+                  placeholder={
+                    isCreatingUser
+                      ? "Nhập mật khẩu"
+                      : "Để trống nếu không đổi mật khẩu"
+                  }
                   onChange={handleUserFormChange}
                 />
               </div>
             </div>
-            <label className="admin-toggle">
-              <input
-                type="checkbox"
-                name="isLocked"
-                checked={userForm.isLocked}
-                onChange={handleUserFormChange}
-              />
-              <span className="admin-toggle-switch" />
-              <span className="admin-toggle-label">
-                {userForm.isLocked
-                  ? "Tài khoản đang bị khóa"
-                  : "Tài khoản đang hoạt động"}
-              </span>
-            </label>
+            {!isCreatingUser && (
+              <label className="admin-toggle">
+                <input
+                  type="checkbox"
+                  name="isLocked"
+                  checked={userForm.isLocked}
+                  onChange={handleUserFormChange}
+                />
+                <span className="admin-toggle-switch" />
+                <span className="admin-toggle-label">
+                  {userForm.isLocked
+                    ? "Tài khoản đang bị khóa"
+                    : "Tài khoản đang hoạt động"}
+                </span>
+              </label>
+            )}
             <div className="location-form-actions">
               <button
                 type="submit"
@@ -797,14 +862,14 @@ function AdminDashboard() {
                 ) : (
                   <LuSave size={16} />
                 )}
-                <span>Lưu tài khoản</span>
+                <span>{isCreatingUser ? "Tạo tài khoản" : "Lưu tài khoản"}</span>
               </button>
               <button
                 type="button"
                 className="btn action-btn-muted"
                 onClick={resetUserForm}
               >
-                Hủy chỉnh sửa
+                Hủy
               </button>
             </div>
           </form>
@@ -1134,6 +1199,13 @@ function AdminDashboard() {
     const managerList = users.filter(
       (item) => (item.role || "").toLowerCase() === "manager",
     );
+    
+    // Map locationId -> assignment info
+    const locationToManager = {};
+    assignments.forEach((a) => {
+      locationToManager[a.locationId] = a;
+    });
+
     const assignedLocationIds = new Set(
       assignments
         .filter((item) => item.managerId === managerId)
@@ -1147,6 +1219,12 @@ function AdminDashboard() {
     const assignedLocations = locations.filter((item) =>
       managerId ? assignedLocationIds.has(item.id) : false,
     );
+
+    // Check if location is assigned to another manager
+    const isAssignedToOther = (locationId) => {
+      const assignment = locationToManager[locationId];
+      return assignment && assignment.managerId !== managerId;
+    };
 
     const handleAssign = async (locationId) => {
       if (!managerId) return;
@@ -1321,23 +1399,46 @@ function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {availableLocations.map((item, index) => (
-                  <tr key={item.id}>
-                    <td>{index + 1}</td>
-                    <td>{item.name}</td>
-                    <td>
-                      <div className="table-actions">
-                        <button
-                          type="button"
-                          className="action-btn"
-                          onClick={() => handleAssign(item.id)}
-                        >
-                          Gán
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {availableLocations.map((item, index) => {
+                  const assignedToOther = isAssignedToOther(item.id);
+                  const assignedManager = locationToManager[item.id]?.managerName;
+
+                  return (
+                    <tr
+                      key={item.id}
+                      className={assignedToOther ? "location-row-unavailable" : ""}
+                    >
+                      <td>{index + 1}</td>
+                      <td>
+                        {item.name}
+                        {assignedToOther && (
+                          <div className="location-assigned-text">
+                            Được quản lý bởi: {assignedManager}
+                          </div>
+                        )}
+                      </td>
+                      <td>
+                        <div className="table-actions">
+                          <button
+                            type="button"
+                            className={`action-btn ${
+                              assignedToOther ? "action-btn-disabled" : ""
+                            }`}
+                            onClick={() => handleAssign(item.id)}
+                            disabled={assignedToOther}
+                            title={
+                              assignedToOther
+                                ? `Sạp này được quản lý bởi ${assignedManager}`
+                                : ""
+                            }
+                          >
+                            {assignedToOther ? "Đã được gán" : "Gán"}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}

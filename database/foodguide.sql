@@ -23,6 +23,7 @@ INSERT INTO Users (Username, Password, FullName, Phone, Gender, Avatar, Role, Is
   ('tranthib', 'password123', 'Trần Thị B', NULL, NULL, NULL, 'user', b'0'),
   ('traveler99', 'dulichvietnam', 'Du Khách 99', NULL, NULL, NULL, 'user', b'0'),
   ('manager1', 'manager123', 'Business Manager', '0911000000', NULL, NULL, 'manager', b'0'),
+  ('mng', 'mng123', 'Người Quản Lý', '0922000000', NULL, NULL, 'manager', b'0'),
   ('admin', 'admin123', 'Administrator', '0900000000', 'Nam', NULL, 'admin', b'0');
 
 CREATE TABLE Locations (
@@ -39,7 +40,9 @@ CREATE TABLE Locations (
     TextVi LONGTEXT CHARACTER SET utf8mb4 NULL,
     TextEn LONGTEXT CHARACTER SET utf8mb4 NULL,
     TextZh LONGTEXT CHARACTER SET utf8mb4 NULL,
-    TextDe LONGTEXT CHARACTER SET utf8mb4 NULL
+    TextDe LONGTEXT CHARACTER SET utf8mb4 NULL,
+    ManagerId INT NULL,
+    CONSTRAINT FK_Locations_Users FOREIGN KEY (ManagerId) REFERENCES Users(Id) ON DELETE SET NULL
 );
 
 CREATE TABLE LocationStats (
@@ -52,42 +55,6 @@ CREATE TABLE LocationStats (
     UNIQUE KEY UX_LocationStats_Location_Date (LocationId, StatDate),
     KEY IX_LocationStats_StatDate (StatDate)
 );
-
-INSERT INTO LocationStats (LocationId, StatDate, ViewsCount, AudioPlaysCount) VALUES
--- Location 1
-(1, '2026-04-05', 120, 95),
-(1, '2026-04-06', 150, 110),
-(1, '2026-04-07', 180, 140),
-(1, '2026-04-08', 200, 170),
-(1, '2026-04-09', 230, 190),
-
--- Location 2
-(2, '2026-04-05', 90, 70),
-(2, '2026-04-06', 110, 85),
-(2, '2026-04-07', 130, 100),
-(2, '2026-04-08', 160, 120),
-(2, '2026-04-09', 180, 150),
-
--- Location 3
-(3, '2026-04-05', 60, 40),
-(3, '2026-04-06', 75, 55),
-(3, '2026-04-07', 95, 70),
-(3, '2026-04-08', 120, 90),
-(3, '2026-04-09', 140, 110),
-
--- Location 4
-(4, '2026-04-05', 200, 160),
-(4, '2026-04-06', 240, 190),
-(4, '2026-04-07', 280, 220),
-(4, '2026-04-08', 310, 250),
-(4, '2026-04-09', 350, 300),
-
--- Location 5
-(5, '2026-04-05', 50, 30),
-(5, '2026-04-06', 65, 45),
-(5, '2026-04-07', 80, 60),
-(5, '2026-04-08', 100, 75),
-(5, '2026-04-09', 120, 95);
 
 CREATE TABLE LocationManagerAssignments (
     Id INT PRIMARY KEY AUTO_INCREMENT,
@@ -254,5 +221,87 @@ VALUES
   'Willkommen beim Thai Eisrollen Stand. Dies ist ein suesser Abschluss fur einen kulinarischen Abend auf der Vinh Khanh Strasse. Das Eis wird direkt auf einer kalten Platte zubereitet, ausgerollt und zu kleinen Rollen geformt. Es gibt Sorten wie Mango, Erdbeere, Schokolade, Vanille oder Gruentee, dazu frische Fruchte, Kekse und Sossen. Ein frisches Dessert, das besonders bei jungen Leuten und Familien beliebt ist.'
 );
 
+-- INSERT LocationStats AFTER Locations data is inserted
+INSERT INTO LocationStats (LocationId, StatDate, ViewsCount, AudioPlaysCount) VALUES
+-- Location 1: Ốc Vĩnh Khánh
+(1, '2026-04-05', 120, 95),
+(1, '2026-04-06', 150, 110),
+(1, '2026-04-07', 180, 140),
+(1, '2026-04-08', 200, 170),
+(1, '2026-04-09', 230, 190),
+
+-- Location 2: Phá Lấu Vĩnh Khánh
+(2, '2026-04-05', 90, 70),
+(2, '2026-04-06', 110, 85),
+(2, '2026-04-07', 130, 100),
+(2, '2026-04-08', 160, 120),
+(2, '2026-04-09', 180, 150),
+
+-- Location 3: Chè Vĩnh Khánh
+(3, '2026-04-05', 60, 40),
+(3, '2026-04-06', 75, 55),
+(3, '2026-04-07', 95, 70),
+(3, '2026-04-08', 120, 90),
+(3, '2026-04-09', 140, 110),
+
+-- Location 4: Hải Sản Nướng
+(4, '2026-04-05', 200, 160),
+(4, '2026-04-06', 240, 190),
+(4, '2026-04-07', 280, 220),
+(4, '2026-04-08', 310, 250),
+(4, '2026-04-09', 350, 300),
+
+-- Location 5: Bánh Tráng Nướng Q4
+(5, '2026-04-05', 50, 30),
+(5, '2026-04-06', 65, 45),
+(5, '2026-04-07', 80, 60),
+(5, '2026-04-08', 100, 75),
+(5, '2026-04-09', 120, 95),
+
+-- Location 6: Súp Cua Vĩnh Khánh
+(6, '2026-04-05', 55, 35),
+(6, '2026-04-06', 70, 50),
+(6, '2026-04-07', 85, 65),
+(6, '2026-04-08', 105, 80),
+(6, '2026-04-09', 125, 100),
+
+-- Location 7: Trà Sữa Vỉa Hè
+(7, '2026-04-05', 45, 25),
+(7, '2026-04-06', 60, 40),
+(7, '2026-04-07', 75, 55),
+(7, '2026-04-08', 90, 70),
+(7, '2026-04-09', 110, 85),
+
+-- Location 8: Xiên Nướng Đêm
+(8, '2026-04-05', 75, 55),
+(8, '2026-04-06', 95, 70),
+(8, '2026-04-07', 115, 85),
+(8, '2026-04-08', 140, 105),
+(8, '2026-04-09', 160, 125),
+
+-- Location 9: Bún Thái Hải Sản
+(9, '2026-04-05', 85, 60),
+(9, '2026-04-06', 105, 75),
+(9, '2026-04-07', 125, 95),
+(9, '2026-04-08', 150, 115),
+(9, '2026-04-09', 175, 140),
+
+-- Location 10: Kem Cuộn Thái
+(10, '2026-04-05', 40, 20),
+(10, '2026-04-06', 55, 35),
+(10, '2026-04-07', 70, 50),
+(10, '2026-04-08', 85, 65),
+(10, '2026-04-09', 100, 80);
+
+-- INSERT LocationManagerAssignments - Assign all locations to manager1
+INSERT INTO LocationManagerAssignments (ManagerId, LocationId) VALUES
+(4, 1), -- Ốc Vĩnh Khánh
+(4, 2), -- Phá Lấu Vĩnh Khánh
+(5, 3),
+(5, 4);
+
+
 SELECT * FROM Users;
 SELECT * FROM Locations;
+SELECT * FROM LocationStats;
+SELECT * FROM LocationManagerAssignments;

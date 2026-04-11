@@ -55,6 +55,60 @@ namespace Tour_Project.Controllers
             return Ok(assignments);
         }
 
+        [HttpGet("available-locations")]
+        public IActionResult GetAvailableLocations()
+        {
+            // Get all locations that are not assigned to any manager
+            var assignedLocationIds = _context.LocationManagerAssignments
+                .Select(item => item.LocationId)
+                .ToList();
+
+            var availableLocations = _context.Locations
+                .Where(location => !assignedLocationIds.Contains(location.Id))
+                .OrderByDescending(location => location.Id)
+                .Select(location => new
+                {
+                    id = location.Id,
+                    name = location.Name,
+                    description = location.Description,
+                    latitude = location.Latitude,
+                    longitude = location.Longitude,
+                    address = location.Address
+                })
+                .ToList();
+
+            return Ok(availableLocations);
+        }
+
+        [HttpGet("locations/{locationId}/availability")]
+        public IActionResult CheckLocationAvailability(int locationId)
+        {
+            var location = _context.Locations.Find(locationId);
+            if (location == null)
+                return NotFound(new { message = "Location not found" });
+
+            var assignment = _context.LocationManagerAssignments
+                .Include(item => item.Manager)
+                .FirstOrDefault(item => item.LocationId == locationId);
+
+            if (assignment == null)
+            {
+                return Ok(new
+                {
+                    locationId = locationId,
+                    isAvailable = true,
+                    assignedManager = (string?)null
+                });
+            }
+
+            return Ok(new
+            {
+                locationId = locationId,
+                isAvailable = false,
+                assignedManager = assignment.Manager?.FullName
+            });
+        }
+
         [HttpGet("managers/{managerId}/locations")]
         public IActionResult GetManagerLocations(int managerId)
         {
@@ -89,11 +143,24 @@ namespace Tour_Project.Controllers
             if (location == null)
                 return NotFound(new { message = "Location not found" });
 
-            var exists = _context.LocationManagerAssignments.Any(item =>
-                item.ManagerId == request.ManagerId && item.LocationId == request.LocationId);
+            // Check if location is already assigned to ANY manager
+            var isLocationAlreadyAssigned = _context.LocationManagerAssignments.Any(item =>
+                item.LocationId == request.LocationId);
 
-            if (exists)
-                return Ok(new { message = "Already assigned" });
+            if (isLocationAlreadyAssigned)
+            {
+                var currentAssignment = _context.LocationManagerAssignments
+                    .Include(item => item.Manager)
+                    .FirstOrDefault(item => item.LocationId == request.LocationId);
+                
+                if (currentAssignment?.ManagerId == request.ManagerId)
+                    return Ok(new { message = "Already assigned" });
+
+                return BadRequest(new 
+                { 
+                    message = $"Location is already assigned to manager: {currentAssignment?.Manager?.FullName}. A location can only be managed by one manager." 
+                });
+            }
 
             var assignment = new LocationManagerAssignment
             {
