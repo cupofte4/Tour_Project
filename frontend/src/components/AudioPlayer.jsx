@@ -2,193 +2,119 @@ import { useEffect, useState } from "react";
 import audioQueue from "../services/audioQueueService";
 import { getTextForLang } from "../services/ttsService";
 
-function AudioPlayer({ lang, onAddToQueue }) {
+function AudioPlayer() {
   const [state, setState] = useState(audioQueue.getState());
-  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = audioQueue.subscribe((newState) => {
-      setState(newState);
-    });
-
+    const unsubscribe = audioQueue.subscribe((newState) => setState(newState));
     return () => unsubscribe();
   }, []);
 
-  const handlePlay = () => {
-    if (state.isPlaying) {
-      audioQueue.pause();
-    } else {
-      audioQueue.play();
-    }
-  };
-
-  const handleStop = () => {
-    audioQueue.stop();
-  };
-
-  const handleSkipNext = () => {
-    audioQueue.skipNext();
-  };
-
-  const handleSkipPrevious = () => {
-    audioQueue.skipPrevious();
-  };
-
-  const handleRemoveItem = (id) => {
-    audioQueue.removeItem(id);
-  };
-
-  const handleClear = () => {
-    if (window.confirm("Xóa tất cả trong danh sách phát?")) {
-      audioQueue.clearQueue();
-    }
-  };
-
   const currentItem = state.currentItem;
-  const queueLength = state.queue?.length || 0;
-  const upcomingCount =
-    state.currentIndex < queueLength ? queueLength - state.currentIndex - 1 : 0;
+  const queue = state.queue || [];
+  const queueLength = queue.length;
+
+  const handlePlay = () => state.isPlaying ? audioQueue.pause() : audioQueue.play();
+  const handleStop = () => audioQueue.stop();
+  const handleNext = () => audioQueue.skipNext();
+  const handlePrev = () => audioQueue.skipPrevious();
+  const handleRemove = (id) => audioQueue.removeItem(id);
+
+  const statusLabel = state.isPlaying ? "Đang phát" : state.isPaused ? "Tạm dừng" : "Chờ phát";
+  const statusColor = state.isPlaying ? "#0f766e" : state.isPaused ? "#d97706" : "#6b7280";
 
   if (queueLength === 0) {
     return (
-      <div className="audio-player empty">
-        <div className="player-header">
-          <div className="player-title">🎵 Danh sách phát</div>
-          <button
-            className="toggle-btn"
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
-            {isExpanded ? "▼" : "▶"}
-          </button>
+      <div className="ap-wrap">
+        <div className="ap-empty">
+          <span className="ap-empty-icon">🎧</span>
+          <p className="ap-empty-text">Chưa có bài thuyết minh</p>
+          <p className="ap-empty-hint">Di chuyển đến gần địa điểm để bắt đầu</p>
         </div>
-        {isExpanded && (
-          <div className="player-content">
-            <div className="empty-queue">
-              <p>Chưa có dữ liệu</p>
-              <p className="hint">Nhấn "Thêm vào danh sách" để thêm địa điểm</p>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
 
   return (
-    <div className="audio-player">
-      <div className="player-header">
-        <div className="player-title">
-          🎵 Danh sách phát ({state.currentIndex + 1}/{queueLength})
+    <div className="ap-wrap">
+      {/* Now Playing Card */}
+      {currentItem && (
+        <div className="ap-now-playing">
+          <div className="ap-np-icon">🎧</div>
+          <div className="ap-np-info">
+            <div className="ap-np-name">{currentItem.location.name}</div>
+            <div className="ap-np-meta">
+              <span className="ap-np-lang">{currentItem.langCode}</span>
+              <span className="ap-np-dot">·</span>
+              <span className="ap-np-status" style={{ color: statusColor }}>{statusLabel}</span>
+            </div>
+          </div>
+          <div className="ap-np-badge">{state.currentIndex + 1}/{queueLength}</div>
         </div>
+      )}
+
+      {/* Controls */}
+      <div className="ap-controls">
         <button
-          className="toggle-btn"
-          onClick={() => setIsExpanded(!isExpanded)}
+          className="ap-btn ap-btn-sm"
+          onClick={handlePrev}
+          disabled={state.currentIndex === 0}
+          title="Bài trước"
+        >⏮</button>
+        <button
+          className="ap-btn ap-btn-play"
+          onClick={handlePlay}
+          title={state.isPlaying ? "Tạm dừng" : "Phát"}
         >
-          {isExpanded ? "▼" : "▶"}
+          {state.isPlaying ? "⏸" : "▶"}
         </button>
+        <button
+          className="ap-btn ap-btn-sm"
+          onClick={handleStop}
+          title="Dừng"
+        >⏹</button>
+        <button
+          className="ap-btn ap-btn-sm"
+          onClick={handleNext}
+          disabled={state.currentIndex >= queueLength - 1}
+          title="Bài tiếp"
+        >⏭</button>
       </div>
 
-      {isExpanded && (
-        <div className="player-content">
-          {/* Current Playing */}
-          {currentItem && (
-            <div className="now-playing">
-              <div className="now-playing-title">🎧 Đang phát:</div>
-              <div className="now-playing-item">
-                <div className="item-name">{currentItem.location.name}</div>
-                <div className="item-status">
-                  {state.isPlaying && <span className="playing-indicator">▶</span>}
-                  {state.isPaused && <span className="playing-indicator">⏸</span>}
-                  <span className="item-lang">{currentItem.langCode}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Controls */}
-          <div className="player-controls">
-            <button
-              className="control-btn skip-prev"
-              onClick={handleSkipPrevious}
-              disabled={state.currentIndex === 0}
-              title="Bài trước"
-            >
-              ⏮
-            </button>
-            <button
-              className="control-btn play"
-              onClick={handlePlay}
-              title={state.isPlaying ? "Tạm dừng" : "Phát"}
-            >
-              {state.isPlaying ? "⏸" : "▶"}
-            </button>
-            <button
-              className="control-btn stop"
-              onClick={handleStop}
-              title="Dừng"
-            >
-              ⏹
-            </button>
-            <button
-              className="control-btn skip-next"
-              onClick={handleSkipNext}
-              disabled={state.currentIndex >= queueLength - 1}
-              title="Bài tiếp"
-            >
-              ⏭
-            </button>
+      {/* Playlist */}
+      {queueLength > 0 && (
+        <div className="ap-playlist">
+          <div className="ap-playlist-header">
+            <span className="ap-playlist-title">Danh sách phát</span>
+            <span className="ap-playlist-count">{queueLength} bài</span>
           </div>
-
-          {/* Queue Info */}
-          {upcomingCount > 0 && (
-            <div className="queue-info">
-              <span>{upcomingCount} bài sắp phát</span>
-            </div>
-          )}
-
-          {/* Queue List */}
-          {queueLength > 1 && (
-            <div className="queue-list">
-              <div className="queue-list-title">Danh sách:</div>
-              <div className="queue-items">
-                {state.queue.map((item, index) => (
-                  <div
-                    key={item.id}
-                    className={`queue-item ${
-                      index === state.currentIndex ? "current" : ""
-                    } ${item.status}`}
-                  >
-                    <div className="item-index">{index + 1}</div>
-                    <div className="item-details">
-                      <div className="item-name">{item.location.name}</div>
-                      <div className="item-preview">
-                        {getTextForLang(item.location, item.langCode).substring(
-                          0,
-                          50,
-                        )}
-                        ...
+          <div className="ap-playlist-items">
+            {queue.map((item, index) => {
+              const isCurrent = index === state.currentIndex;
+              const preview = getTextForLang(item.location, item.langCode);
+              return (
+                <div
+                  key={item.id}
+                  className={`ap-item ${isCurrent ? "ap-item-active" : ""}`}
+                >
+                  <div className="ap-item-left">
+                    <span className="ap-item-idx">{isCurrent && state.isPlaying ? "▶" : index + 1}</span>
+                    <div className="ap-item-info">
+                      <div className="ap-item-name">{item.location.name}</div>
+                      <div className="ap-item-preview">
+                        {preview ? preview.substring(0, 55) + "…" : item.langCode}
                       </div>
                     </div>
-                    <button
-                      className="item-remove"
-                      onClick={() => handleRemoveItem(item.id)}
-                      title="Xóa"
-                    >
-                      ✕
-                    </button>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Clear Button */}
-          {queueLength > 1 && (
-            <div className="player-actions">
-              <button className="clear-btn" onClick={handleClear}>
-                Xóa danh sách
-              </button>
-            </div>
-          )}
+                  <button
+                    className="ap-item-del"
+                    onClick={() => handleRemove(item.id)}
+                    title="Xóa"
+                  >🗑</button>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

@@ -18,8 +18,8 @@ function Home() {
   const [location, setLocation] = useState(null);
   const [locations, setLocations] = useState([]);
   const [userLocation, setUserLocation] = useState({
-    lat: 10.7595,
-    lng: 106.7047,
+    lat: 10.7590,
+    lng: 106.7043,
   });
   const [lang, setLang] = useState("vi-VN");
   const [done, setDone] = useState(false);
@@ -46,6 +46,7 @@ function Home() {
   const [lightbox, setLightbox] = useState(null);
   const lastTrackedLocationRef = useRef(null);
   const mockModeRef = useRef(false); // Track if we've switched to mock mode
+  const currentLocationRef = useRef({ lat: 10.7590, lng: 106.7043 });
 
   const loadLocations = async () => {
     try {
@@ -157,45 +158,23 @@ function Home() {
     };
 
     const errorCallback = (error) => {
-      // Don't log errors if we've already switched to mock mode
       if (mockModeRef.current) return;
-      
       console.error("GPS Error:", error);
-      
-      let statusMsg = error.message;
-      
+
       if (error.code === 1) {
-        statusMsg = "Bạn đã từ chối quyền truy cập GPS. Vui lòng bật GPS trong cài đặt.";
         setGpsStatus("denied");
-      } else if (error.code === 2) {
-        // Only set mock mode once
-        if (!mockModeRef.current) {
-          mockModeRef.current = true;
-          statusMsg = "Không thể xác định vị trí GPS. Sử dụng vị trí giả lập cho demo.";
-          setGpsStatus("mock");
-          
-          // Fallback to mock location for development/demo
-          setUserLocation({
-            lat: 10.7595,
-            lng: 106.7047,
-            accuracy: 50, // Mock accuracy
-          });
-          setGpsError(null); // Clear error since we're using mock
-          
-          // Stop GPS watching since we're using mock location
-          if (watchIdRef.current !== null) {
-            navigator.geolocation.clearWatch(watchIdRef.current);
-            watchIdRef.current = null;
-            console.log("🛑 GPS Watch stopped - using mock location");
-          }
+        setGpsError("Bạn đã từ chối quyền truy cập GPS. Vui lòng bật GPS trong cài đặt.");
+      } else if (error.code === 2 || error.code === 3) {
+        mockModeRef.current = true;
+        setGpsStatus("mock");
+        setUserLocation({ lat: 10.7590, lng: 106.7043, accuracy: 50 });
+        setGpsError(null);
+        if (watchIdRef.current !== null) {
+          navigator.geolocation.clearWatch(watchIdRef.current);
+          watchIdRef.current = null;
         }
-        return; // Don't process further for mock mode
-      } else if (error.code === 3) {
-        statusMsg = "Timeout xác định vị trí GPS. Vui lòng chờ...";
-        setGpsStatus("error");
+        console.log("🎭 Switched to mock location mode");
       }
-      
-      setGpsError(statusMsg);
     };
 
     // Request high accuracy GPS
@@ -257,56 +236,51 @@ function Home() {
       return;
     }
 
+    // Khởi tạo vị trí giả lập từ userLocation hiện tại
+    currentLocationRef.current = { lat: userLocation.lat, lng: userLocation.lng };
     runningRef.current = true;
 
     const run = async () => {
-  while (runningRef.current && visitedRef.current.size < 4) {
-    if (!runningRef.current) break;
+      while (runningRef.current && visitedRef.current.size < 4) {
+        if (!runningRef.current) break;
 
-    while (pausedRef.current) {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-    }
-
-    // Simulate movement: increment lat/lng
-    setUserLocation((prev) => ({
-      lat: prev.lat + 0.00005,
-      lng: prev.lng + 0.00005,
-      accuracy: prev.accuracy || 50,
-    }));
-
-    // Wait for state update
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    // Get current location from state
-    const currentLoc = userLocation;
-    const geofenceData = await checkGeofence(currentLoc.lat, currentLoc.lng);
-
-    if (geofenceData && geofenceData.inGeofence && geofenceData.nearbyPOI) {
-      const poi = geofenceData.nearbyPOI;
-      
-      if (!visitedRef.current.has(poi.id) && !isInCooldown(poi.id)) {
-        visitedRef.current.add(poi.id);
-        markPoiAsPlayed(poi.id);
-        setLocation(poi);
-        console.log(`📍 Geofence triggered! POI: ${poi.name}, Distance: ${geofenceData.distance}m`);
-        audioQueue.addToQueue(poi, langRef.current);
-
-        if (visitedRef.current.size >= 4) {
-          setDone(true);
-          break;
+        while (pausedRef.current) {
+          await new Promise((resolve) => setTimeout(resolve, 300));
         }
-      }
-    } else if (!geofenceData || !geofenceData.inGeofence) {
-      const data = await getNearLocation(currentLoc.lat, currentLoc.lng);
-      if (data && !visitedRef.current.has(data.id)) {
-        setLocation(data);
-      }
-    }
 
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-  }
-};
+        // Tăng dần lat/lng để giả lập di chuyển
+        currentLocationRef.current.lat += 0.00005;
+        currentLocationRef.current.lng += 0.00005;
+        setUserLocation({ ...currentLocationRef.current, accuracy: 50 });
 
+        const { lat, lng } = currentLocationRef.current;
+        const geofenceData = await checkGeofence(lat, lng);
+
+        if (geofenceData && geofenceData.inGeofence && geofenceData.nearbyPOI) {
+          const poi = geofenceData.nearbyPOI;
+
+          if (!visitedRef.current.has(poi.id) && !isInCooldown(poi.id)) {
+            visitedRef.current.add(poi.id);
+            markPoiAsPlayed(poi.id);
+            setLocation(poi);
+            console.log(`📍 Geofence triggered! POI: ${poi.name}, Distance: ${geofenceData.distance}m`);
+            audioQueue.addToQueue(poi, langRef.current);
+
+            if (visitedRef.current.size >= 4) {
+              setDone(true);
+              break;
+            }
+          }
+        } else {
+          const data = await getNearLocation(lat, lng);
+          if (data && !visitedRef.current.has(data.id)) {
+            setLocation(data);
+          }
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
+    };
 
     run();
 
@@ -314,7 +288,7 @@ function Home() {
       runningRef.current = false;
       stop();
     };
-  }, [isAuthenticated, isTourStarted, gpsStatus, userLocation]);
+  }, [isAuthenticated, isTourStarted, gpsStatus]);
 
   return (
     <div>
@@ -463,7 +437,7 @@ function Home() {
                 )}
                 {gpsStatus === "mock" && (
                   <>
-                    <span>🎭</span>
+                    <span>ᯓ➤</span>
                     <span>
                       GPS Tracking - {userLocation.lat?.toFixed(4)}, {userLocation.lng?.toFixed(4)}
                       {userLocation.accuracy && <span> (±{userLocation.accuracy}m)</span>}

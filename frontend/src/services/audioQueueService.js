@@ -170,8 +170,6 @@ class AudioQueue {
     this.isPaused = false;
     this.currentSessionId += 1;
     ttsPause();
-    this.queue = [];
-    this.currentIndex = 0;
     this._notify();
   }
 
