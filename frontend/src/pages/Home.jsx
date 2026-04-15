@@ -2,13 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getNearLocation, getAllLocations } from "../services/locationService";
 import { speakLocationAsync, stop, LANGUAGES } from "../services/ttsService";
+import { trackLocationView } from "../services/analyticsService";
+import { checkGeofence } from "../services/api";
+import API_URL from "../services/api";
+import audioQueue from "../services/audioQueueService";
 import LocationCard from "../components/LocationCard";
 import MapView from "../components/MapView";
+import AudioPlayer from "../components/AudioPlayer";
 import Navbar from "../components/Navbar";
 import TravelSidebar from "../components/TravelSidebar";
 import "../styles/app.css";
-
-const API_URL = "http://localhost:5093";
 
 function Home() {
   const navigate = useNavigate();
@@ -23,12 +26,26 @@ function Home() {
   const [paused, setPaused] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isTourStarted, setIsTourStarted] = useState(false);
+  const [gpsStatus, setGpsStatus] = useState("waiting"); // waiting, loading, active, denied, error
+  const [gpsError, setGpsError] = useState(null);
   const langRef = useRef(lang);
   const visitedRef = useRef(new Set());
   const runningRef = useRef(false);
   const pausedRef = useRef(false);
+  const watchIdRef = useRef(null);
+  
+  // Geofence debounce: Only check geofence every 5 seconds
+  const lastGeofenceCheckRef = useRef(0);
+  const GEOFENCE_CHECK_INTERVAL = 5000; // 5 seconds
+  
+  // Cooldown: Wait 30 seconds before playing audio for same POI again
+  const poiCooldownMapRef = useRef(new Map()); // Map<poiId, lastPlayTime>
+  const COOLDOWN_DURATION = 30000; // 30 seconds
+  const GEOFENCE_RADIUS = 50; // 50 meters
 
   const [lightbox, setLightbox] = useState(null);
+  const lastTrackedLocationRef = useRef(null);
+  const mockModeRef = useRef(false); // Track if we've switched to mock mode
 
   const loadLocations = async () => {
     try {
@@ -56,6 +73,32 @@ function Home() {
   };
 
   useEffect(() => {
+    if (!location?.id) return;
+    if (lastTrackedLocationRef.current === location.id) return;
+
+    lastTrackedLocationRef.current = location.id;
+    trackLocationView(location.id).catch(() => {});
+  }, [location]);
+
+  /**
+   * Check if POI is in cooldown (recently played)
+   * Returns true if cooldown is active, false if OK to play
+   */
+  const isInCooldown = (poiId) => {
+    const lastPlayTime = poiCooldownMapRef.current.get(poiId);
+    if (!lastPlayTime) return false;
+    
+    return Date.now() - lastPlayTime < COOLDOWN_DURATION;
+  };
+
+  /**
+   * Mark POI as just played, starts cooldown timer
+   */
+  const markPoiAsPlayed = (poiId) => {
+    poiCooldownMapRef.current.set(poiId, Date.now());
+  };
+
+  useEffect(() => {
     const userString = localStorage.getItem("user");
     if (!userString) {
       navigate("/login");
@@ -79,6 +122,106 @@ function Home() {
 
     setIsAuthenticated(true);
   }, [navigate]);
+
+  /**
+   * GPS Tracking - Initialize geolocation on component mount
+   * Watches user position in real-time
+   */
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    // Reset mock mode when GPS setup starts
+    mockModeRef.current = false;
+
+    if (!navigator.geolocation) {
+      setGpsStatus("error");
+      setGpsError("Trình duyệt của bạn không hỗ trợ GPS");
+      return;
+    }
+
+    setGpsStatus("loading");
+
+    const successCallback = (position) => {
+      const { latitude, longitude, accuracy } = position.coords;
+      
+      setUserLocation({
+        lat: latitude,
+        lng: longitude,
+        accuracy: Math.round(accuracy),
+      });
+      
+      setGpsStatus("active");
+      setGpsError(null);
+      
+      console.log(`📍 GPS Updated: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} (±${Math.round(accuracy)}m)`);
+    };
+
+    const errorCallback = (error) => {
+      // Don't log errors if we've already switched to mock mode
+      if (mockModeRef.current) return;
+      
+      console.error("GPS Error:", error);
+      
+      let statusMsg = error.message;
+      
+      if (error.code === 1) {
+        statusMsg = "Bạn đã từ chối quyền truy cập GPS. Vui lòng bật GPS trong cài đặt.";
+        setGpsStatus("denied");
+      } else if (error.code === 2) {
+        // Only set mock mode once
+        if (!mockModeRef.current) {
+          mockModeRef.current = true;
+          statusMsg = "Không thể xác định vị trí GPS. Sử dụng vị trí giả lập cho demo.";
+          setGpsStatus("mock");
+          
+          // Fallback to mock location for development/demo
+          setUserLocation({
+            lat: 10.7595,
+            lng: 106.7047,
+            accuracy: 50, // Mock accuracy
+          });
+          setGpsError(null); // Clear error since we're using mock
+          
+          // Stop GPS watching since we're using mock location
+          if (watchIdRef.current !== null) {
+            navigator.geolocation.clearWatch(watchIdRef.current);
+            watchIdRef.current = null;
+            console.log("🛑 GPS Watch stopped - using mock location");
+          }
+        }
+        return; // Don't process further for mock mode
+      } else if (error.code === 3) {
+        statusMsg = "Timeout xác định vị trí GPS. Vui lòng chờ...";
+        setGpsStatus("error");
+      }
+      
+      setGpsError(statusMsg);
+    };
+
+    // Request high accuracy GPS
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 10000,      // 10 seconds
+      maximumAge: 0,       // Don't use cached position
+    };
+
+    // Start watching position
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      successCallback,
+      errorCallback,
+      options
+    );
+
+    console.log("🚀 GPS Watch started");
+
+    // Cleanup: Stop watching position on unmount
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        console.log("🛑 GPS Watch stopped");
+      }
+    };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     langRef.current = lang;
@@ -109,39 +252,61 @@ function Home() {
       return;
     }
 
+    if (gpsStatus !== "active" && gpsStatus !== "mock") {
+      console.warn("Tour started but GPS not active yet:", gpsStatus);
+      return;
+    }
+
     runningRef.current = true;
-    let lat = 10.7595;
-    let lng = 106.7047;
 
     const run = async () => {
-      while (runningRef.current && visitedRef.current.size < 4) {
-        if (!runningRef.current) break;
+  while (runningRef.current && visitedRef.current.size < 4) {
+    if (!runningRef.current) break;
 
-        while (pausedRef.current) {
-          await new Promise((resolve) => setTimeout(resolve, 300));
+    while (pausedRef.current) {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+
+    // Simulate movement: increment lat/lng
+    setUserLocation((prev) => ({
+      lat: prev.lat + 0.00005,
+      lng: prev.lng + 0.00005,
+      accuracy: prev.accuracy || 50,
+    }));
+
+    // Wait for state update
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Get current location from state
+    const currentLoc = userLocation;
+    const geofenceData = await checkGeofence(currentLoc.lat, currentLoc.lng);
+
+    if (geofenceData && geofenceData.inGeofence && geofenceData.nearbyPOI) {
+      const poi = geofenceData.nearbyPOI;
+      
+      if (!visitedRef.current.has(poi.id) && !isInCooldown(poi.id)) {
+        visitedRef.current.add(poi.id);
+        markPoiAsPlayed(poi.id);
+        setLocation(poi);
+        console.log(`📍 Geofence triggered! POI: ${poi.name}, Distance: ${geofenceData.distance}m`);
+        audioQueue.addToQueue(poi, langRef.current);
+
+        if (visitedRef.current.size >= 4) {
+          setDone(true);
+          break;
         }
-
-        lat += 0.00005;
-        lng += 0.00005;
-        setUserLocation({ lat, lng });
-
-        const data = await getNearLocation(lat, lng);
-
-        if (data && !visitedRef.current.has(data.id)) {
-          visitedRef.current.add(data.id);
-          setLocation(data);
-
-          await speakLocationAsync(data, langRef.current);
-
-          if (visitedRef.current.size >= 4) {
-            setDone(true);
-            break;
-          }
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, 3000));
       }
-    };
+    } else if (!geofenceData || !geofenceData.inGeofence) {
+      const data = await getNearLocation(currentLoc.lat, currentLoc.lng);
+      if (data && !visitedRef.current.has(data.id)) {
+        setLocation(data);
+      }
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+  }
+};
+
 
     run();
 
@@ -149,7 +314,7 @@ function Home() {
       runningRef.current = false;
       stop();
     };
-  }, [isAuthenticated, isTourStarted]);
+  }, [isAuthenticated, isTourStarted, gpsStatus, userLocation]);
 
   return (
     <div>
@@ -202,6 +367,7 @@ function Home() {
                     <button
                       className="btn-start-tour"
                       onClick={() => setIsTourStarted(true)}
+                      disabled={gpsStatus !== "active" && gpsStatus !== "mock"}
                     >
                       ▶ Di chuyển
                     </button>
@@ -241,6 +407,105 @@ function Home() {
                 )}
               </div>
 
+              {/* GPS Status Indicator */}
+              <div
+                style={{
+                  padding: "8px 12px",
+                  marginBottom: "12px",
+                  borderRadius: "6px",
+                  fontSize: "12px",
+                  fontWeight: "500",
+                  backgroundColor:
+                    gpsStatus === "active"
+                      ? "#e8f5e9"
+                      : gpsStatus === "loading"
+                      ? "#fff3e0"
+                      : gpsStatus === "denied"
+                      ? "#ffebee"
+                      : gpsStatus === "mock"
+                      ? "#e3f2fd"
+                      : "#f3e5f5",
+                  color:
+                    gpsStatus === "active"
+                      ? "#2e7d32"
+                      : gpsStatus === "loading"
+                      ? "#e65100"
+                      : gpsStatus === "denied"
+                      ? "#c62828"
+                      : gpsStatus === "mock"
+                      ? "#1565c0"
+                      : "#4a148c",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                {gpsStatus === "active" && (
+                  <>
+                    <span>📡</span>
+                    <span>
+                      GPS Active - {userLocation.lat?.toFixed(4)}, {userLocation.lng?.toFixed(4)}
+                      {userLocation.accuracy && <span> (±{userLocation.accuracy}m)</span>}
+                    </span>
+                  </>
+                )}
+                {gpsStatus === "loading" && (
+                  <>
+                    <span>⏳</span>
+                    <span>Khởi động GPS...</span>
+                  </>
+                )}
+                {gpsStatus === "denied" && (
+                  <>
+                    <span>❌</span>
+                    <span>{gpsError || "GPS bị từ chối"}</span>
+                  </>
+                )}
+                {gpsStatus === "mock" && (
+                  <>
+                    <span>🎭</span>
+                    <span>
+                      GPS Tracking - {userLocation.lat?.toFixed(4)}, {userLocation.lng?.toFixed(4)}
+                      {userLocation.accuracy && <span> (±{userLocation.accuracy}m)</span>}
+                    </span>
+                  </>
+                )}
+                {gpsStatus === "error" && (
+                  <>
+                    <span>⚠️</span>
+                    <span>{gpsError || "GPS lỗi"}</span>
+                  </>
+                )}
+              </div>
+
+              {/* Geofence Status - Show during tour */}
+              {isTourStarted && !done && (
+                <div
+                  style={{
+                    padding: "8px 12px",
+                    marginBottom: "12px",
+                    borderRadius: "6px",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                    backgroundColor: "#e8f4f8",
+                    color: "#00695c",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  <span>🎯</span>
+                  <span>
+                    Geofence: 50m radius
+                    {location && (
+                      <span style={{ marginLeft: "8px" }}>
+                        | POI gần nhất: <strong>{location.name}</strong>
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )}
+
               <div className="lang-selector">
                 <label>🌐 Ngôn ngữ thuyết minh</label>
                 <div className="lang-buttons">
@@ -255,6 +520,8 @@ function Home() {
                   ))}
                 </div>
               </div>
+
+              <AudioPlayer lang={lang} />
 
               <LocationCard
                 location={location}

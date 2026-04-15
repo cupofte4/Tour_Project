@@ -18,10 +18,10 @@ namespace Tour_Project.Controllers
         private readonly AppDbContext _context;
         private readonly LocationService _service;
 
-        public LocationController(AppDbContext context)
+        public LocationController(AppDbContext context, LocationService service)
         {
             _context = context;
-            _service = new LocationService();
+            _service = service;
         }
 
         [HttpGet]

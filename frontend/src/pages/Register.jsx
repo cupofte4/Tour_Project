@@ -64,9 +64,18 @@ function Register() {
       const result = await register(fullName, username, password, role);
 
       if (result) {
-        navigate("/login", {
-          state: { message: "Đăng ký thành công! Vui lòng đăng nhập." },
-        });
+        // After registration, backend returns { token, user }
+        // authService.register already saved token + user to localStorage
+        // Auto-login user based on role
+        const normalizedRole = (result.role || "").toLowerCase();
+        
+        if (normalizedRole === "admin") {
+          navigate("/admin/dashboard", { replace: true });
+        } else if (normalizedRole === "manager") {
+          navigate("/manager/dashboard", { replace: true });
+        } else {
+          navigate("/", { replace: true });
+        }
       } else {
         setErrorMsg("Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác.");
       }

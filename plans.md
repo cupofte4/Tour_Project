@@ -1,183 +1,207 @@
-# PROJECT PLAN
-## Ứng dụng thuyết minh du lịch sử dụng GPS
-
-## 1. Mô tả dự án
-Xây dựng ứng dụng thuyết minh du lịch sử dụng GPS. Khi người dùng đến gần một địa điểm du lịch, ứng dụng sẽ tự động phát nội dung thuyết minh bằng âm thanh theo ngôn ngữ đã chọn.
-
-Hệ thống mở rộng:
-- Hỗ trợ chủ quản lý sạp (manager)
-- Cho phép quản lý sạp và nội dung thuyết minh riêng
+# PROJECT PLAN (WEB - REACT + .NET)
+## Ứng dụng thuyết minh du lịch
 
 ---
 
-# 2. Chức năng chính
+# 1. Mô tả dự án
+Xây dựng web app thuyết minh du lịch:
 
-## Đối với người dùng
-- Đăng ký / đăng nhập
-- Chọn loại tài khoản khi đăng ký:
-  - Tôi muốn trải nghiệm app → user
-  - Tôi muốn kinh doanh → manager
-- Xem bản đồ
-- Xem danh sách địa điểm
-- Nghe thuyết minh tự động khi đến gần địa điểm
+- Frontend: React (JSX)
+- Backend: ASP.NET Core Web API (.NET)
+- Database: MySQL (Entity Framework Core)
+
+Chức năng:
+- Hiển thị bản đồ + vị trí user
+- Xem POI (địa điểm)
+- Khi user đến gần → phát audio
+- Hoặc click / QR để nghe
+
+---
+
+# 2. Kiến trúc hệ thống
+
+## Architecture
+
+Frontend (React)
+→ gọi API
+→ ASP.NET Core
+→ Entity Framework Core
+→ MySQL
+
+---
+
+## Core Modules
+
+### Backend (.NET)
+1. Controllers (API)
+2. Services (Business logic)
+3. Models (Entity)
+4. DbContext (EF Core)
+
+### Frontend (React)
+1. Map UI (Google Maps)
+2. Geofence Logic (JS)
+3. Audio Player
+4. Pages (User / Manager / Admin)
+
+---
+
+# 3. Chức năng chính
+
+## 3.1 GPS (Frontend)
+- Dùng `navigator.geolocation`
+- Lấy vị trí theo interval
+- Chỉ hoạt động khi mở web
+
+---
+
+## 3.2 Geofence (React)
+- Dùng công thức Haversine (bạn đã có backend rồi)
+- Kiểm tra khoảng cách:
+  → nếu < radius → trigger
+
+Yêu cầu:
+- debounce
+- cooldown
+- chọn POI gần nhất
+
+---
+
+## 3.3 Narration System
+- Audio chạy trên browser
+
+Tính năng:
+- Queue audio
+- Không phát chồng
+- Auto stop audio cũ
+
+---
+
+## 3.4 POI System
+- Lấy từ API (.NET)
+- Bao gồm:
+  - name
+  - lat, lng
+  - description
+  - multi-language text
+  - audio
+
+---
+
+# 4. UI/UX
+
+## Map Screen
+- Google Maps
+- Hiển thị user
+- Hiển thị POI
+- Highlight gần nhất
+
+## POI Detail
+- Thông tin
+- Hình ảnh
+- Audio player
 - Chọn ngôn ngữ
-- Xem danh sách địa điểm yêu thích
-
-## Đối với chủ quản lý sạp (Manager) 🔥 NEW
-- Truy cập dashboard riêng
-- Xem danh sách sạp sở hữu
-- Thêm / sửa / xoá sạp
-- Quản lý nội dung thuyết minh của sạp
-- Xem thống kê:
-  - lượt truy cập
-  - lượt nghe audio
-  - dữ liệu theo thời gian
-
-## Đối với quản trị viên (Admin)
-- Thêm địa điểm du lịch
-- Chỉnh sửa nội dung thuyết minh
-- Quản lý người dùng
-- Quản lý chủ sạp (manager) 🔥 NEW
-- Gán sạp có sẵn cho manager 🔥 NEW
 
 ---
 
-# 3. Database
+# 5. CMS (Manager / Admin)
 
-## Bảng Locations
-- Id
-- Name
-- Description
-- Image
-- Images
-- Address
-- Phone
-- ReviewsJson
-- Latitude
-- Longitude
-- TextVi
-- TextEn
-- TextZh
-- TextDe
-- ManagerId 🔥 NEW (sạp thuộc manager nào)
+## Manager
+- CRUD Location
+- Upload audio
+- Xem stats
 
-## Bảng Users
-- Id
-- Username
-- Password
-- FullName
-- Phone
-- Gender
-- Avatar
-- Role (user | manager | admin) 🔥 UPDATED
-- IsLocked
+## Admin
+- Quản lý user
+- Quản lý manager
+- Assign location
 
 ---
 
-# 4. Tiến độ dự án
+# 6. Analytics
 
-## Phase 1 – Setup Project
-- [ ] Tạo cấu trúc project
-- [ ] Setup Frontend
-- [ ] Setup Backend API
-- [ ] Kết nối Database
-- [ ] Login / Register API (có chọn role)
+Backend (.NET):
+- LocationStats:
+  - ViewsCount
+  - AudioPlaysCount
 
-## Phase 2 – User Features
-- [ ] Hiển thị bản đồ
-- [ ] Lấy vị trí GPS người dùng
-- [ ] Hiển thị danh sách địa điểm
-- [ ] Hiển thị chi tiết địa điểm
-- [ ] Tự động phát audio khi đến gần địa điểm
-- [ ] Chọn ngôn ngữ thuyết minh
-- [ ] Địa điểm yêu thích
-
-## Phase 3 – Manager Features 🔥 NEW
-- [ ] Manager Dashboard UI
-- [ ] API lấy danh sách sạp theo manager
-- [ ] CRUD sạp
-- [ ] API thống kê (views, audio plays)
-- [ ] Quản lý nội dung thuyết minh
-
-## Phase 4 – Admin Features
-- [ ] Thêm địa điểm
-- [ ] Sửa địa điểm
-- [ ] Xóa địa điểm
-- [ ] Quản lý người dùng
-- [ ] Upload audio thuyết minh
-- [ ] Quản lý manager 🔥 NEW
-- [ ] Gán sạp cho manager 🔥 NEW
-
-## Phase 5 – Hoàn thiện
-- [ ] UI/UX
-- [ ] Testing
-- [ ] Fix bug
-- [ ] Deploy
-- [ ] Viết báo cáo
-- [ ] Làm slide
+Frontend:
+- Gửi event về API
 
 ---
 
-# 5. TODO – Product Requirements Document (PRD)
-
-## PRD Sections
-
-1. Overview (System Architecture)
-2. Startup Flow
-3. GPS + Geofence + Audio Narration
-4. Content Module / POI Management
-5. Audio / TTS System
-6. Authentication & RBAC (user / manager / admin)
-7. Manager Dashboard 🔥 NEW
-8. Localization / Multi-language
-9. Offline / PWA
-10. Map System
-11. Admin Dashboard
-12. Design Patterns
-13. End-to-End Flow
+# 7. QR Mode
+- Scan QR (React camera)
+- Map → LocationId
+- Trigger audio
 
 ---
 
-# 6. User Flow
+# 8. Database (EF Core)
 
-### User
-1. User mở app
-2. App lấy vị trí GPS
-3. App hiển thị các địa điểm gần
-4. User di chuyển đến địa điểm
-5. Khi khoảng cách < 50m
-6. App tự động phát audio thuyết minh
-7. Lưu lịch sử / yêu thích
-
-### Manager 🔥 NEW
-1. Manager đăng nhập
-2. Truy cập dashboard
-3. Quản lý sạp
-4. Xem thống kê hoạt động
-
-### Admin
-1. Admin đăng nhập
-2. Quản lý hệ thống
-3. Gán sạp cho manager
+## User
+## Location
+## LocationStat
+## LocationManagerAssignment
 
 ---
 
-# 7. Mốc thời gian dự kiến
+# 9. Phân quyền
 
-| Tuần | Công việc |
-|-----|-----------|
-| 1 | Setup project |
-| 2 | Login / Register + Role |
-| 3 | Map + GPS |
-| 4 | Locations API |
-| 5 | Audio auto play |
-| 6 | Favorite |
-| 7 | Manager Dashboard 🔥 |
-| 8 | Admin nâng cao |
-| 9 | Testing |
-| 10 | Báo cáo |
+- user
+- manager
+- admin
 
 ---
 
-# 8. Trạng thái dự án
-Status: In Progress
+# 10. Phase
+
+Phase 1:
+- Setup React + .NET API
+
+Phase 2:
+- Auth + Role
+
+Phase 3:
+- Map + GPS
+
+Phase 4:
+- Geofence
+
+Phase 5:
+- Audio
+
+Phase 6:
+- CMS
+
+Phase 7:
+- Analytics
+
+Phase 8:
+- QR
+
+---
+
+# 11. Flow
+
+1. React load
+2. Call API (.NET)
+3. Get locations
+4. Track GPS
+5. Detect gần
+6. Play audio
+
+---
+
+# 12. Điểm mạnh
+
+- Geofence (JS + C#)
+- Audio queue
+- Role-based system
+- Analytics
+- QR mode
+
+---
+
+# STATUS
+updating...

@@ -1,256 +1,201 @@
-# PROMPTS STORAGE
-## Project: GPS Travel Audio Guide App
+# PROMPTS LIBRARY (REACT + .NET)
 
 ---
 
-# 1. Generate Backend API
-Prompt:
-"Generate FastAPI backend structure for a GPS travel audio guide app with authentication, locations, favorites, manager dashboard and admin management."
+# 1. SYSTEM PROMPT
+
+You are a Senior Fullstack Developer.
+
+Stack:
+- Frontend: React (JSX)
+- Backend: ASP.NET Core Web API (.NET)
+- Database: MySQL
+- ORM: Entity Framework Core
+
+Rules:
+- Clean architecture
+- Use C# for backend
+- Use React hooks
+- No unnecessary explanation
 
 ---
 
-# 2. Generate Database Models
-Prompt:
-"Create SQLAlchemy models for Users, Locations and Manager system with role-based access (user, manager, admin). Locations must belong to a manager."
+# 2. BACKEND API (.NET)
 
----
-
-# 3. Generate Login API (UPDATED)
-Prompt:
-"Write FastAPI login and register API with JWT authentication.
+"Generate ASP.NET Core API for [MODULE]
 
 Requirements:
-- Register must include role selection:
-  + user (experience app)
-  + manager (business)
-- Hash password
-- Validate input"
+- Controller + Service pattern
+- Use Entity Framework Core
+- Async/await
+- DTO for request/response
+- Role-based authorization"
 
 ---
 
-# 4. Generate Map UI
-Prompt:
-"Create ReactJS component that displays Google Maps, shows user GPS location and nearby locations from API."
+# 3. DATABASE (EF CORE)
+
+"Design EF Core models:
+
+- User
+- Location
+- LocationStat
+- Assignment
+
+Requirements:
+- relationships
+- navigation properties
+- indexes"
 
 ---
 
-# 5. Distance Calculation
-Prompt:
-"Write function to calculate distance between user GPS and location GPS and trigger audio when distance < 50 meters."
+# 4. GPS (REACT)
+
+"Implement GPS tracking in React:
+
+- navigator.geolocation
+- useEffect
+- update interval
+- handle permission"
 
 ---
 
-# 6. Auto Play Audio
-Prompt:
-"Create React component that automatically plays audio description when user enters location radius."
+# 5. GEOFENCE (REACT)
+
+"Implement geofence logic:
+
+Input:
+- user location
+- POIs
+
+Use:
+- Haversine formula
+
+Requirements:
+- debounce
+- cooldown
+- nearest POI"
 
 ---
 
-# 7. Admin Dashboard (UPDATED)
-Prompt:
-"Generate admin dashboard UI to:
-- manage locations
+# 6. AUDIO SYSTEM
+
+"Build audio system in React:
+
+- audio queue
+- prevent overlap
+- play / pause / stop
+- auto stop previous"
+
+---
+
+# 7. MAP UI
+
+"Create React Google Maps component:
+
+- show user
+- show POIs
+- markers
+- click event"
+
+---
+
+# 8. POI DETAIL
+
+"Create React component:
+
+- image
+- description
+- audio player
+- language switch"
+
+---
+
+# 9. QR
+
+"Implement QR scan in React:
+
+- camera
+- decode QR
+- call API
+- play audio"
+
+---
+
+# 10. ANALYTICS (.NET)
+
+"Create API:
+
+- increase view count
+- increase audio plays
+- store by date"
+
+---
+
+# 11. MANAGER DASHBOARD
+
+"Build React dashboard:
+
+- CRUD location
+- upload audio
+- stats"
+
+---
+
+# 12. ADMIN
+
+"Build admin system:
+
 - manage users
 - manage managers
-- assign locations to managers"
+- assign location"
 
 ---
 
-# 8. Manager Dashboard 🔥 NEW
-Prompt:
-"Generate manager dashboard UI with:
+# 13. PROJECT STRUCTURE
 
-- Sidebar layout
-- Pages:
-  + My Locations
-  + Statistics
+"Generate structure:
 
-- Responsive
-- Clean UI
-- Call backend APIs
-- list of owned locations (stalls)
-- CRUD locations
-- manage audio content
-- view statistics (views count, audio plays count, time-based data)
-Data source: location_stats table"
+- React frontend
+- ASP.NET Core backend
+- EF Core models"
 
 ---
 
-# 9. Project Structure
-Prompt:
-"Generate full project folder structure for React Frontend + FastAPI Backend + MySQL database including manager module."
+# 14. PRD
+
+"Write PRD using HTML template.
+
+System:
+- React frontend
+- .NET backend
+- Geofence
+- Audio
+- QR
+- Roles"
 
 ---
 
-# 10. API Design Prompt (UPDATED)
-Prompt:
-"Design REST API endpoints for:
-- authentication
-- locations
-- favorites
-- manager dashboard
-- admin management
-- assign location to manager"
+# 15. DEBUG
+
+"Fix code:
+
+[CODE]
+
+Use C# or React depending on context"
 
 ---
 
-# 10. PRD Prompt (UPDATED)
-Prompt:
-"Write a Product Requirements Document (PRD) for my project.
-However, you MUST use my existing HTML presentation template and KEEP the layout and CSS exactly the same.
+# 16. CONSISTENCY RULES
 
-IMPORTANT RULES:
-
-* Do NOT change CSS
-* Do NOT change layout
-* Do NOT change HTML structure
-* Do NOT change class names
-* Do NOT change colors or fonts
-* Do NOT remove sections
-* Do NOT redesign UI
-* Only replace TEXT CONTENT inside the HTML
-* You may add more cards/tables using existing classes
-* The output must be a full HTML file
+Always use:
+- React
+- ASP.NET Core
+- EF Core
+- MySQL
+- Google Maps
 
 ---
 
-My project:
-
-A GPS-based tourism narration application.
-
-Core idea:
-When users enter a location (geofence), the app automatically plays audio narration about that place.
-
-Technology:
-- Frontend: React (PWA)
-- Backend: FastAPI
-- Database: MySQL
-- Map: Google Maps API
-- Audio: Text-to-Speech (TTS)
-
-System capabilities:
-- GPS tracking
-- Geofencing
-- Auto audio playback
-- Multi-language support (VI, EN, ZH, DE)
-- Offline support (PWA)
-- Admin content management
-
----
-
-## 🔥 NEW SYSTEM EXTENSIONS (MUST INCLUDE)
-
-### Role-Based System:
-- user (default)
-- manager (NEW)
-- admin
-
-### Manager Module:
-- Each manager owns and manages multiple locations (stalls)
-- Manager dashboard:
-  - Manage owned locations (CRUD)
-  - Manage narration content
-  - View statistics:
-    + view count
-    + audio play count
-    + time-based analytics
-
-### Admin Module (Extended):
-- Manage users
-- Manage managers
-- Assign existing locations to managers
-- Control system-wide data
-
-### Registration Flow (UPDATED):
-- User selects role during registration:
-  - "I want to experience the app" → user
-  - "I want to do business" → manager
-
----
-
-Rewrite the content of the sections to match my FULL system:
-
-- Overview (include full architecture + roles)
-- Startup Flow (include role-based flow)
-- GPS / Geofence / Audio
-- Content Module (include manager ownership)
-- Audio / TTS
-- Authentication / RBAC (IMPORTANT: include user, manager, admin)
-- Localization
-- Offline / PWA
-- Map System
-- Admin Dashboard (include manager management + assign logic)
-- Design Patterns
-- End-to-End Flow (include user + manager + admin flows)
-
----
-
-Writing style:
-
-* Technical documentation
-* Software architecture document
-* Product requirement document
-* Clear structure
-* Suitable for university graduation project
-* Professional engineering documentation
-
----
-
-OUTPUT REQUIREMENT:
-
-Do NOT create new sections.
-Do NOT change layout.
-Only rewrite the content inside these sections to match my updated system.
-
-The HTML template structure IS the PRD structure.
-
-Return the FULL HTML file with updated content.
-Do NOT explain anything.
-Do NOT use markdown.
-Only return HTML."
-
-# 12. UI Prompt (UPDATED)
-Prompt:
-"Design UI for:
-- User app (map + audio)
-- Manager dashboard
-- Admin dashboard
-Modern, responsive, grid-based layout."
-
----
-
-# 13. Sequence Flow Prompt
-Prompt:
-"Write system sequence diagram including:
-- user flow
-- manager flow
-- admin assigning locations to manager"
-
----
-
-# 14. Consistency Rules (UPDATED)
-Luôn giữ thống nhất:
-- Backend: FastAPI
-- Frontend: ReactJS
-- Database: MySQL
-- Map: Google Maps
-- GPS trigger distance: 50m
-- Languages: VI, EN, ZH, DE
-- Roles:
-  - user
-  - manager 🔥
-  - admin
-
----
-
-# 15. Core Features Reminder (UPDATED)
-
-Main Features:
-- Authentication (role-based)
-- Map + GPS
-- Locations
-- Auto audio
-- Favorites
-- Manager dashboard 🔥
-- Admin management
-- Multilingual audio
+# STATUS
+updating...

@@ -37,6 +37,44 @@ namespace Tour_Project.Controllers
             return Ok(result);
         }
 
+        [HttpPost("locations")]
+        public IActionResult CreateMyLocation([FromQuery] int managerId, Location location)
+        {
+            var manager = _context.Users.Find(managerId);
+            if (manager == null)
+            {
+                return NotFound(new { message = "Manager not found" });
+            }
+
+            if (Roles.Normalize(manager.Role) != Roles.Manager)
+            {
+                return BadRequest(new { message = "User is not a manager" });
+            }
+
+            if (location == null)
+            {
+                return BadRequest(new { message = "Invalid location payload" });
+            }
+
+            location.ReviewsJson = string.IsNullOrWhiteSpace(location.ReviewsJson)
+                ? "[]"
+                : location.ReviewsJson;
+
+            _context.Locations.Add(location);
+            _context.SaveChanges();
+
+            var assignment = new LocationManagerAssignment
+            {
+                ManagerId = managerId,
+                LocationId = location.Id
+            };
+
+            _context.LocationManagerAssignments.Add(assignment);
+            _context.SaveChanges();
+
+            return Ok(location);
+        }
+
         [HttpPut("locations/{id}")]
         public IActionResult UpdateMyLocation(int id, [FromQuery] int managerId, Location updated)
         {

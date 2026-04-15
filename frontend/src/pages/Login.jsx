@@ -53,18 +53,16 @@ function Login() {
         return;
       }
 
-      const normalizedUser = {
-        ...user,
-        role: (user.role || "").toLowerCase(),
-      };
+      const normalizedRole = (user.role || "").toLowerCase();
 
-      localStorage.setItem("user", JSON.stringify(normalizedUser));
+      // Note: authService.login already saved token + user to localStorage
+      // Just save additional preferences if needed
       localStorage.setItem("username", username);
       localStorage.setItem("rememberMe", JSON.stringify(rememberMe));
 
-      if (normalizedUser.role === "admin") {
+      if (normalizedRole === "admin") {
         navigate("/admin/dashboard", { replace: true });
-      } else if (normalizedUser.role === "manager") {
+      } else if (normalizedRole === "manager") {
         navigate("/manager/dashboard", { replace: true });
       } else {
         navigate("/", { replace: true });

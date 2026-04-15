@@ -1,4 +1,4 @@
-import API_URL from "./api";
+import API_URL, { POST } from "./api";
 
 export async function login(username, password) {
   const res = await fetch(`${API_URL}/auth/login`, {
@@ -14,13 +14,27 @@ export async function login(username, password) {
     throw new Error(error.message || "Đăng nhập thất bại");
   }
 
-  return await res.json();
+  const response = await res.json();
+  
+  // Backend now returns: { token, user }
+  if (response.token && response.user) {
+    // Save JWT token
+    localStorage.setItem("token", response.token);
+    // Save user info
+    localStorage.setItem("user", JSON.stringify(response.user));
+    return response.user;
+  }
+  
+  // Fallback for old response format (just user object)
+  if (response.id) {
+    localStorage.setItem("user", JSON.stringify(response));
+    return response;
+  }
+  
+  return null;
 }
 
-export async function register(fullName, username, password) {
-  let role = arguments.length > 3 ? arguments[3] : undefined;
-  if (!role) role = "user";
-
+export async function register(fullName, username, password, role = "user") {
   const res = await fetch(`${API_URL}/auth/register`, {
     method: "POST",
     headers: {
@@ -37,7 +51,24 @@ export async function register(fullName, username, password) {
 
   if (res.status === 400) return null;
 
-  return await res.json();
+  const response = await res.json();
+  
+  // Backend now returns: { token, user }
+  if (response.token && response.user) {
+    // Save JWT token
+    localStorage.setItem("token", response.token);
+    // Save user info
+    localStorage.setItem("user", JSON.stringify(response.user));
+    return response.user;
+  }
+  
+  // Fallback for old response format (just user object)
+  if (response.id) {
+    localStorage.setItem("user", JSON.stringify(response));
+    return response;
+  }
+  
+  return null;
 }
 
 export async function changePassword(username, currentPassword, newPassword) {
@@ -58,4 +89,46 @@ export async function changePassword(username, currentPassword, newPassword) {
   }
 
   return data;
+}
+
+/**
+ * Check if user is currently authenticated (has valid token)
+ */
+export function isAuthenticated() {
+  const token = localStorage.getItem("token");
+  const user = localStorage.getItem("user");
+  return !!(token && user);
+}
+
+/**
+ * Get current authenticated user
+ */
+export function getUser() {
+  const user = localStorage.getItem("user");
+  return user ? JSON.parse(user) : null;
+}
+
+/**
+ * Get current user role
+ */
+export function getUserRole() {
+  const user = getUser();
+  return user ? (user.role || "").toLowerCase() : null;
+}
+
+/**
+ * Get JWT token
+ */
+export function getToken() {
+  return localStorage.getItem("token");
+}
+
+/**
+ * Logout user - clear all auth data
+ */
+export function logout() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  localStorage.removeItem("username");
+  localStorage.removeItem("rememberMe");
 }
