@@ -1,0 +1,142 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Use Case Diagram">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ACTORS -->
+        <mxCell id="user" value="User" style="shape=umlActor;" vertex="1" parent="1">
+          <mxGeometry x="40" y="220" width="40" height="80" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="manager" value="Manager" style="shape=umlActor;" vertex="1" parent="1">
+          <mxGeometry x="40" y="400" width="40" height="80" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="admin" value="Admin" style="shape=umlActor;" vertex="1" parent="1">
+          <mxGeometry x="40" y="580" width="40" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- SYSTEM -->
+        <mxCell id="system" value="Travel Guide System" style="rounded=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="180" y="100" width="720" height="650" as="geometry"/>
+        </mxCell>
+
+        <!-- USER -->
+        <mxCell id="uc1" value="View Map" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+          <mxGeometry x="60" y="60" width="140" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="uc2" value="View POIs" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+          <mxGeometry x="260" y="60" width="140" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="uc3" value="View POI Detail" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+          <mxGeometry x="460" y="60" width="160" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="uc4" value="Play Audio" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+          <mxGeometry x="180" y="150" width="140" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="uc5" value="Auto Play Audio" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+          <mxGeometry x="380" y="150" width="160" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="uc6" value="Scan QR" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+          <mxGeometry x="580" y="150" width="140" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="uc7" value="Select Language" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+          <mxGeometry x="300" y="240" width="160" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- MANAGER -->
+        <mxCell id="uc8" value="Manage Locations" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+          <mxGeometry x="120" y="360" width="180" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="uc9" value="Add Location" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+          <mxGeometry x="80" y="440" width="140" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="uc10" value="Edit Location" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+          <mxGeometry x="260" y="440" width="140" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="uc11" value="Delete Location" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+          <mxGeometry x="440" y="440" width="150" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="uc12" value="Upload Audio" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+          <mxGeometry x="620" y="360" width="150" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="uc13" value="View Statistics" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+          <mxGeometry x="620" y="440" width="150" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- ADMIN -->
+        <mxCell id="uc14" value="Manage Users" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+          <mxGeometry x="120" y="580" width="150" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="uc15" value="Manage Managers" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+          <mxGeometry x="320" y="580" width="170" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="uc16" value="Assign Locations" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+          <mxGeometry x="550" y="580" width="170" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- LINKS -->
+        <!-- USER -->
+        <mxCell edge="1" source="user" target="uc1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell edge="1" source="user" target="uc2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell edge="1" source="user" target="uc3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell edge="1" source="user" target="uc4" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell edge="1" source="user" target="uc5" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell edge="1" source="user" target="uc6" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell edge="1" source="user" target="uc7" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- MANAGER -->
+        <mxCell edge="1" source="manager" target="uc8" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell edge="1" source="manager" target="uc12" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell edge="1" source="manager" target="uc13" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- ADMIN -->
+        <mxCell edge="1" source="admin" target="uc14" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell edge="1" source="admin" target="uc15" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell edge="1" source="admin" target="uc16" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- INCLUDE -->
+        <mxCell value="&lt;&lt;include&gt;&gt;" style="dashed=1;endArrow=open;" edge="1" source="uc3" target="uc4" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell value="&lt;&lt;include&gt;&gt;" style="dashed=1;endArrow=open;" edge="1" source="uc6" target="uc4" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell value="&lt;&lt;include&gt;&gt;" style="dashed=1;endArrow=open;" edge="1" source="uc8" target="uc9" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell value="&lt;&lt;include&gt;&gt;" style="dashed=1;endArrow=open;" edge="1" source="uc8" target="uc10" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell value="&lt;&lt;include&gt;&gt;" style="dashed=1;endArrow=open;" edge="1" source="uc8" target="uc11" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- EXTEND -->
+        <mxCell value="&lt;&lt;extend&gt;&gt;" style="dashed=1;endArrow=open;" edge="1" source="uc5" target="uc4" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
