@@ -1,0 +1,16 @@
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Application/bin/Debug/net8.0/VinhKhanhGuide.Application.deps.json
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Application/bin/Debug/net8.0/VinhKhanhGuide.Application.dll
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Application/bin/Debug/net8.0/VinhKhanhGuide.Application.pdb
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Application/bin/Debug/net8.0/VinhKhanhGuide.Domain.dll
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Application/bin/Debug/net8.0/VinhKhanhGuide.Domain.pdb
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Application/obj/Debug/net8.0/VinhKhanhGuide.Application.csproj.AssemblyReference.cache
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Application/obj/Debug/net8.0/VinhKhanhGuide.Application.GeneratedMSBuildEditorConfig.editorconfig
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Application/obj/Debug/net8.0/VinhKhanhGuide.Application.AssemblyInfoInputs.cache
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Application/obj/Debug/net8.0/VinhKhanhGuide.Application.AssemblyInfo.cs
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Application/obj/Debug/net8.0/VinhKhanhGuide.Application.csproj.CoreCompileInputs.cache
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Application/obj/Debug/net8.0/VinhKhanhGuide.Application.sourcelink.json
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Application/obj/Debug/net8.0/VinhKhan.435127E6.Up2Date
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Application/obj/Debug/net8.0/VinhKhanhGuide.Application.dll
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Application/obj/Debug/net8.0/refint/VinhKhanhGuide.Application.dll
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Application/obj/Debug/net8.0/VinhKhanhGuide.Application.pdb
+/Users/tranhau/Documents/Tour_Project/src/backend/VinhKhanhGuide.Application/obj/Debug/net8.0/ref/VinhKhanhGuide.Application.dll

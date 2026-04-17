@@ -1,0 +1,202 @@
+Project Status Summary for GPT
+Generated from code inspection on 2026-04-17
+
+Project name:
+Vinh Khanh Guide
+
+High-level purpose:
+This repository is a tourism guide product centered around "stalls" or points of interest. It includes:
+- a .NET MAUI mobile app for end users
+- an ASP.NET Core Web API backend
+- EF Core with PostgreSQL for persistence
+- test projects for application, API, and mobile logic
+
+Current repo shape:
+- Main solution: VinhKhanhGuide.sln
+- Backend: src/backend/VinhKhanhGuide.Api, Application, Domain, Infrastructure
+- Mobile app: src/mobile/VinhKhanhGuide.Mobile
+- Tests: tests/VinhKhanhGuide.Application.Tests, tests/VinhKhanhGuide.Api.Tests, tests/VinhKhanhGuide.Mobile.Tests
+- There are also side/experimental folders such as TestApp, explan_app, explan_backend, and qr_codes. They do not appear to be the main production path for the Vinh Khanh Guide solution.
+
+What is already implemented in the backend:
+- Clean layered structure:
+  - Domain contains entities such as Stall and StallTranslation.
+  - Application contains use cases and interfaces.
+  - Infrastructure contains EF Core persistence, repository implementations, translation stub, and remote-location import support.
+  - Api exposes HTTP endpoints.
+- Stall data model already exists with fields for:
+  - name
+  - Vietnamese description
+  - latitude / longitude
+  - trigger radius
+  - priority
+  - category
+  - open hours
+  - image URL and image list JSON
+  - address
+  - phone
+  - reviews JSON
+  - map link
+  - Vietnamese narration script
+  - audio URL
+  - active flag
+  - average rating
+- Stall translations are supported as a separate table/entity with:
+  - stall id
+  - language code
+  - translated name
+  - translated description
+  - last generated timestamp
+- API endpoints currently exposed in StallsController:
+  - GET /api/stalls
+  - GET /api/stalls/{id}
+  - GET /api/stalls/nearby?lat=&lng=&radius=
+  - GET /api/stalls/{id}/translation?lang=
+  - POST /api/stalls/sync/locations
+- Root API health-style endpoint exists:
+  - GET /
+  - returns a basic "Vinh Khanh Guide API" ready response
+- Demo deep-link landing pages exist:
+  - GET /demo/open
+  - GET /demo/open/stall/{stallId}
+  These pages generate HTML that can open the mobile app through the custom URL scheme.
+- Database startup behavior:
+  - EF Core migrations run automatically on startup when using a relational database.
+  - PostgreSQL connection is configured through ConnectionStrings:DefaultConnection.
+- Remote location sync pipeline already exists:
+  - startup can optionally import/sync location content from a SQL snapshot file
+  - manual sync endpoint is available
+  - sync logic is designed to insert, update, skip unchanged records, and deactivate missing records
+- Translation generation is not connected to a real external provider yet:
+  - Infrastructure currently registers a FakeTranslationService
+  - this suggests translation behavior is stubbed/faked for now rather than using a live third-party integration
+
+What is already implemented in the mobile app:
+- The app uses .NET MAUI with MVVM.
+- Main shell navigation already exists with three tabs:
+  - List
+  - Map
+  - Settings
+- Dependency injection is set up in MauiProgram and includes services for:
+  - API access
+  - SQLite cache
+  - cached stall data service
+  - deep-link parsing
+  - shell navigation
+  - settings persistence
+  - TTS support
+  - device geolocation
+  - location tracking
+  - narration playback
+  - offline audio download
+  - proximity detection
+  - proximity-triggered narration coordination
+- App link / deep link handling is already wired:
+  - App overrides OnAppLinkRequestReceived
+  - external payloads are processed through ExternalEntryService
+  - backend demo pages are intended to open the app directly
+- Stall list experience:
+  - loads cached stalls first when available
+  - refreshes live data from API
+  - falls back to cache if refresh fails
+  - supports narration preview from the list
+  - preview language choices currently include vi, en, zh, de
+- Stall detail experience:
+  - loads a specific stall
+  - supports translated display content
+  - supports narration playback
+  - supports fallback behavior when translated narration/content is unavailable
+  - includes offline audio download flow
+  - contains logic for external-open/deep-link scenarios and auto-play preparation
+- Map experience:
+  - loads and displays stalls
+  - refreshes device location
+  - supports location tracking
+  - calculates nearest stall
+  - triggers nearby stall prompts
+  - coordinates proximity-based narration
+  - respects settings such as GPS enabled/disabled
+- Settings experience:
+  - persists GPS tracking enabled/disabled
+  - persists trigger radius multiplier
+  - persists auto narration enabled/disabled
+  - allows API base URL override
+  - allows preferred TTS language selection
+  - validates API base URL format
+- Offline support already exists in the app design:
+  - SQLite-backed stall cache is implemented
+  - cached data is used as a fallback when network refresh fails
+  - offline/local audio handling is present
+- Current bundled mobile app configuration:
+  - appsettings.json contains StallApi:BaseUrl as an empty string
+  - this is intentional according to MauiProgram comments, so demo/device builds do not silently point to localhost
+  - a saved override or environment-specific config is expected to provide the actual backend URL
+
+What is already covered by automated tests:
+- Application tests exist for:
+  - remote location sync service
+  - stall translation service
+- API tests exist for:
+  - health/root endpoint
+  - stall endpoints
+  - startup sync behavior
+- Mobile tests exist for:
+  - external entry service
+  - external route parsing
+  - settings service and runtime wiring
+  - stall API client
+  - offline cache data service
+  - offline audio download service
+  - narration service
+  - narration session manager
+  - stall narration resolver
+  - stall narration view-model behavior
+  - proximity service
+  - proximity narration coordinator
+  - map state helper
+  - location tracking status mapping
+  - stall detail external open behavior
+  - demo-related view-model polish behavior
+
+Current implementation status inferred from code:
+- The core architecture is in place and is beyond a prototype.
+- Backend CRUD-style read access for stalls is implemented.
+- Translation retrieval is implemented, but generation appears to rely on a fake/stub translation service.
+- Remote data sync/import is implemented with startup and manual execution options.
+- Mobile app already supports the main user flows: list, detail, map, settings, deep links, narration, and offline/cache-assisted loading.
+- Proximity/location-aware experiences are implemented in code, not just planned.
+- Test coverage is present across all layers, especially on mobile service/view-model logic.
+
+Likely remaining gaps or areas that are not fully production-ready:
+- Mobile app default API base URL is blank, so a real backend URL still needs to be configured for live usage.
+- Translation integration appears fake/stubbed rather than connected to a real translation provider.
+- Some content fields use JSON strings inside relational entities, which may be a deliberate shortcut and not a fully normalized long-term design.
+- The repository contains extra experimental folders, so future GPT sessions should be careful to work inside the main VinhKhanhGuide solution unless explicitly asked otherwise.
+- No evidence was inspected here for deployment pipelines, authentication/authorization, admin tooling, or production observability.
+
+Suggested mental model for future GPT sessions:
+- Treat this as a working tourism guide platform with real backend/mobile foundations already built.
+- Prefer extending the existing architecture rather than redesigning it.
+- Keep changes scoped to the main solution under src/backend, src/mobile, and tests.
+- Assume the owner has already implemented:
+  - stall browsing
+  - stall detail viewing
+  - map/location flows
+  - deep-link entry
+  - narration/audio flow
+  - offline cache support
+  - remote location sync
+  - translation retrieval pipeline
+- Do not assume real external translation or production deployment is finished.
+
+Exact run and test commands currently documented in the repo:
+- dotnet restore VinhKhanhGuide.sln
+- dotnet build VinhKhanhGuide.sln
+- dotnet run --project src/backend/VinhKhanhGuide.Api/VinhKhanhGuide.Api.csproj
+- dotnet test tests/VinhKhanhGuide.Application.Tests/VinhKhanhGuide.Application.Tests.csproj
+- dotnet test tests/VinhKhanhGuide.Api.Tests/VinhKhanhGuide.Api.Tests.csproj
+- dotnet build src/mobile/VinhKhanhGuide.Mobile/VinhKhanhGuide.Mobile.csproj -t:Run -f net8.0-ios
+- dotnet build src/backend/VinhKhanhGuide.Api/VinhKhanhGuide.Api.csproj -p:NuGetAudit=false -v minimal
+
+Important note:
+This summary is based on direct code inspection of the repository structure, service registrations, controllers, view-models, domain entities, configuration, and test files. It describes what is present in code, not a confirmed list of features that have been manually QA-tested in production.

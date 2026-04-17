@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="../buildMultiTargeting/VinhKhanhGuide.Api.props" />
+</Project>

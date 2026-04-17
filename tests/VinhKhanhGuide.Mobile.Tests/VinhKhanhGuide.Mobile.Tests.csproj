@@ -1,0 +1,107 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Controls" Version="8.0.100" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
+    <PackageReference Include="Microsoft.Maui.Essentials" Version="8.0.100" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
+    <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
+    <PackageReference Include="xunit" Version="2.9.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\GeoPoint.cs" Link="Models\GeoPoint.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\AutoNarrationOptions.cs" Link="Models\AutoNarrationOptions.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\AppSettings.cs" Link="Models\AppSettings.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\AppUsageAnalyticsOptions.cs" Link="Models\AppUsageAnalyticsOptions.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\AppUsageEventRequest.cs" Link="Models\AppUsageEventRequest.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\AppUsageHeartbeatRequest.cs" Link="Models\AppUsageHeartbeatRequest.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\AppUsageEventTypes.cs" Link="Models\AppUsageEventTypes.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\DemoUiOptions.cs" Link="Models\DemoUiOptions.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\ExternalEntryOutcome.cs" Link="Models\ExternalEntryOutcome.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\ExternalEntryProcessResult.cs" Link="Models\ExternalEntryProcessResult.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\ExternalEntrySourceType.cs" Link="Models\ExternalEntrySourceType.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\ExternalStallRoute.cs" Link="Models\ExternalStallRoute.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\LanguageOption.cs" Link="Models\LanguageOption.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\LocationResult.cs" Link="Models\LocationResult.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\LocationTrackingOptions.cs" Link="Models\LocationTrackingOptions.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\LocationTrackingStatus.cs" Link="Models\LocationTrackingStatus.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\NarrationContentKind.cs" Link="Models\NarrationContentKind.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\NarrationPlaybackState.cs" Link="Models\NarrationPlaybackState.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\NarrationPlaybackStatus.cs" Link="Models\NarrationPlaybackStatus.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\NarrationRequest.cs" Link="Models\NarrationRequest.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\NearbyStallNotification.cs" Link="Models\NearbyStallNotification.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\ProximityOptions.cs" Link="Models\ProximityOptions.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\ProximityTriggerReason.cs" Link="Models\ProximityTriggerReason.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\StallTranslation.cs" Link="Models\StallTranslation.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\StallSummary.cs" Link="Models\StallSummary.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\StallDetail.cs" Link="Models\StallDetail.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\StallApiOptions.cs" Link="Models\StallApiOptions.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\StallImageSourceResolver.cs" Link="Models\StallImageSourceResolver.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Models\TtsLanguageOption.cs" Link="Models\TtsLanguageOption.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\IProximityDistanceCalculator.cs" Link="Services\IProximityDistanceCalculator.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\IAudioNarrationPlayer.cs" Link="Services\IAudioNarrationPlayer.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\IAppNavigator.cs" Link="Services\IAppNavigator.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\IDeviceTextToSpeech.cs" Link="Services\IDeviceTextToSpeech.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\IExternalEntryService.cs" Link="Services\IExternalEntryService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\IExternalStallRouteParser.cs" Link="Services\IExternalStallRouteParser.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\ILocationService.cs" Link="Services\ILocationService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\ILocationTrackingService.cs" Link="Services\ILocationTrackingService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\INarrationService.cs" Link="Services\INarrationService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\IOfflineAudioDownloadService.cs" Link="Services\IOfflineAudioDownloadService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\IStallApiClient.cs" Link="Services\IStallApiClient.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\IStallDataCache.cs" Link="Services\IStallDataCache.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\IStallDataService.cs" Link="Services\IStallDataService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\ISettingsService.cs" Link="Services\ISettingsService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\ISettingsStorage.cs" Link="Services\ISettingsStorage.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\IProximityService.cs" Link="Services\IProximityService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\IProximityNarrationCoordinator.cs" Link="Services\IProximityNarrationCoordinator.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\ITtsSettingsSupportService.cs" Link="Services\ITtsSettingsSupportService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\TtsLocaleDiscoveryService.cs" Link="Services\TtsLocaleDiscoveryService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\ExternalEntryService.cs" Link="Services\ExternalEntryService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\ExternalEntryStatusService.cs" Link="Services\ExternalEntryStatusService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\ExternalStallRouteParser.cs" Link="Services\ExternalStallRouteParser.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\DirectStallDataService.cs" Link="Services\DirectStallDataService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\CachedStallDataService.cs" Link="Services\CachedStallDataService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\AnalyticsApiClient.cs" Link="Services\AnalyticsApiClient.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\DeviceAppUsageEnvironmentInfo.cs" Link="Services\DeviceAppUsageEnvironmentInfo.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\IAppUsageEnvironmentInfo.cs" Link="Services\IAppUsageEnvironmentInfo.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\IAnalyticsApiClient.cs" Link="Services\IAnalyticsApiClient.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\LocationTrackingStatusMapper.cs" Link="Services\LocationTrackingStatusMapper.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\NarrationService.cs" Link="Services\NarrationService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\NarrationAudioSourceResolver.cs" Link="Services\NarrationAudioSourceResolver.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\NarrationSessionManager.cs" Link="Services\NarrationSessionManager.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\NoopOfflineAudioDownloadService.cs" Link="Services\NoopOfflineAudioDownloadService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\OfflineAudioDownloadResult.cs" Link="Services\OfflineAudioDownloadResult.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\OfflineAudioDownloadService.cs" Link="Services\OfflineAudioDownloadService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\ProximityDistanceCalculator.cs" Link="Services\ProximityDistanceCalculator.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\ProximityNarrationCoordinator.cs" Link="Services\ProximityNarrationCoordinator.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\ProximityService.cs" Link="Services\ProximityService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\IUsageAnalyticsService.cs" Link="Services\IUsageAnalyticsService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\NoopUsageAnalyticsService.cs" Link="Services\NoopUsageAnalyticsService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\SettingsService.cs" Link="Services\SettingsService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\StallApiClient.cs" Link="Services\StallApiClient.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\SqliteStallDataCache.cs" Link="Services\SqliteStallDataCache.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\StallNarrationResolver.cs" Link="Services\StallNarrationResolver.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\StallMapStateHelper.cs" Link="Services\StallMapStateHelper.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\TextToSpeechSettingsResolver.cs" Link="Services\TextToSpeechSettingsResolver.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\Services\UsageAnalyticsService.cs" Link="Services\UsageAnalyticsService.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\ViewModels\ViewModelBase.cs" Link="ViewModels\ViewModelBase.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\ViewModels\StallDetailViewModel.cs" Link="ViewModels\StallDetailViewModel.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\ViewModels\StallListViewModel.cs" Link="ViewModels\StallListViewModel.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\ViewModels\StallMapViewModel.cs" Link="ViewModels\StallMapViewModel.cs" />
+    <Compile Include="..\..\src\mobile\VinhKhanhGuide.Mobile\ViewModels\SettingsViewModel.cs" Link="ViewModels\SettingsViewModel.cs" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+</Project>
