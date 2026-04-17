@@ -74,55 +74,5 @@ namespace Tour_Project.Controllers
                 isLocked = user.IsLocked
             });
         }
-
-        [HttpPost("admin/create")]
-        public IActionResult CreateUserAsAdmin([FromBody] CreateUserRequest request)
-        {
-            if (string.IsNullOrWhiteSpace(request.FullName) ||
-                string.IsNullOrWhiteSpace(request.Username) ||
-                string.IsNullOrWhiteSpace(request.Password))
-            {
-                return BadRequest(new { message = "Vui lòng nhập đầy đủ thông tin (Họ tên, Username, Mật khẩu)" });
-            }
-
-            // Check if username already exists
-            var existingUser = _context.Users.FirstOrDefault(x => x.Username == request.Username);
-            if (existingUser != null)
-                return BadRequest(new { message = "Tên đăng nhập đã tồn tại" });
-
-            // Validate role
-            var roleNormalized = Roles.Normalize(request.Role ?? Roles.User);
-            if (roleNormalized != Roles.User && roleNormalized != Roles.Manager)
-            {
-                return BadRequest(new { message = "Role không hợp lệ (user hoặc manager)" });
-            }
-
-            var newUser = new User
-            {
-                FullName = request.FullName.Trim(),
-                Username = request.Username.Trim(),
-                Password = request.Password.Trim(),
-                Phone = request.Phone?.Trim(),
-                Gender = request.Gender?.Trim(),
-                Avatar = request.Avatar?.Trim(),
-                Role = roleNormalized,
-                IsLocked = false
-            };
-
-            _context.Users.Add(newUser);
-            _context.SaveChanges();
-
-            return Ok(new
-            {
-                id = newUser.Id,
-                fullName = newUser.FullName,
-                username = newUser.Username,
-                phone = newUser.Phone,
-                gender = newUser.Gender,
-                avatar = newUser.Avatar,
-                role = Roles.Normalize(newUser.Role),
-                isLocked = newUser.IsLocked
-            });
-        }
     }
 }

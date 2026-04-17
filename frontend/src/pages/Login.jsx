@@ -65,7 +65,7 @@ function Login() {
       } else if (normalizedRole === "manager") {
         navigate("/manager/dashboard", { replace: true });
       } else {
-        setErrorMsg("Tài khoản không có quyền truy cập hệ thống này.");
+        navigate("/", { replace: true });
       }
     } catch (error) {
       setErrorMsg(error.message || "Có lỗi xảy ra. Vui lòng thử lại.");
@@ -172,7 +172,7 @@ function Login() {
               </div>
 
               <button type="submit" className="login-btn" disabled={isLoading}>
-                {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
+                {isLoading ? "Logging in..." : "Log in"}
               </button>
             </form>
 

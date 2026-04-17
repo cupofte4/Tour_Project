@@ -34,7 +34,7 @@ export async function login(username, password) {
   return null;
 }
 
-export async function register(fullName, username, password, role = "manager") {
+export async function register(fullName, username, password, role = "user") {
   const res = await fetch(`${API_URL}/auth/register`, {
     method: "POST",
     headers: {
