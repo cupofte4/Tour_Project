@@ -8,7 +8,6 @@ function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState("user");
   const [errorMsg, setErrorMsg] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -61,12 +60,13 @@ function Register() {
         return;
       }
 
-      const result = await register(fullName, username, password, role);
+      const result = await register(fullName, username, password, "manager");
 
       if (result) {
-        navigate("/login", {
-          state: { message: "Đăng ký thành công! Vui lòng đăng nhập." },
-        });
+        // After registration, backend returns { token, user }
+        // authService.register already saved token + user to localStorage
+        // Auto-login user based on role
+        navigate("/manager/dashboard", { replace: true });
       } else {
         setErrorMsg("Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác.");
       }
@@ -125,31 +125,6 @@ function Register() {
             )}
 
             <form onSubmit={handleRegister} className="login-form">
-              <div className="form-group">
-                <label>Loại tài khoản</label>
-                <div className="role-options" role="radiogroup" aria-label="Role selection">
-                  <label className="role-option">
-                    <input
-                      type="radio"
-                      name="role"
-                      value="user"
-                      checked={role === "user"}
-                      onChange={() => setRole("user")}
-                    />
-                    <span>Tôi muốn trải nghiệm app</span>
-                  </label>
-                  <label className="role-option">
-                    <input
-                      type="radio"
-                      name="role"
-                      value="manager"
-                      checked={role === "manager"}
-                      onChange={() => setRole("manager")}
-                    />
-                    <span>Tôi muốn kinh doanh</span>
-                  </label>
-                </div>
-              </div>
               <div className="form-group">
                 <label htmlFor="fullName">Họ và Tên</label>
                 <input

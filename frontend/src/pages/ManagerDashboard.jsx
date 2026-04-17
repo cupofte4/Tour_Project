@@ -6,7 +6,6 @@ import {
   LuLayoutGrid,
   LuLoaderCircle,
   LuMapPinned,
-  LuPlus,
   LuRefreshCw,
   LuSave,
   LuTrash2,
@@ -291,7 +290,7 @@ function ManagerDashboard() {
     event.preventDefault();
     if (!user?.id) return;
     if (!locationForm.id) {
-      setLocationError("Bạn chỉ có thể chỉnh sửa sạp/địa điểm đã được admin phân công.");
+      setLocationError("Vui lòng chọn một địa điểm để chỉnh sửa.");
       return;
     }
 
@@ -312,12 +311,8 @@ function ManagerDashboard() {
 
       setLocations((current) => {
         const list = Array.isArray(current) ? current : [];
-        const exists = list.some((item) => item.id === updated.id);
-        return exists
-          ? list.map((item) => (item.id === updated.id ? updated : item))
-          : [updated, ...list];
+        return list.map((item) => (item.id === updated.id ? updated : item));
       });
-      setLocationForm((current) => ({ ...current, id: updated.id }));
       setLocationNotice("Đã lưu thay đổi.");
       loadStats();
     } catch (error) {
@@ -446,8 +441,8 @@ function ManagerDashboard() {
             <div className="admin-empty-state-icon">
               <LuFolderOpen size={24} />
             </div>
-            <h3>Chưa chọn địa điểm</h3>
-            <p>Manager chỉ được chỉnh sửa các địa điểm đã được admin phân công.</p>
+            <h3>Chọn địa điểm để chỉnh sửa</h3>
+            <p>Manager chỉ có quyền xem và sửa các địa điểm đã được phân công.</p>
           </div>
         ) : (
           <form className="location-form" onSubmit={handleLocationSubmit}>
@@ -644,19 +639,17 @@ function ManagerDashboard() {
               ) : (
                 <LuSave size={16} />
               )}
-              <span>Lưu thay đổi</span>
+              <span> Lưu thay đổi</span>
             </button>
-            {locationForm.id && (
-              <button
-                type="button"
-                className="btn action-btn-muted"
-                onClick={resetLocationForm}
-              >
-                Hủy chỉnh sửa
-              </button>
-            )}
+            <button
+              type="button"
+              className="btn action-btn-muted"
+              onClick={resetLocationForm}
+            >
+              Hủy chỉnh sửa
+            </button>
           </div>
-          </form>
+        </form>
         )}
       </div>
     </section>

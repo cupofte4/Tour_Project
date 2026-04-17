@@ -1,14 +1,29 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { isAuthenticated, getUserRole } from "./services/authService";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AdminDashboard from "./pages/AdminDashboard";
 import ManagerDashboard from "./pages/ManagerDashboard";
-import AddLocation from "./pages/AddLocation";
-import EditLocation from "./pages/EditLocation";
-import MyProfile from "./pages/MyProfile";
-import Settings from "./pages/Settings";
-import Favorites from "./pages/Favorites";
+
+function ProtectedRoute({ element, requiredRole }) {
+  if (!isAuthenticated()) return <Navigate to="/login" replace />;
+  const role = getUserRole();
+  if (role !== requiredRole) {
+    if (role === "admin") return <Navigate to="/admin/dashboard" replace />;
+    if (role === "manager") return <Navigate to="/manager/dashboard" replace />;
+    return <Navigate to="/login" replace />;
+  }
+  return element;
+}
+
+function PublicRoute({ element }) {
+  if (isAuthenticated()) {
+    const role = getUserRole();
+    if (role === "admin") return <Navigate to="/admin/dashboard" replace />;
+    if (role === "manager") return <Navigate to="/manager/dashboard" replace />;
+  }
+  return element;
+}
 
 function App() {
   return (
@@ -19,18 +34,16 @@ function App() {
       }}
     >
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/manager" element={<ManagerDashboard />} />
-        <Route path="/manager/dashboard" element={<ManagerDashboard />} />
-        <Route path="/admin/add" element={<AddLocation />} />
-        <Route path="/admin/tts" element={<EditLocation />} />
-        <Route path="/profile" element={<MyProfile />} />
-        <Route path="/favorites" element={<Favorites />} />
-        <Route path="/settings" element={<Settings />} />
+        <Route path="/login" element={<PublicRoute element={<Login />} />} />
+        <Route path="/register" element={<PublicRoute element={<Register />} />} />
+
+        <Route path="/admin" element={<ProtectedRoute element={<AdminDashboard />} requiredRole="admin" />} />
+        <Route path="/admin/dashboard" element={<ProtectedRoute element={<AdminDashboard />} requiredRole="admin" />} />
+
+        <Route path="/manager" element={<ProtectedRoute element={<ManagerDashboard />} requiredRole="manager" />} />
+        <Route path="/manager/dashboard" element={<ProtectedRoute element={<ManagerDashboard />} requiredRole="manager" />} />
+
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );

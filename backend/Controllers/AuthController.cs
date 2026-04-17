@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Tour_Project.Data;
 using Tour_Project.Models;
+using Tour_Project.Services;
 
 namespace Tour_Project.Controllers
 {
@@ -9,10 +10,12 @@ namespace Tour_Project.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly JwtService _jwtService;
 
-        public AuthController(AppDbContext context)
+        public AuthController(AppDbContext context, JwtService jwtService)
         {
             _context = context;
+            _jwtService = jwtService;
         }
 
         [HttpPost("login")]
@@ -27,16 +30,23 @@ namespace Tour_Project.Controllers
             if (u.IsLocked)
                 return Unauthorized(new { message = "Tài khoản của bạn đã bị khóa" });
 
+            // Generate JWT token
+            var token = _jwtService.GenerateToken(u.Id, u.Username, u.Role);
+
             return Ok(new
             {
-                id = u.Id,
-                fullName = u.FullName,
-                username = u.Username,
-                phone = u.Phone,
-                gender = u.Gender,
-                avatar = u.Avatar,
-                role = Roles.Normalize(u.Role),
-                isLocked = u.IsLocked
+                token = token,
+                user = new
+                {
+                    id = u.Id,
+                    fullName = u.FullName,
+                    username = u.Username,
+                    phone = u.Phone,
+                    gender = u.Gender,
+                    avatar = u.Avatar,
+                    role = Roles.Normalize(u.Role),
+                    isLocked = u.IsLocked
+                }
             });
         }
 
@@ -76,16 +86,23 @@ namespace Tour_Project.Controllers
             _context.Users.Add(user);
             _context.SaveChanges();
 
+            // Generate JWT token
+            var token = _jwtService.GenerateToken(user.Id, user.Username, user.Role);
+
             return Ok(new
             {
-                id = user.Id,
-                fullName = user.FullName,
-                username = user.Username,
-                phone = user.Phone,
-                gender = user.Gender,
-                avatar = user.Avatar,
-                role = Roles.Normalize(user.Role),
-                isLocked = user.IsLocked
+                token = token,
+                user = new
+                {
+                    id = user.Id,
+                    fullName = user.FullName,
+                    username = user.Username,
+                    phone = user.Phone,
+                    gender = user.Gender,
+                    avatar = user.Avatar,
+                    role = Roles.Normalize(user.Role),
+                    isLocked = user.IsLocked
+                }
             });
         }
 

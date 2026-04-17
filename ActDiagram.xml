@@ -1,0 +1,123 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Activity Diagram Final">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- SWIMLANES -->
+        <mxCell id="lane1" value="User" style="swimlane;horizontal=1;" vertex="1" parent="1">
+          <mxGeometry x="0" y="0" width="300" height="800" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="lane2" value="Frontend (React)" style="swimlane;horizontal=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="0" width="400" height="800" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="lane3" value="Backend (.NET API)" style="swimlane;horizontal=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="0" width="400" height="800" as="geometry"/>
+        </mxCell>
+
+        <!-- START -->
+        <mxCell id="start" value="" style="ellipse;fillColor=#000000;" vertex="1" parent="lane1">
+          <mxGeometry x="120" y="40" width="30" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- USER -->
+        <mxCell id="u1" value="Open Web App" style="rounded=1;" vertex="1" parent="lane1">
+          <mxGeometry x="60" y="100" width="160" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- FRONTEND -->
+        <mxCell id="f1" value="Load React App" style="rounded=1;" vertex="1" parent="lane2">
+          <mxGeometry x="80" y="100" width="180" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="f2" value="Call API: Get POIs" style="rounded=1;" vertex="1" parent="lane2">
+          <mxGeometry x="80" y="180" width="180" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- BACKEND -->
+        <mxCell id="b1" value="Query Database" style="rounded=1;" vertex="1" parent="lane3">
+          <mxGeometry x="80" y="180" width="180" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="b2" value="Return POIs" style="rounded=1;" vertex="1" parent="lane3">
+          <mxGeometry x="80" y="260" width="180" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- FRONTEND -->
+        <mxCell id="f3" value="Start GPS Tracking" style="rounded=1;" vertex="1" parent="lane2">
+          <mxGeometry x="80" y="260" width="180" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="f4" value="Get Current Location" style="rounded=1;" vertex="1" parent="lane2">
+          <mxGeometry x="80" y="340" width="180" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- DECISION -->
+        <mxCell id="d1" value="Near POI?" style="rhombus;" vertex="1" parent="lane2">
+          <mxGeometry x="100" y="420" width="120" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- YES -->
+        <mxCell id="f5" value="Play Audio" style="rounded=1;" vertex="1" parent="lane2">
+          <mxGeometry x="80" y="520" width="180" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="f6" value="Send Stats" style="rounded=1;" vertex="1" parent="lane2">
+          <mxGeometry x="80" y="600" width="180" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="b3" value="Update Statistics" style="rounded=1;" vertex="1" parent="lane3">
+          <mxGeometry x="80" y="600" width="180" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- NO -->
+        <mxCell id="f7" value="Continue Tracking" style="rounded=1;" vertex="1" parent="lane2">
+          <mxGeometry x="260" y="520" width="180" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- DECISION STOP -->
+        <mxCell id="d2" value="Stop?" style="rhombus;" vertex="1" parent="lane2">
+          <mxGeometry x="120" y="680" width="120" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- END NODES -->
+        <mxCell id="end1" value="" style="ellipse;strokeWidth=3;" vertex="1" parent="lane1">
+          <mxGeometry x="120" y="780" width="30" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="end2" value="" style="ellipse;strokeWidth=3;" vertex="1" parent="lane2">
+          <mxGeometry x="200" y="780" width="30" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- FLOWS -->
+        <mxCell edge="1" source="start" target="u1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell edge="1" source="u1" target="f1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell edge="1" source="f1" target="f2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell edge="1" source="f2" target="b1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell edge="1" source="b1" target="b2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell edge="1" source="b2" target="f3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell edge="1" source="f3" target="f4" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell edge="1" source="f4" target="d1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- YES -->
+        <mxCell value="Yes" edge="1" source="d1" target="f5" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell edge="1" source="f5" target="f6" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell edge="1" source="f6" target="b3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell edge="1" source="b3" target="d2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- NO -->
+        <mxCell value="No" edge="1" source="d1" target="f7" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell edge="1" source="f7" target="d2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- STOP -->
+        <mxCell value="Continue" edge="1" source="d2" target="f4" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell value="User Close" edge="1" source="d2" target="end1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell value="GPS Stop" edge="1" source="d2" target="end2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

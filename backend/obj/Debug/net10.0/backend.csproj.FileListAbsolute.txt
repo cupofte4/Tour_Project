@@ -238,6 +238,7 @@ E:\CNTT_Code\CSharp\backend\obj\Debug\net10.0\refint\backend.dll
 E:\CNTT_Code\CSharp\backend\obj\Debug\net10.0\backend.pdb
 E:\CNTT_Code\CSharp\backend\obj\Debug\net10.0\backend.genruntimeconfig.cache
 E:\CNTT_Code\CSharp\backend\obj\Debug\net10.0\ref\backend.dll
+<<<<<<< HEAD
 D:\Code_CSharp\Tour_Project\backend\bin\Debug\net10.0\appsettings.Development.json
 D:\Code_CSharp\Tour_Project\backend\bin\Debug\net10.0\appsettings.json
 D:\Code_CSharp\Tour_Project\backend\bin\Debug\net10.0\bin_build\appsettings.Development.json
@@ -375,3 +376,11 @@ D:\Code_CSharp\Tour_Project\backend\obj\Debug\net10.0\refint\backend.dll
 D:\Code_CSharp\Tour_Project\backend\obj\Debug\net10.0\backend.pdb
 D:\Code_CSharp\Tour_Project\backend\obj\Debug\net10.0\backend.genruntimeconfig.cache
 D:\Code_CSharp\Tour_Project\backend\obj\Debug\net10.0\ref\backend.dll
+=======
+E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.Bcl.TimeProvider.dll
+E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.IdentityModel.Abstractions.dll
+E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.IdentityModel.JsonWebTokens.dll
+E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.IdentityModel.Logging.dll
+E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.IdentityModel.Tokens.dll
+E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\System.IdentityModel.Tokens.Jwt.dll
+>>>>>>> 3f45118f2338e8b037c1c8b88b22197613ad5bd2

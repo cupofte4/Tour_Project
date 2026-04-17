@@ -1,3 +1,5 @@
+import { trackAudioPlay } from "./analyticsService";
+
 const LANGUAGES = [
   { code: "vi-VN", label: "Tiếng Việt" },
   { code: "en-US", label: "English" },
@@ -279,6 +281,11 @@ function speakLocation(location, langCode) {
 async function speakLocationAsync(location, langCode) {
   const text = getTextForLang(location, langCode);
   if (!text) return;
+
+  if (location?.id) {
+    trackAudioPlay(location.id).catch(() => {});
+  }
+
   await playChunks(text, langCode);
 }
 
