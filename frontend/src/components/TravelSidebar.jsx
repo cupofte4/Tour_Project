@@ -7,6 +7,7 @@ import {
   FaHeart,
   FaCog,
   FaSignOutAlt,
+  FaMapMarkedAlt,
 } from "react-icons/fa";
 
 const TravelSidebar = () => {
@@ -59,9 +60,10 @@ const TravelSidebar = () => {
 
   const menuItems = [
     { id: 1, label: "Trang chủ", icon: FaHome, path: "/" },
-    { id: 2, label: "Hồ sơ của tôi", icon: FaUser, path: "/profile" },
-    { id: 3, label: "Địa điểm yêu thích", icon: FaHeart, path: "/favorites" },
-    { id: 4, label: "Cài đặt", icon: FaCog, path: "/settings" },
+    { id: 2, label: "Khám phá Tour", icon: FaMapMarkedAlt, path: "/tours" },
+    { id: 3, label: "Hồ sơ của tôi", icon: FaUser, path: "/profile" },
+    { id: 4, label: "Địa điểm yêu thích", icon: FaHeart, path: "/favorites" },
+    { id: 5, label: "Cài đặt", icon: FaCog, path: "/settings" },
   ];
 
   const handleLogout = () => {

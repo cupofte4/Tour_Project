@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getNearLocation, getAllLocations } from "../services/locationService";
-import { speakLocationAsync, stop, LANGUAGES } from "../services/ttsService";
+import { getAllTours, getTourLocations } from "../services/tourService";
+import { LANGUAGES } from "../services/ttsService";
 import { trackLocationView } from "../services/analyticsService";
 import { checkGeofence } from "../services/api";
 import API_URL from "../services/api";
@@ -11,12 +12,16 @@ import MapView from "../components/MapView";
 import AudioPlayer from "../components/AudioPlayer";
 import Navbar from "../components/Navbar";
 import TravelSidebar from "../components/TravelSidebar";
+import QRScanner from "../components/QRScanner";
 import "../styles/app.css";
 
 function Home() {
   const navigate = useNavigate();
   const [location, setLocation] = useState(null);
   const [locations, setLocations] = useState([]);
+  const [tours, setTours] = useState([]);
+  const [selectedTourId, setSelectedTourId] = useState("");
+  const [tourLoading, setTourLoading] = useState(false);
   const [userLocation, setUserLocation] = useState({
     lat: 10.7590,
     lng: 106.7043,
@@ -44,16 +49,42 @@ function Home() {
   const GEOFENCE_RADIUS = 50; // 50 meters
 
   const [lightbox, setLightbox] = useState(null);
+  const [showQR, setShowQR] = useState(false);
   const lastTrackedLocationRef = useRef(null);
-  const mockModeRef = useRef(false); // Track if we've switched to mock mode
+  const mockModeRef = useRef(false);
   const currentLocationRef = useRef({ lat: 10.7590, lng: 106.7043 });
+
+  // Guest mode: Home is public — no login required
+  const user = (() => { try { return JSON.parse(localStorage.getItem("user")); } catch { return null; } })();
+  const userRole = (user?.role || "").toLowerCase();
 
   const loadLocations = async () => {
     try {
-      const data = await getAllLocations();
-      setLocations(Array.isArray(data) ? data : []);
+      if (selectedTourId) {
+        setTourLoading(true);
+        const tourLocs = await getTourLocations(selectedTourId);
+        const ordered = (Array.isArray(tourLocs) ? tourLocs : [])
+          .sort((a, b) => (a?.orderIndex ?? 0) - (b?.orderIndex ?? 0))
+          .map((tl) => tl?.location)
+          .filter(Boolean);
+        setLocations(ordered);
+      } else {
+        const data = await getAllLocations();
+        setLocations(Array.isArray(data) ? data : []);
+      }
     } catch {
       setLocations([]);
+    } finally {
+      setTourLoading(false);
+    }
+  };
+
+  const loadTours = async () => {
+    try {
+      const data = await getAllTours();
+      setTours(Array.isArray(data) ? data : []);
+    } catch {
+      setTours([]);
     }
   };
 
@@ -71,6 +102,35 @@ function Home() {
   const handleMapLocationSelect = (selectedLocation) => {
     if (!selectedLocation?.id) return;
     setLocation(selectedLocation);
+  };
+
+  /**
+   * QR scan handler — called by QRScanner with decoded locationId
+   * Finds location from already-loaded list, triggers audio
+   */
+  const handleQRDetected = (locationId) => {
+    setShowQR(false);
+
+    const found = locations.find((l) => l.id === locationId);
+    if (!found) {
+      // Location not in current list — fetch individually
+      fetch(`${API_URL}/location`)
+        .then((r) => r.json())
+        .then((all) => {
+          const target = Array.isArray(all) ? all.find((l) => l.id === locationId) : null;
+          if (target) {
+            setLocation(target);
+            audioQueue.addToQueue(target, langRef.current, true);
+            trackLocationView(target.id).catch(() => {});
+          }
+        })
+        .catch(() => {});
+      return;
+    }
+
+    setLocation(found);
+    audioQueue.addToQueue(found, langRef.current, true); // insertAtStart = true
+    trackLocationView(found.id).catch(() => {});
   };
 
   useEffect(() => {
@@ -99,34 +159,22 @@ function Home() {
     poiCooldownMapRef.current.set(poiId, Date.now());
   };
 
+  // Redirect admin/manager to their dashboards; guests stay on Home
   useEffect(() => {
-    const userString = localStorage.getItem("user");
-    if (!userString) {
-      navigate("/login");
+    if (userRole === "admin") {
+      navigate("/admin/dashboard", { replace: true });
       return;
     }
-
-    try {
-      const userData = JSON.parse(userString);
-      const role = (userData?.role || "").toLowerCase();
-      if (role === "admin") {
-        navigate("/admin/dashboard", { replace: true });
-        return;
-      }
-      if (role === "manager") {
-        navigate("/manager/dashboard", { replace: true });
-        return;
-      }
-    } catch {
-      // Ignore parse errors and let Home handle as normal user.
+    if (userRole === "manager") {
+      navigate("/manager/dashboard", { replace: true });
+      return;
     }
-
+    // Guest or any other case: allow access
     setIsAuthenticated(true);
-  }, [navigate]);
+  }, [navigate, userRole]);
 
   /**
-   * GPS Tracking - Initialize geolocation on component mount
-   * Watches user position in real-time
+   * GPS Tracking - works for both guests and authenticated users
    */
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -208,7 +256,7 @@ function Home() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-
+    loadTours();
     loadLocations();
 
     const handleRefreshLocations = () => {
@@ -222,12 +270,12 @@ function Home() {
       window.removeEventListener("focus", handleRefreshLocations);
       window.clearInterval(intervalId);
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, selectedTourId]);
 
   useEffect(() => {
     if (!isAuthenticated || !isTourStarted) {
       runningRef.current = false;
-      stop();
+      audioQueue.stop();
       return;
     }
 
@@ -249,8 +297,8 @@ function Home() {
         }
 
         // Tăng dần lat/lng để giả lập di chuyển
-        currentLocationRef.current.lat += 0.00005;
-        currentLocationRef.current.lng += 0.00005;
+        currentLocationRef.current.lat += 0.00006;
+        currentLocationRef.current.lng += 0.00006;
         setUserLocation({ ...currentLocationRef.current, accuracy: 50 });
 
         const { lat, lng } = currentLocationRef.current;
@@ -286,7 +334,7 @@ function Home() {
 
     return () => {
       runningRef.current = false;
-      stop();
+      audioQueue.stop();
     };
   }, [isAuthenticated, isTourStarted, gpsStatus]);
 
@@ -333,6 +381,72 @@ function Home() {
             <div className="right-panel">
               <div className="panel-title">📍 Địa điểm để khám phá và review</div>
 
+              {/* Tour quick-access */}
+              {/* Tour selector (active tours only) */}
+              <a
+                href="/tours"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "10px 14px",
+                  background: "linear-gradient(135deg,#0f766e,#115e59)",
+                  color: "#fff",
+                  borderRadius: 10,
+                  textDecoration: "none",
+                  fontWeight: 600,
+                  fontSize: 14,
+                }}
+              >
+                🗺️ Khám phá các Tour tham quan
+                <span style={{ marginLeft: "auto", opacity: 0.8, fontSize: 12 }}>Xem ngay →</span>
+              </a>
+
+              <div
+                style={{
+                  marginTop: 10,
+                  padding: "12px 14px",
+                  borderRadius: 10,
+                  border: "1px solid #d1fae5",
+                  background: "#ecfdf5",
+                }}
+              >
+                <div style={{ fontWeight: 800, fontSize: 13, color: "#065f46", marginBottom: 6 }}>
+                  Chọn tour đang available
+                </div>
+                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                  <select
+                    value={selectedTourId}
+                    onChange={(e) => {
+                      setLocation(null);
+                      setSelectedTourId(e.target.value);
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "8px 10px",
+                      borderRadius: 8,
+                      border: "1px solid #a7f3d0",
+                      outline: "none",
+                      fontWeight: 650,
+                      background: "#fff",
+                      color: "#064e3b",
+                    }}
+                  >
+                    <option value="">Tất cả địa điểm (không chọn tour)</option>
+                    {tours.map((t) => (
+                      <option key={t.id} value={String(t.id)}>
+                        {t.title} ({t.locationCount} POI)
+                      </option>
+                    ))}
+                  </select>
+                  {tourLoading && (
+                    <span style={{ fontSize: 12, color: "#065f46", whiteSpace: "nowrap" }}>
+                      ⏳ Đang tải...
+                    </span>
+                  )}
+                </div>
+              </div>
+
               <div className="status-bar">
                 {!isTourStarted ? (
                   <>
@@ -344,6 +458,13 @@ function Home() {
                       disabled={gpsStatus !== "active" && gpsStatus !== "mock"}
                     >
                       ▶ Di chuyển
+                    </button>
+                    <button
+                      className="btn-start-tour"
+                      onClick={() => setShowQR(true)}
+                      style={{ marginLeft: 8, background: "#6200ea" }}
+                    >
+                      📷 Quét QR
                     </button>
                   </>
                 ) : done ? (
@@ -497,6 +618,27 @@ function Home() {
 
               <AudioPlayer lang={lang} />
 
+              {/* QR button during active tour */}
+              {isTourStarted && !done && (
+                <button
+                  onClick={() => setShowQR(true)}
+                  style={{
+                    width: "100%",
+                    padding: "9px 0",
+                    marginBottom: 8,
+                    background: "#6200ea",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 8,
+                    cursor: "pointer",
+                    fontWeight: 600,
+                    fontSize: 14,
+                  }}
+                >
+                  📷 Quét QR tại địa điểm này
+                </button>
+              )}
+
               <LocationCard
                 location={location}
                 lang={lang}
@@ -522,57 +664,19 @@ function Home() {
               </button>
             </div>
           )}
+
+          {/* QR Scanner modal */}
+          {showQR && (
+            <QRScanner
+              onDetected={handleQRDetected}
+              onClose={() => setShowQR(false)}
+            />
+          )}
         </>
       ) : (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "100vh",
-            background: "linear-gradient(135deg, #e0f7fa 0%, #e1f5fe 100%)",
-            flexDirection: "column",
-          }}
-        >
-          <div
-            style={{
-              textAlign: "center",
-              background: "white",
-              padding: "40px 60px",
-              borderRadius: "16px",
-              boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
-            }}
-          >
-            <p style={{ fontSize: "24px", marginBottom: "16px" }}>
-              🔐 Yêu cầu đăng nhập
-            </p>
-            <p
-              style={{ color: "#666", marginBottom: "24px", fontSize: "16px" }}
-            >
-              Vui lòng đăng nhập để xem hình ảnh và nghe thuyết minh
-            </p>
-            <button
-              onClick={() => navigate("/login")}
-              style={{
-                padding: "12px 32px",
-                fontSize: "16px",
-                background: "linear-gradient(135deg, #1e88e5 0%, #1565c0 100%)",
-                color: "white",
-                border: "none",
-                borderRadius: "8px",
-                cursor: "pointer",
-                transition: "0.2s ease",
-              }}
-              onMouseOver={(event) =>
-                (event.target.style.transform = "translateY(-2px)")
-              }
-              onMouseOut={(event) =>
-                (event.target.style.transform = "translateY(0)")
-              }
-            >
-              Đăng nhập ngay
-            </button>
-          </div>
+        // Loading state while checking role redirect
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+          <span>⏳ Đang tải...</span>
         </div>
       )}
     </div>

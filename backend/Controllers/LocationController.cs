@@ -9,7 +9,7 @@ namespace Tour_Project.Controllers
     [Route("api/location")]
     [ApiController]
     public class LocationController : ControllerBase
-    {
+    {   
         private static readonly JsonSerializerOptions ReviewJsonOptions = new()
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase

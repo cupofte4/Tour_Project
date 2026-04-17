@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   LuArrowUpRight,
@@ -10,8 +10,12 @@ import {
   LuSave,
   LuTrash2,
   LuUpload,
+  LuMap,
+  LuMapPin,
+  LuPhone,
 } from "react-icons/lu";
 import { FaStop, FaVolumeUp } from "react-icons/fa";
+import MapView from "../components/MapView";
 import AdminNavbar, { AdminSidebar } from "../components/AdminNavbar";
 import { speak, stop } from "../services/ttsService";
 import { uploadImages } from "../services/uploadService";
@@ -26,6 +30,7 @@ import "../styles/admin.css";
 
 const MANAGER_TABS = [
   { key: "my-locations", label: "My Locations", icon: LuMapPinned },
+  { key: "map", label: "Bản đồ", icon: LuMap },
   { key: "statistics", label: "Statistics", icon: LuLayoutGrid },
 ];
 
@@ -80,6 +85,8 @@ function ManagerDashboard() {
   const [locationForm, setLocationForm] = useState(createEmptyLocationForm());
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [playingLang, setPlayingLang] = useState("");
+
+  const [mapSelectedLocation, setMapSelectedLocation] = useState(null);
 
   const [statsTotals, setStatsTotals] = useState([]);
   const [timeSeries, setTimeSeries] = useState([]);
@@ -174,13 +181,15 @@ function ManagerDashboard() {
   if (!isAuthorized || !user) return null;
 
   const dashboardTitle =
-    activeMenu === "statistics" ? "Statistics" : "My locations";
+    activeMenu === "statistics" ? "Statistics"
+    : activeMenu === "map" ? "Bản đồ địa điểm"
+    : "My locations";
   const dashboardSubtitle =
-    activeMenu === "statistics"
-      ? "Track views and audio plays for the locations you own."
-      : "Create and manage your own stalls/locations and narration content.";
+    activeMenu === "statistics" ? "Track views and audio plays for the locations you own."
+    : activeMenu === "map" ? "Xem các địa điểm được phân công trên bản đồ, click marker để xem chi tiết."
+    : "Create and manage your own stalls/locations and narration content.";
 
-  const showSearch = activeMenu === "my-locations";
+  const showSearch = activeMenu === "my-locations" || activeMenu === "map";
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -346,6 +355,67 @@ function ManagerDashboard() {
   const totalPlays = statsTotals.reduce(
     (sum, item) => sum + (item.audioPlaysCount || 0),
     0,
+  );
+
+  const renderMapTab = () => (
+    <div className="map-tab-layout">
+      <div className="map-panel">
+        <MapView
+          userLocation={{ lat: 10.7593, lng: 106.7046 }}
+          locations={locations}
+          onSelectLocation={(loc) => setMapSelectedLocation(loc)}
+        />
+      </div>
+      <div className="map-detail-panel">
+        {mapSelectedLocation ? (
+          <>
+            {mapSelectedLocation.image ? (
+              <img
+                className="map-detail-image"
+                src={mapSelectedLocation.image}
+                alt={mapSelectedLocation.name}
+              />
+            ) : (
+              <div className="map-detail-image-placeholder">📷 Chưa có ảnh</div>
+            )}
+            <div className="map-detail-name">{mapSelectedLocation.name}</div>
+            <div className="map-detail-meta">
+              {mapSelectedLocation.address && (
+                <div className="map-detail-row">
+                  <LuMapPin size={14} className="map-detail-row-icon" />
+                  <span>{mapSelectedLocation.address}</span>
+                </div>
+              )}
+              {mapSelectedLocation.phone && (
+                <div className="map-detail-row">
+                  <LuPhone size={14} className="map-detail-row-icon" />
+                  <span>{mapSelectedLocation.phone}</span>
+                </div>
+              )}
+            </div>
+            {mapSelectedLocation.description && (
+              <div className="map-detail-desc">{mapSelectedLocation.description}</div>
+            )}
+            <div className="map-detail-coords">
+              📍 {mapSelectedLocation.latitude}, {mapSelectedLocation.longitude}
+            </div>
+            <button
+              className="btn btn-primary map-detail-edit-btn"
+              onClick={() => startEditingLocation(mapSelectedLocation)}
+            >
+              <LuMapPinned size={15} />
+              <span>Chỉnh sửa địa điểm này</span>
+            </button>
+          </>
+        ) : (
+          <div className="map-detail-empty">
+            <div className="map-detail-empty-icon">🗺️</div>
+            <p className="section-title">Chọn một địa điểm</p>
+            <p>Click vào marker trên bản đồ để xem chi tiết.</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 
   const renderMyLocations = () => (
@@ -856,6 +926,7 @@ function ManagerDashboard() {
         />
         <div className="admin-content">
           {activeMenu === "my-locations" && renderMyLocations()}
+          {activeMenu === "map" && renderMapTab()}
           {activeMenu === "statistics" && renderStatistics()}
         </div>
       </main>

@@ -171,21 +171,6 @@ function LocationCard({ location, lang, onLocationUpdated }) {
 
       <div className="location-desc">{text}</div>
 
-      <div className="tts-controls">
-        <button className="tts-btn play" onClick={handlePlay}>
-          {isPlaying ? "⏸ Đang đọc thuyết minh" : "▶ Đọc thuyết minh"}
-        </button>
-        <button
-          className="tts-btn stop"
-          onClick={() => {
-            stop();
-            setIsPlaying(false);
-          }}
-        >
-          ⏹ Dừng
-        </button>
-      </div>
-
       <div className="location-meta-card">
         <div className="location-meta-item">
           <span className="location-meta-label">Địa chỉ</span>

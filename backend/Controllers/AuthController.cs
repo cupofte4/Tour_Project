@@ -30,12 +30,11 @@ namespace Tour_Project.Controllers
             if (u.IsLocked)
                 return Unauthorized(new { message = "Tài khoản của bạn đã bị khóa" });
 
-            // Generate JWT token
             var token = _jwtService.GenerateToken(u.Id, u.Username, u.Role);
 
             return Ok(new
             {
-                token = token,
+                token,
                 user = new
                 {
                     id = u.Id,
@@ -57,41 +56,31 @@ namespace Tour_Project.Controllers
                 string.IsNullOrWhiteSpace(request.Username) ||
                 string.IsNullOrWhiteSpace(request.Password))
             {
-                return BadRequest(new { message = "Vui lÃ²ng nháº­p Ä‘áº§y Ä‘á»§ thÃ´ng tin" });
+                return BadRequest(new { message = "Vui lòng nhập đầy đủ thông tin" });
             }
 
-            // Check if username already exists
             var existingUser = _context.Users.FirstOrDefault(x => x.Username == request.Username);
             if (existingUser != null)
                 return BadRequest(new { message = "Tên đăng nhập đã tồn tại" });
 
-            var roleRaw = (request.Role ?? string.Empty).Trim();
-            var roleNormalized = roleRaw.ToLowerInvariant();
-            var selectedRole =
-                roleNormalized == Roles.Manager ||
-                roleRaw.Equals("Tôi muốn kinh doanh", StringComparison.OrdinalIgnoreCase) ||
-                roleRaw.Equals("Toi muon kinh doanh", StringComparison.OrdinalIgnoreCase)
-                    ? Roles.Manager
-                    : Roles.User;
-
+            // Role is ALWAYS assigned by backend — never from client
             var user = new User
             {
                 FullName = request.FullName.Trim(),
                 Username = request.Username.Trim(),
                 Password = request.Password.Trim(),
-                Role = selectedRole,
+                Role = Roles.Manager,
                 IsLocked = false
             };
-            
+
             _context.Users.Add(user);
             _context.SaveChanges();
 
-            // Generate JWT token
             var token = _jwtService.GenerateToken(user.Id, user.Username, user.Role);
 
             return Ok(new
             {
-                token = token,
+                token,
                 user = new
                 {
                     id = user.Id,
@@ -123,14 +112,10 @@ namespace Tour_Project.Controllers
 
             var user = _context.Users.FirstOrDefault(x => x.Username == request.Username);
             if (user == null)
-            {
                 return NotFound(new { message = "Không tìm thấy người dùng" });
-            }
 
             if (user.Password != request.CurrentPassword)
-            {
                 return BadRequest(new { message = "Mật khẩu hiện tại không chính xác" });
-            }
 
             user.Password = request.NewPassword;
             _context.SaveChanges();
@@ -139,18 +124,18 @@ namespace Tour_Project.Controllers
         }
     }
 
-    public class ChangePasswordRequest
-    {
-        public string Username { get; set; } = string.Empty;
-        public string CurrentPassword { get; set; } = string.Empty;
-        public string NewPassword { get; set; } = string.Empty;
-    }
-
+    // Role field removed — backend assigns role, not client
     public class RegisterRequest
     {
         public string FullName { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
-        public string? Role { get; set; }
+    }
+
+    public class ChangePasswordRequest
+    {
+        public string Username { get; set; } = string.Empty;
+        public string CurrentPassword { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
     }
 }

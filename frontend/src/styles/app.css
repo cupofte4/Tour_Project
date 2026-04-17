@@ -414,28 +414,6 @@ audio {
 .lang-btn:hover { border-color: #115e59; color: #115e59; }
 .lang-btn.active { background: #0f766e; color: white; border-color: #0f766e; font-weight: bold; }
 
-/* TTS controls */
-.tts-controls {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.tts-btn {
-  flex: 1;
-  padding: 9px;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: opacity 0.2s;
-}
-
-.tts-btn:hover { opacity: 0.85; }
-.tts-btn.play { background: #0f766e; color: white; }
-.tts-btn.stop { background: #f5f5f5; color: #555; border: 1px solid #ddd; }
-
 /* Image grid */
 .img-grid {
   display: grid;

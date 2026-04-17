@@ -8,7 +8,6 @@ function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState("user");
   const [errorMsg, setErrorMsg] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -21,61 +20,27 @@ function Register() {
     try {
       if (!fullName.trim()) {
         setErrorMsg("Vui lòng nhập tên đầy đủ.");
-        setIsLoading(false);
         return;
       }
-
-      if (!username.trim()) {
-        setErrorMsg("Vui lòng nhập tên đăng nhập.");
-        setIsLoading(false);
-        return;
-      }
-
-      if (username.length < 3) {
+      if (!username.trim() || username.length < 3) {
         setErrorMsg("Tên đăng nhập phải có ít nhất 3 ký tự.");
-        setIsLoading(false);
         return;
       }
-
-      if (!password.trim()) {
-        setErrorMsg("Vui lòng nhập mật khẩu.");
-        setIsLoading(false);
-        return;
-      }
-
-      if (password.length < 6) {
+      if (!password.trim() || password.length < 6) {
         setErrorMsg("Mật khẩu phải có ít nhất 6 ký tự.");
-        setIsLoading(false);
         return;
       }
-
-      if (!confirmPassword.trim()) {
-        setErrorMsg("Vui lòng xác nhận mật khẩu.");
-        setIsLoading(false);
-        return;
-      }
-
       if (password !== confirmPassword) {
         setErrorMsg("Mật khẩu xác nhận không khớp.");
-        setIsLoading(false);
         return;
       }
 
-      const result = await register(fullName, username, password, role);
+      // Role is NOT passed — backend assigns manager automatically
+      const result = await register(fullName, username, password);
 
       if (result) {
-        // After registration, backend returns { token, user }
-        // authService.register already saved token + user to localStorage
-        // Auto-login user based on role
-        const normalizedRole = (result.role || "").toLowerCase();
-        
-        if (normalizedRole === "admin") {
-          navigate("/admin/dashboard", { replace: true });
-        } else if (normalizedRole === "manager") {
-          navigate("/manager/dashboard", { replace: true });
-        } else {
-          navigate("/", { replace: true });
-        }
+        // All new accounts are manager — redirect to manager dashboard
+        navigate("/manager/dashboard", { replace: true });
       } else {
         setErrorMsg("Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác.");
       }
@@ -135,31 +100,6 @@ function Register() {
 
             <form onSubmit={handleRegister} className="login-form">
               <div className="form-group">
-                <label>Loại tài khoản</label>
-                <div className="role-options" role="radiogroup" aria-label="Role selection">
-                  <label className="role-option">
-                    <input
-                      type="radio"
-                      name="role"
-                      value="user"
-                      checked={role === "user"}
-                      onChange={() => setRole("user")}
-                    />
-                    <span>Tôi muốn trải nghiệm app</span>
-                  </label>
-                  <label className="role-option">
-                    <input
-                      type="radio"
-                      name="role"
-                      value="manager"
-                      checked={role === "manager"}
-                      onChange={() => setRole("manager")}
-                    />
-                    <span>Tôi muốn kinh doanh</span>
-                  </label>
-                </div>
-              </div>
-              <div className="form-group">
                 <label htmlFor="fullName">Họ và Tên</label>
                 <input
                   type="text"
@@ -167,7 +107,7 @@ function Register() {
                   className="form-input"
                   placeholder="Ngo Tran Bao Tin"
                   value={fullName}
-                  onChange={(event) => setFullName(event.target.value)}
+                  onChange={(e) => setFullName(e.target.value)}
                 />
               </div>
 
@@ -179,7 +119,7 @@ function Register() {
                   className="form-input"
                   placeholder="Choose a username"
                   value={username}
-                  onChange={(event) => setUsername(event.target.value)}
+                  onChange={(e) => setUsername(e.target.value)}
                 />
               </div>
 
@@ -191,7 +131,7 @@ function Register() {
                   className="form-input"
                   placeholder="Create a password"
                   value={password}
-                  onChange={(event) => setPassword(event.target.value)}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
 
@@ -203,7 +143,7 @@ function Register() {
                   className="form-input"
                   placeholder="Confirm your password"
                   value={confirmPassword}
-                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                 />
               </div>
 
@@ -214,9 +154,7 @@ function Register() {
 
             <p className="login-footer">
               Đã có tài khoản?
-              <a href="/login" className="signup-link">
-                Đăng nhập ngay
-              </a>
+              <a href="/login" className="signup-link"> Đăng nhập ngay</a>
             </p>
           </div>
         </section>

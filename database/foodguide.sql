@@ -220,3 +220,80 @@ VALUES
 
 SELECT * FROM Users;
 SELECT * FROM Locations;
+
+-- ============================================================
+-- TOUR MANAGEMENT SYSTEM
+-- ============================================================
+
+DROP TABLE IF EXISTS SessionVisits;
+DROP TABLE IF EXISTS TourSessions;
+DROP TABLE IF EXISTS TourLocations;
+DROP TABLE IF EXISTS Tours;
+
+CREATE TABLE Tours (
+    Id INT PRIMARY KEY AUTO_INCREMENT,
+    Title VARCHAR(200) CHARACTER SET utf8mb4 NOT NULL,
+    Description TEXT CHARACTER SET utf8mb4 NULL,
+    CoverImage VARCHAR(500) NULL,
+    EstimatedDurationMinutes INT NOT NULL DEFAULT 60,
+    IsActive BIT NOT NULL DEFAULT b'1',
+    CreatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE TourLocations (
+    Id INT PRIMARY KEY AUTO_INCREMENT,
+    TourId INT NOT NULL,
+    LocationId INT NOT NULL,
+    OrderIndex INT NOT NULL DEFAULT 0,
+    IsOptional BIT NOT NULL DEFAULT b'0',
+    CONSTRAINT FK_TourLocations_Tours FOREIGN KEY (TourId) REFERENCES Tours(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_TourLocations_Locations FOREIGN KEY (LocationId) REFERENCES Locations(Id) ON DELETE CASCADE,
+    UNIQUE KEY UX_TourLocations_Tour_Location (TourId, LocationId),
+    KEY IX_TourLocations_Order (TourId, OrderIndex)
+);
+
+CREATE TABLE TourSessions (
+    Id INT PRIMARY KEY AUTO_INCREMENT,
+    UserId INT NOT NULL,
+    TourId INT NOT NULL,
+    LanguageCode VARCHAR(10) NOT NULL DEFAULT 'vi',
+    StartedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CompletedAt DATETIME NULL,
+    CONSTRAINT FK_TourSessions_Users FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_TourSessions_Tours FOREIGN KEY (TourId) REFERENCES Tours(Id) ON DELETE CASCADE
+);
+
+CREATE TABLE SessionVisits (
+    Id INT PRIMARY KEY AUTO_INCREMENT,
+    SessionId INT NOT NULL,
+    LocationId INT NOT NULL,
+    AudioPlayed BIT NOT NULL DEFAULT b'0',
+    VisitedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT FK_SessionVisits_Sessions FOREIGN KEY (SessionId) REFERENCES TourSessions(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_SessionVisits_Locations FOREIGN KEY (LocationId) REFERENCES Locations(Id) ON DELETE CASCADE
+);
+
+-- Seed: 1 tour mẫu gồm các địa điểm Vĩnh Khánh
+INSERT INTO Tours (Title, Description, CoverImage, EstimatedDurationMinutes) VALUES
+(
+    'Khám Phá Phố Ẩm Thực Vĩnh Khánh',
+    'Hành trình tự khám phá các món ăn đặc sắc trên phố Vĩnh Khánh, Quận 4, TP.HCM. Hệ thống sẽ tự động phát thuyết minh khi bạn đến gần mỗi địa điểm.',
+    'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800',
+    90
+);
+
+-- Gán tất cả locations hiện có vào tour theo thứ tự Id
+INSERT INTO TourLocations (TourId, LocationId, OrderIndex) VALUES
+(1, 1, 1),
+(1, 2, 2),
+(1, 3, 3),
+(1, 4, 4),
+(1, 5, 5),
+(1, 6, 6),
+(1, 7, 7),
+(1, 8, 8),
+(1, 9, 9),
+(1, 10, 10);
+
+SELECT * FROM Tours;
+SELECT * FROM TourLocations;

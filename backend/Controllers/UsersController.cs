@@ -19,17 +19,17 @@ namespace Tour_Project.Controllers
         public IActionResult GetAll()
         {
             var users = _context.Users
-                .OrderByDescending(user => user.Id)
-                .Select(user => new
+                .OrderByDescending(u => u.Id)
+                .Select(u => new
                 {
-                    id = user.Id,
-                    fullName = user.FullName,
-                    username = user.Username,
-                    phone = user.Phone,
-                    gender = user.Gender,
-                    avatar = user.Avatar,
-                    role = Roles.Normalize(user.Role),
-                    isLocked = user.IsLocked
+                    id = u.Id,
+                    fullName = u.FullName,
+                    username = u.Username,
+                    phone = u.Phone,
+                    gender = u.Gender,
+                    avatar = u.Avatar,
+                    role = Roles.Normalize(u.Role),
+                    isLocked = u.IsLocked
                 })
                 .ToList();
 
@@ -43,8 +43,10 @@ namespace Tour_Project.Controllers
             if (user == null)
                 return NotFound(new { message = "Không tìm thấy người dùng" });
 
-            var normalizedRole = Roles.Normalize(user.Role);
-            if (normalizedRole == Roles.Admin && request.IsLocked)
+            var currentRole = Roles.Normalize(user.Role);
+
+            // Cannot lock admin account
+            if (currentRole == Roles.Admin && request.IsLocked)
                 return BadRequest(new { message = "Không thể khóa tài khoản admin" });
 
             if (!string.IsNullOrWhiteSpace(request.Password))
@@ -52,11 +54,16 @@ namespace Tour_Project.Controllers
 
             if (!string.IsNullOrWhiteSpace(request.Role))
             {
-                if (normalizedRole == Roles.Admin)
-                    return BadRequest(new { message = "KhÃ´ng thá»ƒ Ä‘á»•i role cá»§a admin" });
+                // Cannot change admin's own role
+                if (currentRole == Roles.Admin)
+                    return BadRequest(new { message = "Không thể đổi role của admin" });
 
-                user.Role = Roles.Normalize(request.Role);
-                normalizedRole = Roles.Normalize(user.Role);
+                var newRole = Roles.Normalize(request.Role);
+                // Only allow valid roles (admin / manager)
+                if (!Roles.IsValid(newRole))
+                    return BadRequest(new { message = "Role không hợp lệ. Chỉ chấp nhận: admin, manager" });
+
+                user.Role = newRole;
             }
 
             user.IsLocked = request.IsLocked;
@@ -70,7 +77,7 @@ namespace Tour_Project.Controllers
                 phone = user.Phone,
                 gender = user.Gender,
                 avatar = user.Avatar,
-                role = normalizedRole,
+                role = Roles.Normalize(user.Role),
                 isLocked = user.IsLocked
             });
         }

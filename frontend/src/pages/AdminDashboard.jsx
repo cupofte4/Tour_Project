@@ -18,9 +18,15 @@ import {
   LuUsers,
   LuUserCog,
   LuLink2,
+  LuMap,
+  LuMapPin,
+  LuPhone,
+  LuRoute,
 } from "react-icons/lu";
 import { FaStop, FaVolumeUp } from "react-icons/fa";
+import MapView from "../components/MapView";
 import AdminNavbar, { AdminSidebar } from "../components/AdminNavbar";
+import AdminToursPanel from "../components/AdminToursPanel";
 import {
   createLocation,
   deleteLocation,
@@ -39,6 +45,8 @@ import "../styles/admin.css";
 
 const DASHBOARD_TABS = [
   { key: "overview", label: "Tổng quan", icon: LuLayoutGrid },
+  { key: "map", label: "Bản đồ", icon: LuMap },
+  { key: "tours", label: "Tours", icon: LuRoute },
   { key: "users", label: "Người dùng", icon: LuUsers },
   { key: "managers", label: "Managers", icon: LuUserCog },
   { key: "assignments", label: "Phân công", icon: LuLink2 },
@@ -123,6 +131,8 @@ function AdminDashboard() {
   const [locationForm, setLocationForm] = useState(createEmptyLocationForm());
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [playingLang, setPlayingLang] = useState("");
+
+  const [mapSelectedLocation, setMapSelectedLocation] = useState(null);
 
   const [assignments, setAssignments] = useState([]);
   const [isLoadingAssignments, setIsLoadingAssignments] = useState(true);
@@ -567,53 +577,104 @@ function AdminDashboard() {
     },
   ];
 
+  const renderToursTab = () => <AdminToursPanel />;
+
+  const renderMapTab = () => (
+    <div className="map-tab-layout">
+      <div className="map-panel">
+        <MapView
+          userLocation={{ lat: 10.7593, lng: 106.7046 }}
+          locations={locations}
+          onSelectLocation={(loc) => setMapSelectedLocation(loc)}
+        />
+      </div>
+      <div className="map-detail-panel">
+        {mapSelectedLocation ? (
+          <>
+            {mapSelectedLocation.image ? (
+              <img
+                className="map-detail-image"
+                src={mapSelectedLocation.image}
+                alt={mapSelectedLocation.name}
+              />
+            ) : (
+              <div className="map-detail-image-placeholder">📷 Chưa có ảnh</div>
+            )}
+            <div className="map-detail-name">{mapSelectedLocation.name}</div>
+            <div className="map-detail-meta">
+              {mapSelectedLocation.address && (
+                <div className="map-detail-row">
+                  <LuMapPin size={14} className="map-detail-row-icon" />
+                  <span>{mapSelectedLocation.address}</span>
+                </div>
+              )}
+              {mapSelectedLocation.phone && (
+                <div className="map-detail-row">
+                  <LuPhone size={14} className="map-detail-row-icon" />
+                  <span>{mapSelectedLocation.phone}</span>
+                </div>
+              )}
+            </div>
+            {mapSelectedLocation.description && (
+              <div className="map-detail-desc">{mapSelectedLocation.description}</div>
+            )}
+            <div className="map-detail-coords">
+              📍 {mapSelectedLocation.latitude}, {mapSelectedLocation.longitude}
+            </div>
+            <button
+              className="btn btn-primary map-detail-edit-btn"
+              onClick={() => startEditingLocation(mapSelectedLocation)}
+            >
+              <LuMapPinned size={15} />
+              <span>Chỉnh sửa địa điểm này</span>
+            </button>
+          </>
+        ) : (
+          <div className="map-detail-empty">
+            <div className="map-detail-empty-icon">🗺️</div>
+            <p className="section-title">Chọn một địa điểm</p>
+            <p>Click vào marker trên bản đồ để xem chi tiết.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   const dashboardTitle =
-    activeMenu === "overview"
-      ? "Dashboard overview"
-      : activeMenu === "users"
-        ? "User management"
-        : activeMenu === "managers"
-          ? "Manager management"
-          : activeMenu === "assignments"
-            ? "Location assignment"
-            : "Location management";
+    activeMenu === "overview" ? "Dashboard overview"
+    : activeMenu === "map" ? "Bản đồ địa điểm"
+    : activeMenu === "tours" ? "Tour management"
+    : activeMenu === "users" ? "User management"
+    : activeMenu === "managers" ? "Manager management"
+    : activeMenu === "assignments" ? "Location assignment"
+    : "Location management";
 
   const dashboardSubtitle =
-    activeMenu === "overview"
-      ? "Follow usage metrics and destination coverage across the guide system."
-      : activeMenu === "users"
-        ? "Review accounts, password resets, and locking status from one place."
-        : activeMenu === "managers"
-          ? "Manage business accounts and grant manager role to selected users."
-          : activeMenu === "assignments"
-            ? "Assign locations to managers for content ownership and operations."
-            : "Create, edit, and publish destination data that the frontend can consume immediately.";
+    activeMenu === "overview" ? "Follow usage metrics and destination coverage across the guide system."
+    : activeMenu === "map" ? "Xem toàn bộ địa điểm trên bản đồ, click marker để xem chi tiết và chỉnh sửa."
+    : activeMenu === "tours" ? "Tạo và quản lý các tour tham quan, gán POI và sắp xếp thứ tự."
+    : activeMenu === "users" ? "Review accounts, password resets, and locking status from one place."
+    : activeMenu === "managers" ? "Manage business accounts and grant manager role to selected users."
+    : activeMenu === "assignments" ? "Assign locations to managers for content ownership and operations."
+    : "Create, edit, and publish destination data that the frontend can consume immediately.";
 
   const showSearch =
     activeMenu === "users" ||
     activeMenu === "managers" ||
     activeMenu === "locations";
   const searchValue =
-    activeMenu === "users"
-      ? userSearch
-      : activeMenu === "managers"
-        ? managerSearch
-        : locationSearch;
+    activeMenu === "users" ? userSearch
+    : activeMenu === "managers" ? managerSearch
+    : locationSearch;
   const searchPlaceholder =
-    activeMenu === "users"
-      ? "Tìm theo tên người dùng"
-      : activeMenu === "managers"
-        ? "Tìm theo manager"
-        : "Tìm theo tên địa điểm";
+    activeMenu === "users" ? "Tìm theo tên người dùng"
+    : activeMenu === "managers" ? "Tìm theo manager"
+    : "Tìm theo tên địa điểm";
 
   const handleNavbarSearchChange = (value) => {
-    if (activeMenu === "users") {
-      setUserSearch(value);
-    } else if (activeMenu === "managers") {
-      setManagerSearch(value);
-    } else if (activeMenu === "locations") {
-      setLocationSearch(value);
-    }
+    if (activeMenu === "users") setUserSearch(value);
+    else if (activeMenu === "managers") setManagerSearch(value);
+    else if (activeMenu === "locations") setLocationSearch(value);
   };
 
   const renderUsersOverviewTable = () => (
@@ -681,7 +742,7 @@ function AdminDashboard() {
                     </div>
                   </td>
                   <td>{member.username}</td>
-                  <td>{(member.role || "user").toUpperCase()}</td>
+                  <td>{(member.role || "manager").toUpperCase()}</td>
                   <td>
                     <span className={`status-pill status-${status.key}`}>
                       {status.label}
@@ -879,7 +940,7 @@ function AdminDashboard() {
                       </div>
                     </td>
                     <td>{member.username}</td>
-                    <td>{(member.role || "user").toUpperCase()}</td>
+                    <td>{(member.role || "manager").toUpperCase()}</td>
                     <td>
                       <span className={`status-pill status-${status.key}`}>
                         {status.label}
@@ -965,9 +1026,8 @@ function AdminDashboard() {
   };
 
   const renderManagersTab = () => {
-    const eligibleUsers = filteredUsers.filter(
-      (item) => (item.role || "").toLowerCase() === "user",
-    );
+    const eligibleUsers = filteredManagers;
+
 
     return (
       <section className="admin-grid">
@@ -1603,7 +1663,7 @@ function AdminDashboard() {
             )}
           </div>
           <br />
-          <h2 class="section-title">Nội dung thuyết minh</h2>
+          <h2 className="section-title">Nội dung thuyết minh</h2>
           <div className="form-row">
             {/* Tiếng Việt */}
             <div className="form-group">
@@ -1752,6 +1812,8 @@ function AdminDashboard() {
               {renderUsersOverviewTable()}
             </>
           )}
+          {activeMenu === "map" && renderMapTab()}
+          {activeMenu === "tours" && renderToursTab()}
           {activeMenu === "users" && renderUsersTab()}
           {activeMenu === "managers" && renderManagersTab()}
           {activeMenu === "assignments" && renderAssignmentsTab()}

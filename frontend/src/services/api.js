@@ -104,6 +104,24 @@ export async function DELETE(endpoint, options = {}) {
 }
 
 /**
+ * Helper to make authenticated PATCH request
+ */
+export async function PATCH(endpoint, body, options = {}) {
+  const url = `${API_URL}${endpoint}`;
+  const response = await fetchWithAuth(url, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+    ...options,
+  });
+
+  if (!response.ok) {
+    throw new Error(`PATCH ${endpoint} failed: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
  * Helper to check geofence - POST with query parameters
  * Note: Uses query params because geofence check endpoint expects them
  */

@@ -3,7 +3,6 @@ namespace Tour_Project.Models
     public static class Roles
     {
         public const string Admin = "admin";
-        public const string User = "user";
         public const string Manager = "manager";
 
         public static string Normalize(string? role)
@@ -12,10 +11,15 @@ namespace Tour_Project.Models
             return value switch
             {
                 "admin" => Admin,
-                "user" => User,
                 "manager" => Manager,
-                _ => User
+                _ => Manager   // default fallback = manager (no user role)
             };
+        }
+
+        public static bool IsValid(string? role)
+        {
+            var v = (role ?? string.Empty).Trim().ToLowerInvariant();
+            return v == Admin || v == Manager;
         }
     }
 }

@@ -11,10 +11,12 @@ import EditLocation from "./pages/EditLocation";
 import MyProfile from "./pages/MyProfile";
 import Settings from "./pages/Settings";
 import Favorites from "./pages/Favorites";
+import TourList from "./pages/TourList";
+import TourDetail from "./pages/TourDetail";
 
 /**
- * Route guard: Check if user is authenticated
- * If not, redirect to login; if yes, check role
+ * Route guard: requires login. Redirects unauthorized role to their dashboard.
+ * Only admin and manager roles exist — no "user" role.
  */
 function ProtectedRoute({ element, requiredRole = null }) {
   if (!isAuthenticated()) {
@@ -24,10 +26,8 @@ function ProtectedRoute({ element, requiredRole = null }) {
   if (requiredRole) {
     const userRole = getUserRole();
     if (userRole !== requiredRole) {
-      // Redirect based on role
       if (userRole === "admin") return <Navigate to="/admin/dashboard" replace />;
-      if (userRole === "manager") return <Navigate to="/manager/dashboard" replace />;
-      return <Navigate to="/" replace />;
+      return <Navigate to="/manager/dashboard" replace />;
     }
   }
 
@@ -35,14 +35,13 @@ function ProtectedRoute({ element, requiredRole = null }) {
 }
 
 /**
- * Route guard: Prevent access if already logged in
+ * Route guard: redirect already-logged-in users away from login/register.
  */
 function PublicRoute({ element }) {
   if (isAuthenticated()) {
     const userRole = getUserRole();
     if (userRole === "admin") return <Navigate to="/admin/dashboard" replace />;
-    if (userRole === "manager") return <Navigate to="/manager/dashboard" replace />;
-    return <Navigate to="/" replace />;
+    return <Navigate to="/manager/dashboard" replace />;
   }
   return element;
 }
@@ -108,6 +107,10 @@ function App() {
           path="/manager/dashboard"
           element={<ProtectedRoute element={<ManagerDashboard />} requiredRole="manager" />}
         />
+
+        {/* Tour routes */}
+        <Route path="/tours" element={<TourList />} />
+        <Route path="/tours/:id" element={<TourDetail />} />
 
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />

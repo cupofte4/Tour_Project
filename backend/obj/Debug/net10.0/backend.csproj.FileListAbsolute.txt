@@ -252,8 +252,10 @@ E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\backend.runtimeconfig.json
 E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\backend.dll
 E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\backend.pdb
 E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Humanizer.dll
+E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
 E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.AspNetCore.OpenApi.dll
 E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.Bcl.AsyncInterfaces.dll
+E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.Bcl.TimeProvider.dll
 E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.Build.Locator.dll
 E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.CodeAnalysis.dll
 E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.CodeAnalysis.CSharp.dll
@@ -266,6 +268,12 @@ E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.Abst
 E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.Design.dll
 E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.Relational.dll
 E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.Extensions.DependencyModel.dll
+E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.IdentityModel.Abstractions.dll
+E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.IdentityModel.JsonWebTokens.dll
+E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.IdentityModel.Logging.dll
+E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.IdentityModel.Protocols.dll
+E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.IdentityModel.Tokens.dll
 E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.OpenApi.dll
 E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Mono.TextTemplating.dll
 E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\MySqlConnector.dll
@@ -276,6 +284,7 @@ E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\System.Composition.Convention.dll
 E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\System.Composition.Hosting.dll
 E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\System.Composition.Runtime.dll
 E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\System.Composition.TypedParts.dll
+E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\System.IdentityModel.Tokens.Jwt.dll
 E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\cs\Microsoft.CodeAnalysis.resources.dll
 E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\de\Microsoft.CodeAnalysis.resources.dll
 E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\es\Microsoft.CodeAnalysis.resources.dll
@@ -365,9 +374,3 @@ E:\CNTT_Code\CSharp\backend\obj\Debug\net10.0\refint\backend.dll
 E:\CNTT_Code\CSharp\backend\obj\Debug\net10.0\backend.pdb
 E:\CNTT_Code\CSharp\backend\obj\Debug\net10.0\backend.genruntimeconfig.cache
 E:\CNTT_Code\CSharp\backend\obj\Debug\net10.0\ref\backend.dll
-E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.Bcl.TimeProvider.dll
-E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.IdentityModel.Abstractions.dll
-E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.IdentityModel.JsonWebTokens.dll
-E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.IdentityModel.Logging.dll
-E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\Microsoft.IdentityModel.Tokens.dll
-E:\CNTT_Code\CSharp\backend\bin\Debug\net10.0\System.IdentityModel.Tokens.Jwt.dll
