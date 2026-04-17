@@ -85,6 +85,31 @@
                 BorderColor="#D9D9D9"
                 CornerRadius="12"
                 HasShadow="False">
+                <VerticalStackLayout Spacing="8">
+                    <Label
+                        FontAttributes="Bold"
+                        Text="API Connection" />
+
+                    <Label
+                        Text="API Base URL Override" />
+
+                    <Entry
+                        ClearButtonVisibility="WhileEditing"
+                        Keyboard="Url"
+                        Placeholder="Leave blank to use the bundled default"
+                        Text="{Binding ApiBaseUrl}" />
+
+                    <Label
+                        Text="Use this only when you need the app to point at a different backend without rebuilding."
+                        TextColor="#666666" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame
+                Padding="14"
+                BorderColor="#D9D9D9"
+                CornerRadius="12"
+                HasShadow="False">
                 <VerticalStackLayout Spacing="12">
                     <Label
                         FontAttributes="Bold"
@@ -96,13 +121,6 @@
                             ItemsSource="{Binding SupportedLanguages}"
                             ItemDisplayBinding="{Binding DisplayName}"
                             SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}" />
-                    </VerticalStackLayout>
-
-                    <VerticalStackLayout Spacing="4">
-                        <Label Text="Preferred Voice ID (Optional)" />
-                        <Entry
-                            Placeholder="Leave blank for device default"
-                            Text="{Binding PreferredTtsVoiceId}" />
                     </VerticalStackLayout>
 
                     <Label

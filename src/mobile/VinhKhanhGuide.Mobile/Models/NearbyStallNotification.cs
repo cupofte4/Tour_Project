@@ -26,7 +26,13 @@ public class NearbyStallNotification
 
     public string NarrationText { get; init; } = string.Empty;
 
+    public string RequestedLanguageCode { get; init; } = "vi";
+
     public string LanguageCode { get; init; } = "vi";
+
+    public string LocaleCode { get; init; } = "vi-VN";
+
+    public bool UsedFallback { get; init; }
 
     public string PlaybackStatusText { get; init; } = string.Empty;
 

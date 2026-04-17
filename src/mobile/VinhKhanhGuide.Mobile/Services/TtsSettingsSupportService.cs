@@ -5,17 +5,24 @@ namespace VinhKhanhGuide.Mobile.Services;
 
 public sealed class TtsSettingsSupportService : ITtsSettingsSupportService
 {
+    private readonly ITtsLocaleDiscoveryService _localeDiscoveryService;
+
     private static readonly TtsLanguageOption SystemDefaultLanguage = new()
     {
         Code = string.Empty,
         DisplayName = "System Default"
     };
 
+    public TtsSettingsSupportService(ITtsLocaleDiscoveryService localeDiscoveryService)
+    {
+        _localeDiscoveryService = localeDiscoveryService;
+    }
+
     public async Task<IReadOnlyList<TtsLanguageOption>> GetSupportedLanguagesAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            var locales = await TextToSpeech.Default.GetLocalesAsync();
+            var locales = await _localeDiscoveryService.GetAvailableLocalesAsync(cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
 
             var languages = locales

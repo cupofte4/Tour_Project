@@ -426,3 +426,4 @@
 /Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/bin/Debug/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll
 /Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/bin/Debug/net8.0/Npgsql.dll
 /Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/bin/Debug/net8.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll
+/Users/tranhau/Documents/Tour_Project/tests/VinhKhanhGuide.Api.Tests/bin/Debug/net8.0/VinhKhanhGuide.Api

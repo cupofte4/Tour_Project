@@ -64,6 +64,10 @@
               "target": "Package",
               "version": "[17.10.0, )"
             },
+            "sqlite-net-pcl": {
+              "target": "Package",
+              "version": "[1.9.172, )"
+            },
             "xunit": {
               "target": "Package",
               "version": "[2.9.0, )"

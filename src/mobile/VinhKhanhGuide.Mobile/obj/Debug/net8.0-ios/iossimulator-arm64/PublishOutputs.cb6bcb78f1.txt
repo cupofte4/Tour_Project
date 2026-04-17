@@ -36,8 +36,13 @@
 /Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/runtimeconfig.bin
 /Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/Microsoft.Extensions.Configuration.dll
 /Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/Microsoft.Extensions.Configuration.Abstractions.dll
+/Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/Microsoft.Extensions.Configuration.FileExtensions.dll
+/Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/Microsoft.Extensions.Configuration.Json.dll
 /Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/Microsoft.Extensions.DependencyInjection.dll
 /Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/Microsoft.Extensions.DependencyInjection.Abstractions.dll
+/Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/Microsoft.Extensions.FileProviders.Abstractions.dll
+/Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/Microsoft.Extensions.FileProviders.Physical.dll
+/Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/Microsoft.Extensions.FileSystemGlobbing.dll
 /Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/Microsoft.Extensions.Logging.dll
 /Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/Microsoft.Extensions.Logging.Abstractions.dll
 /Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/Microsoft.Extensions.Logging.Debug.dll
@@ -51,6 +56,10 @@
 /Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/Microsoft.Maui.Essentials.dll
 /Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/Microsoft.Maui.Graphics.dll
 /Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/Microsoft.Maui.Maps.dll
+/Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/SQLite-net.dll
+/Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/SQLitePCLRaw.batteries_v2.dll
+/Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/SQLitePCLRaw.core.dll
+/Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/SQLitePCLRaw.provider.sqlite3.dll
 /Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/VinhKhanhGuide.Mobile.dll
 /Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/Microsoft.CSharp.dll
 /Users/tranhau/Documents/Tour_Project/src/mobile/VinhKhanhGuide.Mobile/bin/Debug/net8.0-ios/iossimulator-arm64/publish/../VinhKhanhGuide.Mobile.app/Microsoft.VisualBasic.Core.dll

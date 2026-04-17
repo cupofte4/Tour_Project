@@ -92,7 +92,11 @@ public sealed class NarrationService : INarrationService
             }
             else
             {
-                await _deviceTextToSpeech.SpeakAsync(selection.Content, request.LanguageCode, cancellationToken);
+                await _deviceTextToSpeech.SpeakAsync(
+                    selection.Content,
+                    request.LanguageCode,
+                    request.LocaleCode,
+                    cancellationToken);
             }
 
             await PublishStateAsync(_sessionManager.MarkStopped(request.PoiId));
@@ -100,6 +104,14 @@ public sealed class NarrationService : INarrationService
         }
         catch (OperationCanceledException)
         {
+        }
+        catch (TextToSpeechLocaleUnavailableException exception)
+        {
+            await PublishStateAsync(_sessionManager.MarkError(request.PoiId, exception.Message));
+        }
+        catch (TextToSpeechLocaleDiscoveryException exception)
+        {
+            await PublishStateAsync(_sessionManager.MarkError(request.PoiId, exception.Message));
         }
         catch (Exception)
         {

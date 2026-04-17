@@ -13,13 +13,22 @@ public static class StallNarrationResolver
         string audioUrl,
         Func<string, Task<StallTranslation?>> translationLoaderAsync)
     {
+        var normalizedRequestedLanguage = TextToSpeechSettingsResolver.ResolveSupportedLanguageCode(
+            requestedLanguageCode,
+            SupportedLanguageCodes);
+
         foreach (var candidateLanguage in TextToSpeechSettingsResolver.BuildLanguageFallbackChain(
-                     requestedLanguageCode,
+                     normalizedRequestedLanguage,
                      SupportedLanguageCodes))
         {
             if (string.Equals(candidateLanguage, "vi", StringComparison.OrdinalIgnoreCase))
             {
-                return CreateResolvedNarration(defaultName, fallbackVietnameseText, audioUrl, "vi");
+                return CreateResolvedNarration(
+                    defaultName,
+                    fallbackVietnameseText,
+                    audioUrl,
+                    normalizedRequestedLanguage,
+                    "vi");
             }
 
             var translation = await translationLoaderAsync(candidateLanguage);
@@ -39,11 +48,21 @@ public static class StallNarrationResolver
 
             if (!string.IsNullOrWhiteSpace(narrationText))
             {
-                return CreateResolvedNarration(name, narrationText, audioUrl, candidateLanguage);
+                return CreateResolvedNarration(
+                    name,
+                    narrationText,
+                    audioUrl,
+                    normalizedRequestedLanguage,
+                    candidateLanguage);
             }
         }
 
-        return CreateResolvedNarration(defaultName, fallbackVietnameseText, audioUrl, "vi");
+        return CreateResolvedNarration(
+            defaultName,
+            fallbackVietnameseText,
+            audioUrl,
+            normalizedRequestedLanguage,
+            "vi");
     }
 
     public static string ResolveVietnameseNarrationText(string narrationScriptVi, string descriptionVi)
@@ -57,26 +76,43 @@ public static class StallNarrationResolver
         string name,
         string text,
         string audioUrl,
-        string languageCode)
+        string requestedLanguageCode,
+        string resolvedLanguageCode)
     {
         var normalizedText = text?.Trim() ?? string.Empty;
         var normalizedAudioUrl = audioUrl?.Trim() ?? string.Empty;
         var hasText = !string.IsNullOrWhiteSpace(normalizedText);
+        var normalizedRequestedLanguage = TextToSpeechSettingsResolver.ResolveSupportedLanguageCode(
+            requestedLanguageCode,
+            SupportedLanguageCodes);
+        var normalizedResolvedLanguage = TextToSpeechSettingsResolver.ResolveSupportedLanguageCode(
+            resolvedLanguageCode,
+            SupportedLanguageCodes);
+        var usedFallback = !string.Equals(
+            normalizedRequestedLanguage,
+            normalizedResolvedLanguage,
+            StringComparison.OrdinalIgnoreCase);
 
         return new ResolvedStallNarration(
             string.IsNullOrWhiteSpace(name) ? string.Empty : name.Trim(),
             normalizedText,
-            TextToSpeechSettingsResolver.ResolveSupportedLanguageCode(languageCode, SupportedLanguageCodes),
-            hasText ? string.Empty : normalizedAudioUrl,
+            normalizedRequestedLanguage,
+            normalizedResolvedLanguage,
+            TextToSpeechSettingsResolver.ResolvePreferredLocaleHint(normalizedResolvedLanguage),
+            normalizedAudioUrl,
             hasText,
-            hasText || !string.IsNullOrWhiteSpace(normalizedAudioUrl));
+            hasText || !string.IsNullOrWhiteSpace(normalizedAudioUrl),
+            usedFallback);
     }
 }
 
 public sealed record ResolvedStallNarration(
     string Name,
     string Text,
+    string RequestedLanguageCode,
     string LanguageCode,
+    string LocaleCode,
     string AudioUrl,
     bool HasText,
-    bool CanNarrate);
+    bool CanNarrate,
+    bool UsedFallback);

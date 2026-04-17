@@ -12,5 +12,11 @@ public sealed class NarrationRequest
 
     public string Text { get; init; } = string.Empty;
 
+    public string RequestedLanguageCode { get; init; } = string.Empty;
+
     public string LanguageCode { get; init; } = string.Empty;
+
+    public string LocaleCode { get; init; } = string.Empty;
+
+    public bool UsedFallback { get; init; }
 }

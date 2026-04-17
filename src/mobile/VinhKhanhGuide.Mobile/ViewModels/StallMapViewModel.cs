@@ -7,11 +7,12 @@ namespace VinhKhanhGuide.Mobile.ViewModels;
 
 public class StallMapViewModel : ViewModelBase
 {
-    private readonly IStallApiClient _stallApiClient;
+    private readonly IStallDataService _stallDataService;
     private readonly IProximityDistanceCalculator _distanceCalculator;
     private readonly ILocationTrackingService _locationTrackingService;
     private readonly IProximityService _proximityService;
     private readonly IProximityNarrationCoordinator _proximityNarrationCoordinator;
+    private readonly ISettingsService _settingsService;
     private readonly SemaphoreSlim _locationUpdateLock = new(1, 1);
     private bool _hasLoaded;
     private bool _isLoading;
@@ -23,18 +24,38 @@ public class StallMapViewModel : ViewModelBase
     private StallSummary? _nearestStall;
     private string _nearestStallDistanceText = string.Empty;
 
-    public StallMapViewModel(
+    public static StallMapViewModel CreateForApiClient(
         IStallApiClient stallApiClient,
         IProximityDistanceCalculator distanceCalculator,
         ILocationTrackingService locationTrackingService,
         IProximityService proximityService,
-        IProximityNarrationCoordinator proximityNarrationCoordinator)
+        IProximityNarrationCoordinator proximityNarrationCoordinator,
+        ISettingsService settingsService)
     {
-        _stallApiClient = stallApiClient;
+        return new StallMapViewModel(
+            new DirectStallDataService(stallApiClient),
+            distanceCalculator,
+            locationTrackingService,
+            proximityService,
+            proximityNarrationCoordinator,
+            settingsService);
+    }
+
+    public StallMapViewModel(
+        IStallDataService stallDataService,
+        IProximityDistanceCalculator distanceCalculator,
+        ILocationTrackingService locationTrackingService,
+        IProximityService proximityService,
+        IProximityNarrationCoordinator proximityNarrationCoordinator,
+        ISettingsService settingsService)
+    {
+        _stallDataService = stallDataService;
         _distanceCalculator = distanceCalculator;
         _locationTrackingService = locationTrackingService;
         _proximityService = proximityService;
         _proximityNarrationCoordinator = proximityNarrationCoordinator;
+        _settingsService = settingsService;
+        _settingsService.SettingsChanged += OnSettingsChanged;
     }
 
     public ObservableCollection<StallSummary> Stalls { get; } = [];
@@ -119,23 +140,34 @@ public class StallMapViewModel : ViewModelBase
 
         try
         {
-            var stalls = await _stallApiClient.GetStallsAsync();
-
-            Stalls.Clear();
-
-            foreach (var stall in stalls)
+            var cachedStalls = await _stallDataService.GetCachedStallsAsync();
+            if (cachedStalls.Count > 0)
             {
-                Stalls.Add(stall);
+                ApplyStalls(cachedStalls);
+                StatusMessage = "Showing saved locations while refreshing.";
             }
 
+            var stalls = await _stallDataService.RefreshStallsAsync();
+            ApplyStalls(stalls);
             _proximityService.Reset();
             NearbyStall = _proximityNarrationCoordinator.DismissPrompt();
+            StatusMessage = string.Empty;
             await RefreshLocationAsync();
             _hasLoaded = true;
         }
         catch (Exception)
         {
-            StatusMessage = "Could not load stall map data from the backend.";
+            var cachedStalls = await _stallDataService.GetCachedStallsAsync();
+            if (cachedStalls.Count > 0)
+            {
+                ApplyStalls(cachedStalls);
+                StatusMessage = "Showing saved locations because the latest map data couldn't be refreshed.";
+                await RefreshLocationAsync();
+                _hasLoaded = true;
+                return;
+            }
+
+            StatusMessage = "We couldn't load the map right now.";
 
             if (Stalls.Count > 0)
             {
@@ -156,6 +188,15 @@ public class StallMapViewModel : ViewModelBase
 
     public async Task StartLocationTrackingAsync()
     {
+        if (!_settingsService.GetSettings().IsGpsTrackingEnabled)
+        {
+            await ApplyLocationResultAsync(LocationTrackingStatusMapper.CreateUnavailableResult(
+                LocationTrackingStatus.LocationServicesDisabled,
+                "GPS tracking is turned off in Settings. Nearby prompts are paused."));
+            OnPropertyChanged(nameof(IsTracking));
+            return;
+        }
+
         SubscribeToLocationUpdates();
         var locationResult = await _locationTrackingService.StartTrackingAsync();
         await ApplyLocationResultAsync(locationResult);
@@ -206,6 +247,9 @@ public class StallMapViewModel : ViewModelBase
             else
             {
                 UserLocation = null;
+                NearbyStall = _proximityNarrationCoordinator.DismissPrompt();
+                NearestStall = null;
+                NearestStallDistanceText = string.Empty;
 
                 if (Stalls.Count > 0 && MapCenter is null)
                 {
@@ -284,5 +328,36 @@ public class StallMapViewModel : ViewModelBase
     public Task OpenStallDetailAsync(int stallId)
     {
         return Shell.Current.GoToAsync($"stall-detail?stallId={stallId}");
+    }
+
+    private void OnSettingsChanged(AppSettings settings)
+    {
+        if (settings.IsGpsTrackingEnabled)
+        {
+            return;
+        }
+
+        _ = ApplyGpsDisabledAsync();
+    }
+
+    private async Task ApplyGpsDisabledAsync()
+    {
+        await StopLocationTrackingAsync();
+        _proximityService.Reset();
+        NearbyStall = _proximityNarrationCoordinator.DismissPrompt();
+        UserLocation = null;
+        NearestStall = null;
+        NearestStallDistanceText = string.Empty;
+        StatusMessage = "GPS tracking is turned off in Settings. Nearby prompts are paused.";
+    }
+
+    private void ApplyStalls(IReadOnlyList<StallSummary> stalls)
+    {
+        Stalls.Clear();
+
+        foreach (var stall in stalls)
+        {
+            Stalls.Add(stall);
+        }
     }
 }

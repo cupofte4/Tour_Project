@@ -108,19 +108,84 @@ public class ProximityNarrationCoordinatorTests
         Assert.Equal("Narration for 8", prompt.NarrationText);
     }
 
+    [Theory]
+    [InlineData("en", "English narration", "en", "en-US")]
+    [InlineData("zh", "中文旁白", "zh", "zh-CN")]
+    [InlineData("de", "Deutsche Erzahlung", "de", "de-DE")]
+    [InlineData("vi", "Narration for 10", "vi", "vi-VN")]
+    public async Task HandleTriggerAsync_UsesSelectedLanguageForPlayback(
+        string preferredLanguage,
+        string expectedText,
+        string expectedLanguageCode,
+        string expectedLocaleCode)
+    {
+        var narrationService = new FakeNarrationService();
+        var coordinator = CreateCoordinator(
+            narrationService,
+            new FakeTimeProvider(DateTimeOffset.UtcNow),
+            enabled: true,
+            preferredLanguage: preferredLanguage);
+        var stall = CreateStall(
+            10,
+            priority: 1,
+            translations:
+            [
+                new StallTranslation { StallId = 10, LanguageCode = "en", Name = "English Name", Description = "English narration" },
+                new StallTranslation { StallId = 10, LanguageCode = "zh", Name = "中文店名", Description = "中文旁白" },
+                new StallTranslation { StallId = 10, LanguageCode = "de", Name = "Deutscher Name", Description = "Deutsche Erzahlung" }
+            ]);
+
+        var prompt = await coordinator.HandleTriggerAsync(CreateNotification(stall), [stall]);
+
+        Assert.NotNull(prompt);
+        Assert.Single(narrationService.Requests);
+        Assert.Equal(expectedText, narrationService.Requests[0].Text);
+        Assert.Equal(expectedLanguageCode, narrationService.Requests[0].LanguageCode);
+        Assert.Equal(expectedLocaleCode, narrationService.Requests[0].LocaleCode);
+    }
+
+    [Fact]
+    public async Task HandleTriggerAsync_FallsBackToVietnameseOnly_WhenSelectedTranslationMissing()
+    {
+        var narrationService = new FakeNarrationService();
+        var coordinator = CreateCoordinator(
+            narrationService,
+            new FakeTimeProvider(DateTimeOffset.UtcNow),
+            enabled: true,
+            preferredLanguage: "zh");
+        var stall = CreateStall(
+            11,
+            priority: 1,
+            translations:
+            [
+                new StallTranslation { StallId = 11, LanguageCode = "en", Name = "English Name", Description = "English narration" }
+            ]);
+
+        var prompt = await coordinator.HandleTriggerAsync(CreateNotification(stall), [stall]);
+
+        Assert.NotNull(prompt);
+        Assert.Single(narrationService.Requests);
+        Assert.Equal("zh", narrationService.Requests[0].RequestedLanguageCode);
+        Assert.Equal("vi", narrationService.Requests[0].LanguageCode);
+        Assert.Equal("Narration for 11", narrationService.Requests[0].Text);
+        Assert.True(narrationService.Requests[0].UsedFallback);
+    }
+
     private static ProximityNarrationCoordinator CreateCoordinator(
         FakeNarrationService narrationService,
         TimeProvider timeProvider,
-        bool enabled)
+        bool enabled,
+        string preferredLanguage = "")
     {
-        return new ProximityNarrationCoordinator(
+        return ProximityNarrationCoordinator.CreateForApiClient(
             new FakeStallApiClient(),
             narrationService,
             new FakeSettingsService
             {
                 Settings = new AppSettings
                 {
-                    AutoNarrationEnabled = enabled
+                    AutoNarrationEnabled = enabled,
+                    PreferredTtsLanguage = preferredLanguage
                 }
             },
             Options.Create(new AutoNarrationOptions
@@ -130,7 +195,7 @@ public class ProximityNarrationCoordinatorTests
             timeProvider);
     }
 
-    private static StallSummary CreateStall(int id, int priority)
+    private static StallSummary CreateStall(int id, int priority, IReadOnlyList<StallTranslation>? translations = null)
     {
         return new StallSummary
         {
@@ -142,7 +207,8 @@ public class ProximityNarrationCoordinatorTests
             TriggerRadiusMeters = 50,
             Priority = priority,
             IsActive = true,
-            NarrationScriptVi = $"Narration for {id}"
+            NarrationScriptVi = $"Narration for {id}",
+            Translations = translations ?? []
         };
     }
 
@@ -174,7 +240,11 @@ public class ProximityNarrationCoordinatorTests
             CurrentState = new NarrationPlaybackState
             {
                 Status = NarrationPlaybackStatus.Playing,
-                ActivePoiId = request.PoiId
+                ActivePoiId = request.PoiId,
+                RequestedLanguageCode = request.RequestedLanguageCode,
+                LanguageCode = request.LanguageCode,
+                LocaleCode = request.LocaleCode,
+                UsedFallback = request.UsedFallback
             };
             IsPlaying = true;
             PlaybackStateChanged?.Invoke(CurrentState);
@@ -210,6 +280,8 @@ public class ProximityNarrationCoordinatorTests
 
     private sealed class FakeSettingsService : ISettingsService
     {
+        public event AppSettingsChangedEventHandler? SettingsChanged;
+
         public AppSettings Settings { get; set; } = new();
 
         public AppSettings GetSettings()
@@ -220,6 +292,17 @@ public class ProximityNarrationCoordinatorTests
         public void SaveSettings(AppSettings settings)
         {
             Settings = settings;
+            SettingsChanged?.Invoke(settings);
+        }
+
+        public string GetResolvedApiBaseUrl()
+        {
+            return "http://localhost:5113/";
+        }
+
+        public string GetConfiguredApiBaseUrl()
+        {
+            return string.Empty;
         }
     }
 

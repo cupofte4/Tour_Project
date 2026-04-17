@@ -30,6 +30,8 @@ public class StallSummary
 
     public string AudioUrl { get; init; } = string.Empty;
 
+    public string LocalAudioPath { get; init; } = string.Empty;
+
     public bool IsActive { get; init; }
 
     public decimal AverageRating { get; init; }

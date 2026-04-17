@@ -4,5 +4,5 @@ namespace VinhKhanhGuide.Application.RemoteLocations;
 
 public interface IStallContentSyncRepository
 {
-    Task UpsertAsync(IReadOnlyCollection<StallDto> stalls, CancellationToken cancellationToken = default);
+    Task<StallSyncPersistenceResult> UpsertAsync(IReadOnlyCollection<StallDto> stalls, CancellationToken cancellationToken = default);
 }

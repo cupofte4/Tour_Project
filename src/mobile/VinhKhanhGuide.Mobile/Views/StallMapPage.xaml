@@ -4,12 +4,12 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
-    Title="POI Map">
-    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="12" Padding="16">
+    Title="Location Map">
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="14" Padding="16">
         <Label
             Grid.Row="0"
             Text="{Binding StatusMessage}"
-            TextColor="#666666"
+            TextColor="#6F6A63"
             IsVisible="{Binding HasStatusMessage}" />
 
         <Grid Grid.Row="1">
@@ -32,7 +32,7 @@
                             Grid.Row="0"
                             Grid.Column="0"
                             FontAttributes="Bold"
-                            Text="Nearest POI" />
+                            Text="Nearest location" />
                         <Button
                             Grid.Row="0"
                             Grid.Column="1"
@@ -73,7 +73,7 @@
                             Grid.Row="0"
                             Grid.Column="1"
                             FontAttributes="Bold"
-                            Text="Nearby POI" />
+                            Text="Nearby location" />
                         <Button
                             Grid.Row="0"
                             Grid.Column="2"
@@ -142,7 +142,7 @@
 
         <Label
             Grid.Row="2"
-            Text="Tap a pin or card to open POI details."
-            TextColor="#666666" />
+            Text="Tap a pin or card to open location details."
+            TextColor="#6F6A63" />
     </Grid>
 </ContentPage>

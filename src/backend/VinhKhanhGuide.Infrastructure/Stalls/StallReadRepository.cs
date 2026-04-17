@@ -69,34 +69,25 @@ public class StallReadRepository(AppDbContext dbContext) : IStallReadRepository,
             .SingleOrDefaultAsync(cancellationToken);
     }
 
-    public async Task UpsertAsync(IReadOnlyCollection<StallDto> stalls, CancellationToken cancellationToken = default)
+    public async Task<StallSyncPersistenceResult> UpsertAsync(IReadOnlyCollection<StallDto> stalls, CancellationToken cancellationToken = default)
     {
         if (stalls.Count == 0)
         {
-            return;
+            return new StallSyncPersistenceResult();
         }
 
         var stallIds = stalls.Select(stall => stall.Id).Distinct().ToArray();
         var existingStalls = await dbContext.Stalls
-            .Where(stall => stallIds.Contains(stall.Id))
             .ToDictionaryAsync(stall => stall.Id, cancellationToken);
-        var staleStalls = await dbContext.Stalls
-            .Where(stall => !stallIds.Contains(stall.Id))
-            .ToListAsync(cancellationToken);
+        var insertedCount = 0;
+        var updatedCount = 0;
+        var deactivatedCount = 0;
+        var unchangedCount = 0;
 
-        if (staleStalls.Count > 0)
+        foreach (var staleStall in existingStalls.Values.Where(stall => !stallIds.Contains(stall.Id) && stall.IsActive))
         {
-            var staleIds = staleStalls.Select(stall => stall.Id).ToArray();
-            var staleTranslations = await dbContext.StallTranslations
-                .Where(translation => staleIds.Contains(translation.StallId))
-                .ToListAsync(cancellationToken);
-
-            if (staleTranslations.Count > 0)
-            {
-                dbContext.StallTranslations.RemoveRange(staleTranslations);
-            }
-
-            dbContext.Stalls.RemoveRange(staleStalls);
+            staleStall.IsActive = false;
+            deactivatedCount++;
         }
 
         foreach (var stall in stalls)
@@ -108,30 +99,73 @@ public class StallReadRepository(AppDbContext dbContext) : IStallReadRepository,
                     Id = stall.Id
                 };
 
+                ApplyValues(entity, stall);
                 dbContext.Stalls.Add(entity);
                 existingStalls[stall.Id] = entity;
+                insertedCount++;
+                continue;
             }
 
-            entity.Name = stall.Name;
-            entity.DescriptionVi = stall.DescriptionVi;
-            entity.Latitude = stall.Latitude;
-            entity.Longitude = stall.Longitude;
-            entity.TriggerRadiusMeters = stall.TriggerRadiusMeters;
-            entity.Priority = stall.Priority;
-            entity.Category = stall.Category;
-            entity.OpenHours = stall.OpenHours;
-            entity.ImageUrl = stall.ImageUrl;
-            entity.ImageUrlsJson = JsonSerializer.Serialize(stall.ImageUrls);
-            entity.Address = stall.Address;
-            entity.Phone = stall.Phone;
-            entity.ReviewsJson = stall.ReviewsJson;
-            entity.MapLink = stall.MapLink;
-            entity.NarrationScriptVi = stall.NarrationScriptVi;
-            entity.AudioUrl = stall.AudioUrl;
-            entity.IsActive = stall.IsActive;
-            entity.AverageRating = stall.AverageRating;
+            var imageUrlsJson = JsonSerializer.Serialize(stall.ImageUrls);
+            var changed = entity.Name != stall.Name ||
+                          entity.DescriptionVi != stall.DescriptionVi ||
+                          entity.Latitude != stall.Latitude ||
+                          entity.Longitude != stall.Longitude ||
+                          entity.TriggerRadiusMeters != stall.TriggerRadiusMeters ||
+                          entity.Priority != stall.Priority ||
+                          entity.Category != stall.Category ||
+                          entity.OpenHours != stall.OpenHours ||
+                          entity.ImageUrl != stall.ImageUrl ||
+                          entity.ImageUrlsJson != imageUrlsJson ||
+                          entity.Address != stall.Address ||
+                          entity.Phone != stall.Phone ||
+                          entity.ReviewsJson != stall.ReviewsJson ||
+                          entity.MapLink != stall.MapLink ||
+                          entity.NarrationScriptVi != stall.NarrationScriptVi ||
+                          entity.AudioUrl != stall.AudioUrl ||
+                          entity.IsActive != true ||
+                          entity.AverageRating != stall.AverageRating;
+
+            if (!changed)
+            {
+                unchangedCount++;
+                continue;
+            }
+
+            ApplyValues(entity, stall);
+            updatedCount++;
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        return new StallSyncPersistenceResult
+        {
+            InsertedCount = insertedCount,
+            UpdatedCount = updatedCount,
+            DeactivatedCount = deactivatedCount,
+            UnchangedCount = unchangedCount
+        };
+    }
+
+    private static void ApplyValues(Stall entity, StallDto stall)
+    {
+        entity.Name = stall.Name;
+        entity.DescriptionVi = stall.DescriptionVi;
+        entity.Latitude = stall.Latitude;
+        entity.Longitude = stall.Longitude;
+        entity.TriggerRadiusMeters = stall.TriggerRadiusMeters;
+        entity.Priority = stall.Priority;
+        entity.Category = stall.Category;
+        entity.OpenHours = stall.OpenHours;
+        entity.ImageUrl = stall.ImageUrl;
+        entity.ImageUrlsJson = JsonSerializer.Serialize(stall.ImageUrls);
+        entity.Address = stall.Address;
+        entity.Phone = stall.Phone;
+        entity.ReviewsJson = stall.ReviewsJson;
+        entity.MapLink = stall.MapLink;
+        entity.NarrationScriptVi = stall.NarrationScriptVi;
+        entity.AudioUrl = stall.AudioUrl;
+        entity.IsActive = true;
+        entity.AverageRating = stall.AverageRating;
     }
 }

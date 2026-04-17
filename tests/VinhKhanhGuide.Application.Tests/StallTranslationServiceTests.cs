@@ -6,7 +6,40 @@ namespace VinhKhanhGuide.Application.Tests;
 public class StallTranslationServiceTests
 {
     [Fact]
-    public async Task GetTranslationAsync_FallsBackToEnglish_WhenGermanTranslationIsMissing()
+    public async Task GetTranslationAsync_ReturnsStoredGermanTranslation_WhenAvailable()
+    {
+        var stallRepository = new FakeStallReadRepository();
+        var fakeTranslationService = new FakeTranslationService();
+        var translationRepository = new FakeTranslationRepository(
+            new StallTranslationDto
+            {
+                StallId = 1,
+                LanguageCode = "de",
+                Name = "Deutscher Name",
+                Description = "Deutsche Beschreibung"
+            },
+            new StallTranslationDto
+            {
+                StallId = 1,
+                LanguageCode = "en",
+                Name = "English name",
+                Description = "English description"
+            });
+        var service = new StallTranslationService(stallRepository, translationRepository, fakeTranslationService);
+
+        var result = await service.GetTranslationAsync(1, "de");
+
+        Assert.NotNull(result);
+        Assert.Equal("de", result!.RequestedLanguageCode);
+        Assert.Equal("de", result.LanguageCode);
+        Assert.Equal("Deutsche Beschreibung", result.Description);
+        Assert.False(result.UsedFallback);
+        Assert.Equal("stored", result.Source);
+        Assert.Equal(0, fakeTranslationService.CallCount);
+    }
+
+    [Fact]
+    public async Task GetTranslationAsync_ReturnsNull_WhenRequestedTranslationIsUnavailable()
     {
         var stallRepository = new FakeStallReadRepository();
         var translationRepository = new FakeTranslationRepository(new StallTranslationDto
@@ -18,25 +51,9 @@ public class StallTranslationServiceTests
         });
         var service = new StallTranslationService(stallRepository, translationRepository, new FakeTranslationService());
 
-        var result = await service.GetTranslationAsync(1, "de");
-
-        Assert.NotNull(result);
-        Assert.Equal("en", result!.LanguageCode);
-        Assert.Equal("English description", result.Description);
-    }
-
-    [Fact]
-    public async Task GetTranslationAsync_FallsBackToVietnamese_WhenEnglishIsUnavailable()
-    {
-        var stallRepository = new FakeStallReadRepository();
-        var translationRepository = new FakeTranslationRepository();
-        var service = new StallTranslationService(stallRepository, translationRepository, new FakeTranslationService());
-
         var result = await service.GetTranslationAsync(1, "zh");
 
-        Assert.NotNull(result);
-        Assert.Equal("vi", result!.LanguageCode);
-        Assert.Equal("Noi dung Viet", result.Description);
+        Assert.Null(result);
     }
 
     [Fact]
@@ -49,6 +66,22 @@ public class StallTranslationServiceTests
         var result = await service.GetTranslationAsync(1, "ko");
 
         Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetTranslationAsync_ReturnsVietnameseSource_WhenRequestedLanguageIsVietnamese()
+    {
+        var stallRepository = new FakeStallReadRepository();
+        var translationRepository = new FakeTranslationRepository();
+        var service = new StallTranslationService(stallRepository, translationRepository, new FakeTranslationService());
+
+        var result = await service.GetTranslationAsync(1, "vi");
+
+        Assert.NotNull(result);
+        Assert.Equal("vi", result!.RequestedLanguageCode);
+        Assert.Equal("vi", result.LanguageCode);
+        Assert.False(result.UsedFallback);
+        Assert.Equal("vietnamese-source", result.Source);
     }
 
     private sealed class FakeStallReadRepository : IStallReadRepository
@@ -101,8 +134,11 @@ public class StallTranslationServiceTests
 
     private sealed class FakeTranslationService : ITranslationService
     {
+        public int CallCount { get; private set; }
+
         public Task<string> TranslateAsync(string text, string targetLanguageCode, CancellationToken cancellationToken = default)
         {
+            CallCount++;
             return Task.FromResult(text);
         }
     }

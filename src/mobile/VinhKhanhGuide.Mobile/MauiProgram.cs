@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using VinhKhanhGuide.Mobile.Models;
 using VinhKhanhGuide.Mobile.Services;
 using VinhKhanhGuide.Mobile.ViewModels;
@@ -18,9 +19,41 @@ public static class MauiProgram
             {
             });
 
+        AddAppConfiguration(builder.Configuration);
+
         builder.Services.Configure<StallApiOptions>(options =>
         {
-            options.BaseUrl = "http://localhost:5113/";
+            options.BaseUrl = builder.Configuration[$"{StallApiOptions.SectionName}:BaseUrl"] ?? options.BaseUrl;
+        });
+        builder.Services.Configure<AppUsageAnalyticsOptions>(options =>
+        {
+            if (bool.TryParse(builder.Configuration[$"{AppUsageAnalyticsOptions.SectionName}:Enabled"], out var enabled))
+            {
+                options.Enabled = enabled;
+            }
+
+            if (int.TryParse(builder.Configuration[$"{AppUsageAnalyticsOptions.SectionName}:HeartbeatIntervalSeconds"], out var heartbeatIntervalSeconds))
+            {
+                options.HeartbeatIntervalSeconds = heartbeatIntervalSeconds;
+            }
+        });
+        builder.Services.PostConfigure<StallApiOptions>(options =>
+        {
+            // The bundled config is intentionally allowed to stay blank so device/demo builds do not
+            // silently point at localhost. A persisted override or environment-specific config can supply it.
+            if (string.IsNullOrWhiteSpace(options.BaseUrl))
+            {
+                options.BaseUrl = string.Empty;
+                return;
+            }
+
+            if (!StallApiOptions.TryNormalizeBaseUrl(options.BaseUrl, out var normalizedBaseUrl))
+            {
+                throw new InvalidOperationException(
+                    $"Configuration section '{StallApiOptions.SectionName}' must contain a valid absolute BaseUrl.");
+            }
+
+            options.BaseUrl = normalizedBaseUrl;
         });
         builder.Services.Configure<ProximityOptions>(options =>
         {
@@ -42,14 +75,26 @@ public static class MauiProgram
         });
 
         builder.Services.AddSingleton<IStallApiClient, StallApiClient>();
+        builder.Services.AddSingleton<IStallDataCache, SqliteStallDataCache>();
+        builder.Services.AddSingleton<IStallDataService, CachedStallDataService>();
+        builder.Services.AddSingleton<IExternalStallRouteParser, ExternalStallRouteParser>();
+        builder.Services.AddSingleton<IAppNavigator, ShellAppNavigator>();
+        builder.Services.AddSingleton<ExternalEntryStatusService>();
+        builder.Services.AddSingleton<IExternalEntryService, ExternalEntryService>();
         builder.Services.AddSingleton<ISettingsStorage, PreferencesSettingsStorage>();
         builder.Services.AddSingleton<ISettingsService, SettingsService>();
+        builder.Services.AddSingleton<IAppUsageEnvironmentInfo, DeviceAppUsageEnvironmentInfo>();
+        builder.Services.AddSingleton<IAnalyticsApiClient, AnalyticsApiClient>();
+        builder.Services.AddSingleton<IUsageAnalyticsService, UsageAnalyticsService>();
+        builder.Services.AddSingleton<ITtsLocaleDiscoveryService, TtsLocaleDiscoveryService>();
         builder.Services.AddSingleton<ITtsSettingsSupportService, TtsSettingsSupportService>();
         builder.Services.AddSingleton<ILocationService, DeviceLocationService>();
         builder.Services.AddSingleton<ILocationTrackingService>(sp =>
             (DeviceLocationService)sp.GetRequiredService<ILocationService>());
         builder.Services.AddSingleton<IDeviceTextToSpeech, DeviceTextToSpeechService>();
-        builder.Services.AddSingleton<IAudioNarrationPlayer, NullAudioNarrationPlayer>();
+        builder.Services.AddSingleton<IAudioNarrationPlayer, DeviceAudioNarrationPlayer>();
+        builder.Services.AddSingleton(new HttpClient());
+        builder.Services.AddSingleton<IOfflineAudioDownloadService, OfflineAudioDownloadService>();
         builder.Services.AddSingleton<NarrationSessionManager>();
         builder.Services.AddSingleton<INarrationService, NarrationService>();
         builder.Services.AddSingleton<IProximityDistanceCalculator, ProximityDistanceCalculator>();
@@ -70,5 +115,18 @@ public static class MauiProgram
         ServiceHelper.Services = app.Services;
 
         return app;
+    }
+
+    private static void AddAppConfiguration(ConfigurationManager configuration)
+    {
+        var appSettingsPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
+
+        if (!File.Exists(appSettingsPath))
+        {
+            return;
+        }
+
+        using var stream = File.OpenRead(appSettingsPath);
+        configuration.AddJsonStream(stream);
     }
 }

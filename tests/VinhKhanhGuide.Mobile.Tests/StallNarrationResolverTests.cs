@@ -29,13 +29,16 @@ public class StallNarrationResolverTests
                 : null));
 
         Assert.Equal("de", resolved.LanguageCode);
+        Assert.Equal("de", resolved.RequestedLanguageCode);
+        Assert.Equal("de-DE", resolved.LocaleCode);
         Assert.Equal("Deutscher Text", resolved.Text);
-        Assert.Equal(string.Empty, resolved.AudioUrl);
+        Assert.Equal("https://example.com/audio.mp3", resolved.AudioUrl);
         Assert.True(resolved.CanNarrate);
+        Assert.False(resolved.UsedFallback);
     }
 
     [Fact]
-    public async Task ResolveAsync_FallsBackToEnglish_BeforeVietnamese()
+    public async Task ResolveAsync_FallsBackToVietnamese_WhenSelectedTranslationMissing()
     {
         var translations = new Dictionary<string, StallTranslation>(StringComparer.OrdinalIgnoreCase)
         {
@@ -57,8 +60,11 @@ public class StallNarrationResolverTests
                 ? translation
                 : null));
 
-        Assert.Equal("en", resolved.LanguageCode);
-        Assert.Equal("English narration", resolved.Text);
+        Assert.Equal("zh", resolved.RequestedLanguageCode);
+        Assert.Equal("vi", resolved.LanguageCode);
+        Assert.Equal("vi-VN", resolved.LocaleCode);
+        Assert.Equal("Mo ta tieng Viet", resolved.Text);
+        Assert.True(resolved.UsedFallback);
     }
 
     [Fact]
@@ -72,9 +78,11 @@ public class StallNarrationResolverTests
             _ => Task.FromResult<StallTranslation?>(null));
 
         Assert.Equal("vi", resolved.LanguageCode);
+        Assert.Equal("de", resolved.RequestedLanguageCode);
         Assert.Equal(string.Empty, resolved.Text);
         Assert.Equal("https://example.com/audio.mp3", resolved.AudioUrl);
         Assert.True(resolved.CanNarrate);
         Assert.False(resolved.HasText);
+        Assert.True(resolved.UsedFallback);
     }
 }

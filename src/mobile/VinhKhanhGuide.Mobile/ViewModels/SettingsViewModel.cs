@@ -15,8 +15,8 @@ public sealed class SettingsViewModel : ViewModelBase
     private bool _isGpsTrackingEnabled;
     private double _triggerRadiusMultiplier = 1.0d;
     private bool _autoNarrationEnabled = true;
+    private string _apiBaseUrl = string.Empty;
     private TtsLanguageOption? _selectedLanguage;
-    private string _preferredTtsVoiceId = string.Empty;
     private string _statusMessage = string.Empty;
     private string _supportNote = string.Empty;
 
@@ -70,24 +70,18 @@ public sealed class SettingsViewModel : ViewModelBase
         set => SetProperty(ref _autoNarrationEnabled, value);
     }
 
+    public string ApiBaseUrl
+    {
+        get => _apiBaseUrl;
+        set => SetProperty(ref _apiBaseUrl, value);
+    }
+
     public TtsLanguageOption? SelectedLanguage
     {
         get => _selectedLanguage;
         set
         {
             if (SetProperty(ref _selectedLanguage, value))
-            {
-                UpdateSupportNote();
-            }
-        }
-    }
-
-    public string PreferredTtsVoiceId
-    {
-        get => _preferredTtsVoiceId;
-        set
-        {
-            if (SetProperty(ref _preferredTtsVoiceId, value))
             {
                 UpdateSupportNote();
             }
@@ -159,7 +153,7 @@ public sealed class SettingsViewModel : ViewModelBase
             IsGpsTrackingEnabled = settings.IsGpsTrackingEnabled;
             TriggerRadiusMultiplier = settings.TriggerRadiusMultiplier;
             AutoNarrationEnabled = settings.AutoNarrationEnabled;
-            PreferredTtsVoiceId = settings.PreferredTtsVoiceId;
+            ApiBaseUrl = settings.ApiBaseUrlOverride;
             SelectedLanguage = selectedLanguage ?? SupportedLanguages.FirstOrDefault();
             _hasLoaded = true;
             UpdateSupportNote();
@@ -186,13 +180,22 @@ public sealed class SettingsViewModel : ViewModelBase
 
         try
         {
+            var normalizedApiBaseUrl = string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(ApiBaseUrl) &&
+                !StallApiOptions.TryNormalizeBaseUrl(ApiBaseUrl, out normalizedApiBaseUrl))
+            {
+                StatusMessage = "Enter a valid absolute API URL starting with http:// or https://, or leave it blank to use the bundled default.";
+                return;
+            }
+
             _settingsService.SaveSettings(new AppSettings
             {
                 IsGpsTrackingEnabled = IsGpsTrackingEnabled,
                 TriggerRadiusMultiplier = TriggerRadiusMultiplier,
                 AutoNarrationEnabled = AutoNarrationEnabled,
-                PreferredTtsLanguage = SelectedLanguage?.Code ?? string.Empty,
-                PreferredTtsVoiceId = PreferredTtsVoiceId
+                ApiBaseUrlOverride = string.IsNullOrWhiteSpace(ApiBaseUrl) ? string.Empty : normalizedApiBaseUrl,
+                PreferredTtsLanguage = SelectedLanguage?.Code ?? string.Empty
             });
 
             if (!IsGpsTrackingEnabled && _locationTrackingService.IsTracking)
@@ -200,7 +203,14 @@ public sealed class SettingsViewModel : ViewModelBase
                 await _locationTrackingService.StopTrackingAsync();
             }
 
-            StatusMessage = "Settings saved.";
+            var hasSavedOverride = !string.IsNullOrWhiteSpace(normalizedApiBaseUrl);
+            var configuredBaseUrl = _settingsService.GetConfiguredApiBaseUrl();
+
+            StatusMessage = hasSavedOverride
+                ? "Settings saved. API URL override applied."
+                : string.IsNullOrWhiteSpace(configuredBaseUrl)
+                    ? "Settings saved. Enter an API URL override before loading live data."
+                    : $"Settings saved. Using configured API URL: {configuredBaseUrl}";
             UpdateSupportNote();
         }
         catch (Exception)
@@ -220,12 +230,6 @@ public sealed class SettingsViewModel : ViewModelBase
             SelectedLanguage.DisplayName.EndsWith("(Unavailable)", StringComparison.OrdinalIgnoreCase))
         {
             SupportNote = "This language may not be available on the current device. The system voice will be used if needed.";
-            return;
-        }
-
-        if (!string.IsNullOrWhiteSpace(PreferredTtsVoiceId))
-        {
-            SupportNote = "Specific voice IDs vary by device and may be ignored by the current MAUI text-to-speech API.";
             return;
         }
 

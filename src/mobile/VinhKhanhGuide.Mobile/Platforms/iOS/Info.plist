@@ -43,5 +43,17 @@
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Your location is used to keep the POI map centered around you while the app is open.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.vinhkhanhguide.mobile</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>vinhkhanhguide</string>
+				<string>vkguide</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

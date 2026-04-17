@@ -32,9 +32,9 @@ public class DeviceLocationService(
     {
         if (!settingsService.GetSettings().IsGpsTrackingEnabled)
         {
-            return CreateFallbackLocationResult(
+            return LocationTrackingStatusMapper.CreateUnavailableResult(
                 LocationTrackingStatus.LocationServicesDisabled,
-                "GPS tracking is turned off in Settings. Using the default demo location near Vinh Khanh.");
+                "GPS tracking is turned off in Settings. Nearby prompts are paused.");
         }
 
         var currentOptions = _currentOptions;
@@ -124,7 +124,7 @@ public class DeviceLocationService(
         {
             return LocationTrackingStatusMapper.CreateUnavailableResult(
                 LocationTrackingStatus.LocationServicesDisabled,
-                "GPS tracking is turned off in Settings. Showing POI pins only.");
+                "GPS tracking is turned off in Settings. Nearby prompts are paused.");
         }
 
         lock (_syncRoot)

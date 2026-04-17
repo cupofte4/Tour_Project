@@ -1,0 +1,367 @@
+BAO CAO TINH TRANG DO AN - VINH KHANH GUIDE
+Ngay danh gia: 2026-04-17
+Thu muc repo: /Users/tranhau/Documents/Tour_Project
+
+1. TOM TAT NHANH
+
+Do an hien tai dang o trang thai co the xem la "MVP mo rong + dang bo sung tinh nang nang cao".
+Huong chinh cua repo da ro rang:
+- Mobile app: .NET MAUI
+- Backend: ASP.NET Core Web API
+- Kien truc backend: Api / Application / Domain / Infrastructure
+- Database: EF Core + PostgreSQL
+- Mobile pattern: MVVM
+
+Tinh trang tong quan hien tai:
+- Solution chinh build thanh cong.
+- Backend API tests pass.
+- Application tests pass.
+- Mobile unit tests pass.
+- Repo dang co nhieu thay doi chua commit, cho thay do an dang trong giai doan phat trien tiep chứ khong phai ban da dong bang.
+
+Danh gia ngan:
+- Nen tang ky thuat da kha day du de demo mot do an du lich/thuyet minh dia diem.
+- Nhom tinh nang hien tai da vuot muc CRUD co ban.
+- Diem can luu y lon nhat khong phai la compile, ma la do repo dang co nhieu thay doi dang lam do va ton tai mot so nhanh/phien ban phu trong cung workspace.
+
+2. CAU TRUC THUC TE CUA REPO
+
+2.1. Thanh phan chinh
+
+Solution chinh:
+- VinhKhanhGuide.sln
+
+Backend:
+- src/backend/VinhKhanhGuide.Api
+- src/backend/VinhKhanhGuide.Application
+- src/backend/VinhKhanhGuide.Domain
+- src/backend/VinhKhanhGuide.Infrastructure
+
+Mobile:
+- src/mobile/VinhKhanhGuide.Mobile
+
+Test:
+- tests/VinhKhanhGuide.Api.Tests
+- tests/VinhKhanhGuide.Application.Tests
+- tests/VinhKhanhGuide.Mobile.Tests
+
+Noi dung phu trong repo:
+- explan_app: mot app Flutter rieng
+- explan_backend: mot backend phu
+- TestApp: app MAUI thu nghiem
+- foodguide.sql: snapshot/nguon du lieu de sync
+- plans.md, codex-prompts.md, README.md, AGENTS.md
+
+2.2. Nhan xet ve cau truc
+
+Codebase chinh cua do an van la VinhKhanhGuide.sln + thu muc src + tests.
+Nhung repo khong chi chua mot he thong duy nhat, ma con kem cac thu nghiem/phien ban phu.
+Neu viet prompt cho GPT khac, can noi ro:
+- "Codebase chinh" la VinhKhanhGuide.*
+- explan_app, explan_backend, TestApp la phan phu hoac thu nghiem, khong phai trung tam cua do an hien tai.
+
+3. BACKEND HIEN TAI
+
+3.1. Nen tang
+
+Backend dang dung:
+- .NET 8
+- ASP.NET Core Web API
+- EF Core 8
+- Npgsql.EntityFrameworkCore.PostgreSQL
+- Swagger
+
+Program.cs cho thay backend da duoc wiring that:
+- AddApplication()
+- AddInfrastructure(builder.Configuration)
+- AddControllers()
+- AddEndpointsApiExplorer()
+- AddSwaggerGen()
+- Tu dong migrate database khi startup neu DB la relational
+- Tu dong chay IRemoteLocationSyncService.SyncAsync() khi app khoi dong
+
+Y nghia:
+- Backend khong con o muc skeleton.
+- Database schema duoc quan ly bang migration.
+- Du lieu stall dang duoc dong bo tu nguon ngoai/snapshot, khong phai seed tay don gian.
+
+3.2. API endpoint dang co
+
+Controller chinh hien tai la StallsController, gom:
+- GET /api/stalls
+- GET /api/stalls/{id}
+- GET /api/stalls/nearby?lat={x}&lng={y}&radius={r}
+- GET /api/stalls/{id}/translation?lang=...
+- POST /api/stalls/sync/locations
+
+Ngoai ra endpoint goc "/" tra ve:
+- Name = "Vinh Khanh Guide API"
+- Status = "Ready"
+
+Danh gia:
+- Phan read API cho danh sach, chi tiet, nearby va translation da co.
+- Da co endpoint sync de nap/cap nhat du lieu.
+- API hop voi mot mobile app tham quan/du lich lay noi dung tu backend.
+
+3.3. Domain va application logic
+
+Phan backend hien da co nhieu logic nghiep vu hon ban CRUD co ban:
+- Stall va StallTranslation da xuat hien ro trong Domain/Application.
+- Translation service co ho tro vi, en, zh, de.
+- RemoteLocationSyncService xu ly dong bo stalls va translations.
+- Khi translation khong co san, service co fallback ve noi dung tieng Viet.
+
+Tinh trang rat dang chu y:
+- Sync service dang khong chi upsert stall ma con doi chieu translations dang ton tai va xoa translation khong con nam trong nguon mong muon doi voi cac ngon ngu duoc ho tro.
+- Day la dau hieu cho thay he thong da co "vong doi du lieu" ro hon, khong chi them moi.
+
+3.4. Database va migrations
+
+Migration dang co trong active chain:
+- 20260403144130_InitialCreateStalls
+- 20260407135000_AddStallTranslations
+- 20260409114208_AddPoiReadyFieldsToStalls
+- 20260410162101_AddLocationMetadataToStalls
+- 20260416153000_AddStallTranslationsToActiveChain
+
+Danh gia:
+- Database schema da tien hoa qua nhieu dot.
+- Migration moi nhat cho thay nhom dang tiep tuc hop nhat/dua translation vao active chain chinh thuc.
+- AppDbContextModelSnapshot da duoc cap nhat, nghia la thay doi schema moi nhat da ton tai trong repo.
+
+3.5. Muc do hoan thien backend
+
+Phan backend co the xem la da dat duoc:
+- API doc du lieu
+- translation endpoint
+- nearby query
+- startup migration
+- startup sync
+- test co ban cho API va application
+
+Van de can luu y:
+- Sync chay luc startup co the tien cho demo, nhung ve van hanh that can can nhac do tre khoi dong va phu thuoc du lieu nguon.
+- Repo hien cho thay nhieu file dang sua quanh translation va sync, nghia la khu vuc nay van dang duoc hoan thien.
+
+4. MOBILE HIEN TAI
+
+4.1. Nen tang
+
+Mobile app chinh:
+- src/mobile/VinhKhanhGuide.Mobile/VinhKhanhGuide.Mobile.csproj
+
+Cong nghe:
+- .NET MAUI
+- MVVM
+- Shell navigation
+- MAUI Maps
+- sqlite-net-pcl
+
+Target framework hien tai:
+- net8.0-ios
+
+Platforms trong csproj:
+- iPhone
+- iPhoneSimulator
+
+Danh gia:
+- Ban mobile chinh hien tai dang uu tien iOS.
+- Chua thay target Android/Windows/MacCatalyst trong csproj chinh.
+
+4.2. Man hinh va luong chinh
+
+Trong mobile da co cac man/feature ro rang:
+- MainPage: danh sach stall
+- StallDetailPage: chi tiet stall
+- StallMapPage: ban do
+- SettingsPage: cai dat
+
+MauiProgram.cs cho thay mobile da duoc wiring kha day:
+- IStallApiClient -> StallApiClient
+- IStallDataCache -> SqliteStallDataCache
+- IStallDataService -> CachedStallDataService
+- ILocationService -> DeviceLocationService
+- IAudioNarrationPlayer -> DeviceAudioNarrationPlayer
+- IOfflineAudioDownloadService -> OfflineAudioDownloadService
+- IExternalEntryService -> ExternalEntryService
+- cac service cho narration, proximity, settings, navigation
+
+Y nghia:
+- Mobile khong phai UI mockup.
+- Da co he thong service/doc data/cached data/narration/proximity/settings tuong doi day du.
+
+4.3. Chuc nang mobile da thay ro trong code
+
+Tu cac ViewModel, Model va Service dang co, co the thay do an da di qua muc co ban va dang huong toi trai nghiem that:
+- Lay danh sach stall tu API
+- Xem chi tiet stall
+- Hien thi ban do
+- Chon ngon ngu/noi dung narration
+- TTS narration
+- Quan ly session narration
+- Xac dinh vi tri va stall gan nhat
+- Trigger proximity narration
+- Tai audio offline
+- Luu local audio path
+- Cache stall va translation bang SQLite
+- Xu ly external entry/deep-link style route vao stall
+
+4.4. Tinh trang cache va offline
+
+Phan dang duoc lam ro va co y nghia nhat trong mobile hien tai la offline/cache:
+- Co interface IStallDataCache va IStallDataService
+- Co SqliteStallDataCache dung SQLiteAsyncConnection
+- Co CachedStallDataService
+- Cache gom:
+  - danh sach stall
+  - chi tiet stall
+  - translation theo tung stall + language
+  - local audio path
+
+Y nghia:
+- App dang tien den kha nang dung du lieu cuc bo thay vi phu thuoc hoan toan vao API live.
+- Day la mot buoc nang cap gia tri demo rat tot cho de tai du lich.
+
+4.5. Tinh trang narration va audio
+
+Mobile hien da co nhom logic lien quan den narration kha dam:
+- NarrationService
+- NarrationSessionManager
+- DeviceTextToSpeechService
+- DeviceAudioNarrationPlayer
+- NarrationAudioSourceResolver
+- OfflineAudioDownloadService
+
+Trong StallDetailViewModel co the thay:
+- uu tien audio local neu co
+- fallback remote audio neu file local khong ton tai
+- cho phep download/remove offline audio
+- cap nhat local audio path ve cache
+- xu ly narration theo ngon ngu va fallback translation
+
+Danh gia:
+- Day la diem manh ky thuat cua do an hien tai.
+- Tinh nang nay giup do an co mau sac "ung dung trai nghiem du lich" ro hon mot app CRUD thong thuong.
+
+4.6. Tinh trang settings va runtime wiring
+
+Mobile hien co cac settings va option ro:
+- StallApiOptions
+- ProximityOptions
+- AutoNarrationOptions
+- LocationTrackingOptions
+- ISettingsService / SettingsService
+- TextToSpeechSettingsResolver
+
+BaseUrl API hien dang duoc set truc tiep trong MauiProgram:
+- http://localhost:5113/
+
+Can luu y:
+- Cau hinh nay phu hop luc dev local, nhung chua phai cau hinh production/deployment that.
+- Neu demo tren thiet bi that, dia chi localhost se can duoc xu ly lai.
+
+5. TEST VA MUC DO ON DINH
+
+5.1. Ket qua kiem tra thuc te trong workspace hien tai
+
+Da chay thanh cong:
+- dotnet build VinhKhanhGuide.sln -v minimal
+- dotnet test tests/VinhKhanhGuide.Application.Tests/VinhKhanhGuide.Application.Tests.csproj -v minimal
+- dotnet test tests/VinhKhanhGuide.Api.Tests/VinhKhanhGuide.Api.Tests.csproj -v minimal
+- dotnet test tests/VinhKhanhGuide.Mobile.Tests/VinhKhanhGuide.Mobile.Tests.csproj -v minimal
+
+Ket qua:
+- Solution build thanh cong, 0 warnings, 0 errors
+- Application tests: Passed 15/15
+- API tests: Passed 14/14
+- Mobile tests: Passed 107/107
+
+5.2. Nhan xet ve test
+
+Diem tich cuc:
+- Khong chi co test backend ma mobile logic cung duoc test kha nhieu.
+- So test mobile lon hon ro ret, cho thay nhom da dau tu vao logic thay vi chi giao dien.
+- Translation, narration, proximity, external entry, offline audio deu da co dau vet test.
+
+Diem can luu y:
+- tests/VinhKhanhGuide.Mobile.Tests.csproj dang ton tai va chay pass, nhung hien khong nam trong danh sach project cua VinhKhanhGuide.sln.
+- Nghia la neu ai chi chay "dotnet test" theo solution thi co the bo sot test mobile.
+
+6. TINH TRANG WORKTREE VA CAC THAY DOI DANG LAM
+
+6.1. Trang thai git
+
+Worktree hien tai dang dirty, co rat nhieu file modified/untracked.
+Neu bo qua bin/obj, cac thay doi chinh dang tap trung vao:
+- backend translation
+- backend remote sync
+- migration moi
+- mobile SQLite cache
+- mobile offline audio
+- mobile external entry
+- mobile narration/proximity/settings
+- test mo rong cho cac tinh nang tren
+
+6.2. Dau hieu cho thay nhung hang muc dang duoc phat trien do
+
+Backend:
+- RemoteLocationSyncService va ket qua sync dang duoc sua
+- StallTranslationService va DTO translation dang duoc sua
+- them migration 20260416153000_AddStallTranslationsToActiveChain
+- Program.cs dang thay doi
+
+Mobile:
+- them moi IStallDataCache, SqliteStallDataCache, CachedStallDataService
+- them nhom external entry
+- them offline audio download service
+- them app navigator
+- sua lon o StallDetailViewModel, StallListViewModel, StallMapViewModel, SettingsViewModel
+- sua MainPage, SettingsPage, StallDetailPage, StallMapPage
+
+Tests:
+- them test cho external entry
+- them test cho offline cache
+- them test cho offline audio
+- them test runtime wiring/settings
+
+Danh gia:
+- Do an dang trong mot phase nang cap lon, nhung khong bi vo build/test.
+- Day la mot dau hieu tot: code dang phat trien tiep nhung van giu duoc kha nang chay test.
+
+7. DIEM MANH HIEN TAI CUA DO AN
+
+- Kien truc backend tach layer ro rang.
+- Mobile dung MVVM va da co wiring tuong doi day.
+- Co translation va fallback language.
+- Co location/proximity/narration, tao ra trai nghiem co tinh chat du lich huong dan.
+- Co SQLite cache va huong offline, tang gia tri su dung thuc te.
+- Co bo test kha kha cho backend va mobile logic.
+- Build/test hien tai deu pass.
+
+8. RUI RO VA DIEM CAN NOI RO KHI MO TA CHO GPT KHAC
+
+- Repo khong hoan toan sach: co rat nhieu thay doi chua commit.
+- Trong repo co them explan_app, explan_backend, TestApp; can tranh de GPT khac nham cac thu muc phu nay la he thong chinh.
+- Mobile app hien target iOS, khong phai da san sang da nen tang.
+- API base URL tren mobile dang hard-code localhost cho dev.
+- Startup API dang auto-migrate + auto-sync; can mo ta ro day la hanh vi hien tai de tranh GPT khac de xuat sai muc.
+- Mobile tests ton tai nhung khong nam trong solution list.
+
+9. KET LUAN
+
+Tinh trang hien tai cua do an la:
+- Nen tang ky thuat chinh da hoat dong.
+- Kien truc va huong san pham da ro.
+- Nhieu tinh nang nang cao da xuat hien: translation, proximity narration, offline audio, SQLite cache, external entry.
+- Muc do on dinh ky thuat hien tai tot, vi build va toan bo test da pass trong workspace nay.
+- Tuy nhien, repo dang la mot worktree dang phat trien manh, chua phai trang thai "dong goi cuoi cung".
+
+Neu can tom tat do an trong 1 cau:
+"Day la mot mono-repo .NET cho ung dung huong dan du lich, gom backend ASP.NET Core + PostgreSQL va mobile .NET MAUI theo MVVM, hien da co cac tinh nang doc stall, ban do, translation, narration theo vi tri, audio offline va cache SQLite, dong thoi dang trong giai doan hoan thien them cac tinh nang mobile/offline va migration translation."
+
+10. CAC LENH XAC MINH DA CHAY
+
+dotnet build VinhKhanhGuide.sln -v minimal
+dotnet test tests/VinhKhanhGuide.Application.Tests/VinhKhanhGuide.Application.Tests.csproj -v minimal
+dotnet test tests/VinhKhanhGuide.Api.Tests/VinhKhanhGuide.Api.Tests.csproj -v minimal
+dotnet test tests/VinhKhanhGuide.Mobile.Tests/VinhKhanhGuide.Mobile.Tests.csproj -v minimal

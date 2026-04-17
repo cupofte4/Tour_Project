@@ -24,6 +24,11 @@ public class StallTranslationConfiguration : IEntityTypeConfiguration<StallTrans
             .HasMaxLength(2000)
             .IsRequired();
 
+        builder.HasOne<Stall>()
+            .WithMany()
+            .HasForeignKey(translation => translation.StallId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasIndex(translation => new { translation.StallId, translation.LanguageCode })
             .IsUnique();
     }

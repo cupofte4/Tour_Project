@@ -246,6 +246,8 @@ public class ProximityServiceTests
 
     private sealed class FakeSettingsService : ISettingsService
     {
+        public event AppSettingsChangedEventHandler? SettingsChanged;
+
         public AppSettings Settings { get; set; } = new();
 
         public AppSettings GetSettings()
@@ -256,6 +258,17 @@ public class ProximityServiceTests
         public void SaveSettings(AppSettings settings)
         {
             Settings = settings;
+            SettingsChanged?.Invoke(settings);
+        }
+
+        public string GetResolvedApiBaseUrl()
+        {
+            return "http://localhost:5113/";
+        }
+
+        public string GetConfiguredApiBaseUrl()
+        {
+            return string.Empty;
         }
     }
 }

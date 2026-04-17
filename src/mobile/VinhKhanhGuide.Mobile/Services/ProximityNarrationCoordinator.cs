@@ -7,7 +7,7 @@ namespace VinhKhanhGuide.Mobile.Services;
 public sealed class ProximityNarrationCoordinator : IProximityNarrationCoordinator
 {
     private readonly object _syncRoot = new();
-    private readonly IStallApiClient _stallApiClient;
+    private readonly IStallDataService _stallDataService;
     private readonly INarrationService _narrationService;
     private readonly ISettingsService _settingsService;
     private readonly AutoNarrationOptions _options;
@@ -15,14 +15,29 @@ public sealed class ProximityNarrationCoordinator : IProximityNarrationCoordinat
     private readonly Dictionary<int, DateTimeOffset> _lastNarratedAt = [];
     private NearbyStallNotification? _currentPrompt;
 
-    public ProximityNarrationCoordinator(
+    public static ProximityNarrationCoordinator CreateForApiClient(
         IStallApiClient stallApiClient,
         INarrationService narrationService,
         ISettingsService settingsService,
         IOptions<AutoNarrationOptions> options,
         TimeProvider timeProvider)
     {
-        _stallApiClient = stallApiClient;
+        return new ProximityNarrationCoordinator(
+            new DirectStallDataService(stallApiClient),
+            narrationService,
+            settingsService,
+            options,
+            timeProvider);
+    }
+
+    public ProximityNarrationCoordinator(
+        IStallDataService stallDataService,
+        INarrationService narrationService,
+        ISettingsService settingsService,
+        IOptions<AutoNarrationOptions> options,
+        TimeProvider timeProvider)
+    {
+        _stallDataService = stallDataService;
         _narrationService = narrationService;
         _settingsService = settingsService;
         _options = options.Value;
@@ -126,12 +141,32 @@ public sealed class ProximityNarrationCoordinator : IProximityNarrationCoordinat
 
             _lastNarratedAt[stall.Id] = GetNow();
             _currentPrompt = CreatePrompt(
-                new LocalizedPromptContent(prompt.StallName, prompt.NarrationText, prompt.LanguageCode, prompt.ImageUrl),
+                new ResolvedStallNarration(
+                    prompt.StallName,
+                    prompt.NarrationText,
+                    prompt.RequestedLanguageCode,
+                    prompt.LanguageCode,
+                    prompt.LocaleCode,
+                    string.Empty,
+                    !string.IsNullOrWhiteSpace(prompt.NarrationText),
+                    !string.IsNullOrWhiteSpace(prompt.NarrationText),
+                    prompt.UsedFallback),
                 prompt,
                 canStartNarration: false,
                 autoPlayStarted: true,
                 promptText: "Playing nearby narration.");
-            narrationRequest = CreateNarrationRequest(stall, prompt.LanguageCode, prompt.NarrationText);
+            narrationRequest = CreateNarrationRequest(
+                stall,
+                new ResolvedStallNarration(
+                    prompt.StallName,
+                    prompt.NarrationText,
+                    prompt.RequestedLanguageCode,
+                    prompt.LanguageCode,
+                    prompt.LocaleCode,
+                    string.Empty,
+                    !string.IsNullOrWhiteSpace(prompt.NarrationText),
+                    !string.IsNullOrWhiteSpace(prompt.NarrationText),
+                    prompt.UsedFallback));
         }
 
         if (narrationRequest is not null)
@@ -147,45 +182,25 @@ public sealed class ProximityNarrationCoordinator : IProximityNarrationCoordinat
         return _timeProvider.GetUtcNow();
     }
 
-    private async Task<LocalizedPromptContent> ResolveLocalizedContentAsync(
+    private async Task<ResolvedStallNarration> ResolveLocalizedContentAsync(
         StallSummary stall,
         CancellationToken cancellationToken)
     {
         var requestedLanguage = ResolveRequestedLanguage();
 
-        foreach (var candidateLanguage in TextToSpeechSettingsResolver.BuildLanguageFallbackChain(requestedLanguage))
-        {
-            if (string.Equals(candidateLanguage, "vi", StringComparison.OrdinalIgnoreCase))
-            {
-                return new LocalizedPromptContent(
-                    stall.Name,
-                    ResolveVietnameseNarrationText(stall),
-                    "vi",
-                    stall.ImageUrl);
-            }
-
-            var translation = stall.Translations.FirstOrDefault(item =>
-                string.Equals(item.LanguageCode, candidateLanguage, StringComparison.OrdinalIgnoreCase));
-
-            translation ??= await _stallApiClient.GetStallTranslationAsync(stall.Id, candidateLanguage, cancellationToken);
-
-            if (translation is null)
-            {
-                continue;
-            }
-
-            return new LocalizedPromptContent(
-                string.IsNullOrWhiteSpace(translation.Name) ? stall.Name : translation.Name,
-                string.IsNullOrWhiteSpace(translation.Description) ? ResolveVietnameseNarrationText(stall) : translation.Description,
-                candidateLanguage,
-                stall.ImageUrl);
-        }
-
-        return new LocalizedPromptContent(
+        return await StallNarrationResolver.ResolveAsync(
+            requestedLanguage,
             stall.Name,
             ResolveVietnameseNarrationText(stall),
-            "vi",
-            stall.ImageUrl);
+            ResolvePreferredAudioSource(stall),
+            async candidateLanguage =>
+            {
+                var translation = stall.Translations.FirstOrDefault(item =>
+                    string.Equals(item.LanguageCode, candidateLanguage, StringComparison.OrdinalIgnoreCase));
+
+                translation ??= await _stallDataService.GetTranslationAsync(stall.Id, candidateLanguage, cancellationToken);
+                return translation;
+            });
     }
 
     private string ResolveRequestedLanguage()
@@ -198,25 +213,25 @@ public sealed class ProximityNarrationCoordinator : IProximityNarrationCoordinat
         return TextToSpeechSettingsResolver.ResolveSupportedLanguageCode(preferredLanguage);
     }
 
-    private static NarrationRequest CreateNarrationRequest(StallSummary stall, LocalizedPromptContent content)
-    {
-        return CreateNarrationRequest(stall, content.LanguageCode, content.NarrationText);
-    }
-
-    private static NarrationRequest CreateNarrationRequest(
-        StallSummary stall,
-        string languageCode,
-        string narrationText)
+    private static NarrationRequest CreateNarrationRequest(StallSummary stall, ResolvedStallNarration content)
     {
         return new NarrationRequest
         {
             PoiId = stall.Id,
             Priority = stall.Priority,
-            Title = stall.Name,
-            AudioUrl = stall.AudioUrl,
-            Text = narrationText,
-            LanguageCode = languageCode
+            Title = content.Name,
+            AudioUrl = content.AudioUrl,
+            Text = content.Text,
+            RequestedLanguageCode = content.RequestedLanguageCode,
+            LanguageCode = content.LanguageCode,
+            LocaleCode = content.LocaleCode,
+            UsedFallback = content.UsedFallback
         };
+    }
+
+    private static string ResolvePreferredAudioSource(StallSummary stall)
+    {
+        return NarrationAudioSourceResolver.ResolvePreferredAudioSource(stall.LocalAudioPath, stall.AudioUrl);
     }
 
     private NearbyStallNotification MergePrompt(NearbyStallNotification nextPrompt)
@@ -226,7 +241,10 @@ public sealed class ProximityNarrationCoordinator : IProximityNarrationCoordinat
             _currentPrompt.CanStartNarration == nextPrompt.CanStartNarration &&
             _currentPrompt.AutoPlayStarted == nextPrompt.AutoPlayStarted &&
             string.Equals(_currentPrompt.NarrationText, nextPrompt.NarrationText, StringComparison.Ordinal) &&
+            string.Equals(_currentPrompt.RequestedLanguageCode, nextPrompt.RequestedLanguageCode, StringComparison.OrdinalIgnoreCase) &&
             string.Equals(_currentPrompt.LanguageCode, nextPrompt.LanguageCode, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(_currentPrompt.LocaleCode, nextPrompt.LocaleCode, StringComparison.OrdinalIgnoreCase) &&
+            _currentPrompt.UsedFallback == nextPrompt.UsedFallback &&
             string.Equals(_currentPrompt.PromptText, nextPrompt.PromptText, StringComparison.Ordinal))
         {
             return _currentPrompt;
@@ -236,7 +254,7 @@ public sealed class ProximityNarrationCoordinator : IProximityNarrationCoordinat
     }
 
     private static NearbyStallNotification CreatePrompt(
-        LocalizedPromptContent content,
+        ResolvedStallNarration content,
         NearbyStallNotification source,
         bool canStartNarration,
         bool autoPlayStarted,
@@ -247,15 +265,18 @@ public sealed class ProximityNarrationCoordinator : IProximityNarrationCoordinat
             StallId = source.StallId,
             StallName = content.Name,
             Category = source.Category,
-            ImageUrl = content.ImageUrl,
+            ImageUrl = source.ImageUrl,
             DistanceMeters = source.DistanceMeters,
             TriggerReason = source.TriggerReason,
             Timestamp = source.Timestamp,
             CanStartNarration = canStartNarration,
             AutoPlayStarted = autoPlayStarted,
             PromptText = promptText,
-            NarrationText = content.NarrationText,
+            NarrationText = content.Text,
+            RequestedLanguageCode = content.RequestedLanguageCode,
             LanguageCode = content.LanguageCode,
+            LocaleCode = content.LocaleCode,
+            UsedFallback = content.UsedFallback,
             PlaybackStatusText = autoPlayStarted ? "Playing" : string.Empty
         };
     }
@@ -290,9 +311,4 @@ public sealed class ProximityNarrationCoordinator : IProximityNarrationCoordinat
             : stall.DescriptionVi;
     }
 
-    private sealed record LocalizedPromptContent(
-        string Name,
-        string NarrationText,
-        string LanguageCode,
-        string ImageUrl);
 }

@@ -9,6 +9,8 @@ public class StallTranslationService(
 {
     public async Task<StallTranslationDto?> GetTranslationAsync(int stallId, string languageCode, CancellationToken cancellationToken = default)
     {
+        // Live generation is intentionally disabled in the request path. We only
+        // serve persisted translations or an explicit miss that the client can handle.
         _ = translationService;
         var normalizedLanguageCode = languageCode.Trim().ToLowerInvariant();
 
@@ -26,80 +28,29 @@ public class StallTranslationService(
 
         if (normalizedLanguageCode == "vi")
         {
+            return CreateVietnameseSourceTranslation(stall, normalizedLanguageCode, usedFallback: false);
+        }
+
+        var storedTranslation = await stallTranslationRepository.GetByStallIdAndLanguageAsync(
+            stallId,
+            normalizedLanguageCode,
+            cancellationToken);
+
+        if (storedTranslation is not null)
+        {
             return new StallTranslationDto
             {
-                StallId = stall.Id,
-                LanguageCode = "vi",
-                Name = stall.Name,
-                Description = stall.NarrationScriptVi
+                StallId = storedTranslation.StallId,
+                RequestedLanguageCode = normalizedLanguageCode,
+                LanguageCode = storedTranslation.LanguageCode,
+                Name = storedTranslation.Name,
+                Description = storedTranslation.Description,
+                UsedFallback = false,
+                Source = "stored"
             };
         }
 
-        foreach (var candidateLanguage in BuildFallbackChain(normalizedLanguageCode))
-        {
-            if (candidateLanguage == "vi")
-            {
-                return new StallTranslationDto
-                {
-                    StallId = stall.Id,
-                    LanguageCode = "vi",
-                    Name = stall.Name,
-                    Description = stall.NarrationScriptVi
-                };
-            }
-
-            var cachedTranslation = await stallTranslationRepository.GetByStallIdAndLanguageAsync(
-                stallId,
-                candidateLanguage,
-                cancellationToken);
-
-            if (cachedTranslation is not null)
-            {
-                return cachedTranslation;
-            }
-        }
-
-        return new StallTranslationDto
-        {
-            StallId = stall.Id,
-            LanguageCode = "vi",
-            Name = stall.Name,
-            Description = stall.NarrationScriptVi
-        };
-    }
-
-    private static IReadOnlyList<string> BuildFallbackChain(string languageCode)
-    {
-        var candidates = new List<string>();
-        AddCandidate(candidates, languageCode);
-
-        if (!string.Equals(languageCode, "en", StringComparison.OrdinalIgnoreCase))
-        {
-            AddCandidate(candidates, "en");
-        }
-
-        AddCandidate(candidates, "vi");
-        return candidates;
-    }
-
-    private static void AddCandidate(ICollection<string> candidates, string languageCode)
-    {
-        if (string.IsNullOrWhiteSpace(languageCode))
-        {
-            return;
-        }
-
-        var normalized = languageCode.Trim().ToLowerInvariant();
-
-        if (normalized.Contains('-'))
-        {
-            normalized = normalized.Split('-', 2)[0];
-        }
-
-        if (!candidates.Contains(normalized, StringComparer.OrdinalIgnoreCase))
-        {
-            candidates.Add(normalized);
-        }
+        return null;
     }
 
     private static bool IsSupportedLanguage(string languageCode)
@@ -109,5 +60,24 @@ public class StallTranslationService(
             : languageCode;
 
         return normalized is "vi" or "en" or "zh" or "de";
+    }
+
+    private static StallTranslationDto CreateVietnameseSourceTranslation(
+        StallDto stall,
+        string requestedLanguageCode,
+        bool usedFallback)
+    {
+        return new StallTranslationDto
+        {
+            StallId = stall.Id,
+            RequestedLanguageCode = requestedLanguageCode,
+            LanguageCode = "vi",
+            Name = stall.Name,
+            Description = stall.NarrationScriptVi,
+            UsedFallback = usedFallback,
+            Source = usedFallback
+                ? "vietnamese-source-fallback"
+                : "vietnamese-source"
+        };
     }
 }

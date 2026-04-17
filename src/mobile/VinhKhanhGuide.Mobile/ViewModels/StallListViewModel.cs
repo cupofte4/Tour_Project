@@ -15,22 +15,43 @@ public class StallListViewModel : ViewModelBase
         new LanguageOption { Code = "de", DisplayName = "German" }
     ];
 
-    private readonly IStallApiClient _stallApiClient;
+    private readonly IStallDataService _stallDataService;
     private readonly INarrationService _narrationService;
+    private readonly ISettingsService _settingsService;
     private bool _hasLoaded;
     private bool _isLoading;
     private string _errorMessage = string.Empty;
+    private string _noticeMessage = string.Empty;
     private StallSummary? _selectedStall;
     private LanguageOption? _selectedPreviewLanguage;
-    private string _previewStatusText = "Ready to preview narration.";
+    private string _previewStatusText = "Choose a language to listen to a short narration preview.";
 
-    public StallListViewModel(IStallApiClient stallApiClient, INarrationService narrationService)
+    public static StallListViewModel CreateForApiClient(
+        IStallApiClient stallApiClient,
+        INarrationService narrationService,
+        ISettingsService settingsService)
     {
-        _stallApiClient = stallApiClient;
+        return new StallListViewModel(
+            new DirectStallDataService(stallApiClient),
+            narrationService,
+            settingsService);
+    }
+
+    public StallListViewModel(
+        IStallDataService stallDataService,
+        INarrationService narrationService,
+        ISettingsService settingsService)
+    {
+        _stallDataService = stallDataService;
         _narrationService = narrationService;
+        _settingsService = settingsService;
         _narrationService.PlaybackStateChanged += OnNarrationPlaybackStateChanged;
 
-        var defaultLanguageCode = TextToSpeechSettingsResolver.ResolveSupportedLanguageCode(CultureInfo.CurrentUICulture.Name);
+        var preferredLanguageCode = _settingsService.GetSettings().PreferredTtsLanguage;
+        var defaultLanguageCode = TextToSpeechSettingsResolver.ResolveSupportedLanguageCode(
+            string.IsNullOrWhiteSpace(preferredLanguageCode)
+                ? CultureInfo.CurrentUICulture.Name
+                : preferredLanguageCode);
         SelectedPreviewLanguage = PreviewLanguages.FirstOrDefault(language =>
             string.Equals(language.Code, defaultLanguageCode, StringComparison.OrdinalIgnoreCase))
             ?? PreviewLanguages.First(language => string.Equals(language.Code, "en", StringComparison.OrdinalIgnoreCase));
@@ -60,6 +81,20 @@ public class StallListViewModel : ViewModelBase
 
     public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
 
+    public string NoticeMessage
+    {
+        get => _noticeMessage;
+        private set
+        {
+            if (SetProperty(ref _noticeMessage, value))
+            {
+                OnPropertyChanged(nameof(HasNoticeMessage));
+            }
+        }
+    }
+
+    public bool HasNoticeMessage => !string.IsNullOrWhiteSpace(NoticeMessage);
+
     public StallSummary? SelectedStall
     {
         get => _selectedStall;
@@ -84,6 +119,16 @@ public class StallListViewModel : ViewModelBase
         private set => SetProperty(ref _previewStatusText, value);
     }
 
+    public string LoadingMessage => "Loading locations...";
+
+    public string EmptyStateTitle => HasError
+        ? "Locations are unavailable"
+        : "No locations yet";
+
+    public string EmptyStateMessage => HasError
+        ? "Please try again in a moment."
+        : "Locations will appear here when they are ready.";
+
     public async Task LoadAsync()
     {
         if (_hasLoaded || IsLoading)
@@ -93,23 +138,35 @@ public class StallListViewModel : ViewModelBase
 
         IsLoading = true;
         ErrorMessage = string.Empty;
+        NoticeMessage = string.Empty;
 
         try
         {
-            var stalls = await _stallApiClient.GetStallsAsync();
-
-            Stalls.Clear();
-
-            foreach (var stall in stalls)
+            var cachedStalls = await _stallDataService.GetCachedStallsAsync();
+            if (cachedStalls.Count > 0)
             {
-                Stalls.Add(stall);
+                ApplyStalls(cachedStalls);
+                NoticeMessage = "Showing saved locations while refreshing.";
             }
+
+            var stalls = await _stallDataService.RefreshStallsAsync();
+            ApplyStalls(stalls);
+            NoticeMessage = string.Empty;
 
             _hasLoaded = true;
         }
         catch (Exception)
         {
-            ErrorMessage = "Could not load stalls from the backend.";
+            var cachedStalls = await _stallDataService.GetCachedStallsAsync();
+            if (cachedStalls.Count > 0)
+            {
+                ApplyStalls(cachedStalls);
+                NoticeMessage = "Showing saved locations because the latest content couldn't be refreshed.";
+                _hasLoaded = true;
+                return;
+            }
+
+            ErrorMessage = "We couldn't load locations right now.";
         }
         finally
         {
@@ -121,7 +178,7 @@ public class StallListViewModel : ViewModelBase
     {
         if (stall is null)
         {
-            PreviewStatusText = "Preview unavailable.";
+            PreviewStatusText = "Narration preview is not available right now.";
             return;
         }
 
@@ -130,17 +187,17 @@ public class StallListViewModel : ViewModelBase
             requestedLanguage,
             stall.Name,
             StallNarrationResolver.ResolveVietnameseNarrationText(stall.NarrationScriptVi, stall.DescriptionVi),
-            stall.AudioUrl,
+            ResolvePreferredAudioSource(stall),
             languageCode => Task.FromResult(stall.Translations.FirstOrDefault(item =>
                 string.Equals(item.LanguageCode, languageCode, StringComparison.OrdinalIgnoreCase))));
 
         if (!resolvedNarration.CanNarrate)
         {
-            PreviewStatusText = $"Preview unavailable for {stall.Name}.";
+            PreviewStatusText = $"Narration preview is not available for {stall.Name}.";
             return;
         }
 
-        PreviewStatusText = $"Previewing {resolvedNarration.LanguageCode.ToUpperInvariant()} for {stall.Name}.";
+        PreviewStatusText = $"Starting narration preview for {stall.Name}.";
 
         await _narrationService.RequestNarrationAsync(new NarrationRequest
         {
@@ -149,7 +206,10 @@ public class StallListViewModel : ViewModelBase
             Title = resolvedNarration.Name,
             AudioUrl = resolvedNarration.AudioUrl,
             Text = resolvedNarration.Text,
-            LanguageCode = resolvedNarration.LanguageCode
+            RequestedLanguageCode = resolvedNarration.RequestedLanguageCode,
+            LanguageCode = resolvedNarration.LanguageCode,
+            LocaleCode = resolvedNarration.LocaleCode,
+            UsedFallback = resolvedNarration.UsedFallback
         });
     }
 
@@ -163,17 +223,32 @@ public class StallListViewModel : ViewModelBase
     {
         PreviewStatusText = state.Status switch
         {
-            NarrationPlaybackStatus.Idle => "Ready to preview narration.",
-            NarrationPlaybackStatus.Queued => "Preview queued...",
-            NarrationPlaybackStatus.Preparing => "Preparing preview...",
-            NarrationPlaybackStatus.Playing => "Preview playing...",
+            NarrationPlaybackStatus.Idle => "Choose a language to listen to a short narration preview.",
+            NarrationPlaybackStatus.Queued => "Starting narration preview...",
+            NarrationPlaybackStatus.Preparing => "Preparing narration...",
+            NarrationPlaybackStatus.Playing => "Narration is playing.",
             NarrationPlaybackStatus.Stopped => string.IsNullOrWhiteSpace(state.Message)
-                ? "Preview stopped."
-                : state.Message,
+                ? "Narration stopped."
+                : "Narration stopped.",
             NarrationPlaybackStatus.Error => string.IsNullOrWhiteSpace(state.Message)
-                ? "Preview failed."
+                ? "We couldn't start narration."
                 : state.Message,
-            _ => "Ready to preview narration."
+            _ => "Choose a language to listen to a short narration preview."
         };
+    }
+
+    private void ApplyStalls(IReadOnlyList<StallSummary> stalls)
+    {
+        Stalls.Clear();
+
+        foreach (var stall in stalls)
+        {
+            Stalls.Add(stall);
+        }
+    }
+
+    private static string ResolvePreferredAudioSource(StallSummary stall)
+    {
+        return NarrationAudioSourceResolver.ResolvePreferredAudioSource(stall.LocalAudioPath, stall.AudioUrl);
     }
 }

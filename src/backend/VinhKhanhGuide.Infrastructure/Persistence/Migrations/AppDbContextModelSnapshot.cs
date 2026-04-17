@@ -22,6 +22,47 @@ namespace VinhKhanhGuide.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("VinhKhanhGuide.Domain.Entities.AppUsageSession", b =>
+                {
+                    b.Property<string>("SessionId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AnonymousClientId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AppVersion")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset>("FirstSeenAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastEventType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("LastSeenAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("SessionId");
+
+                    b.HasIndex("AnonymousClientId");
+
+                    b.HasIndex("LastSeenAtUtc");
+
+                    b.ToTable("AppUsageSessions", (string)null);
+                });
+
             modelBuilder.Entity("VinhKhanhGuide.Domain.Entities.Stall", b =>
                 {
                     b.Property<int>("Id")
@@ -152,6 +193,15 @@ namespace VinhKhanhGuide.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("StallTranslations", (string)null);
+                });
+
+            modelBuilder.Entity("VinhKhanhGuide.Domain.Entities.StallTranslation", b =>
+                {
+                    b.HasOne("VinhKhanhGuide.Domain.Entities.Stall", null)
+                        .WithMany()
+                        .HasForeignKey("StallId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

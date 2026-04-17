@@ -23,16 +23,6 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
 
             services.AddDbContext<AppDbContext>(options =>
                 options.UseInMemoryDatabase(_databaseName));
-
-            using var scope = services.BuildServiceProvider().CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            var options = scope.ServiceProvider.GetRequiredService<IOptions<RemoteLocationImportOptions>>();
-            var syncService = scope.ServiceProvider.GetRequiredService<IRemoteLocationSyncService>();
-
-            dbContext.Database.EnsureDeleted();
-            dbContext.Database.EnsureCreated();
-            options.Value.SqlSnapshotPath = ResolveFoodGuideSqlPath();
-            syncService.SyncAsync().GetAwaiter().GetResult();
         });
     }
 
@@ -41,6 +31,32 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
         using var scope = Services.CreateScope();
         var fakeTranslator = scope.ServiceProvider.GetRequiredService<FakeTranslationService>();
         fakeTranslator.Reset();
+    }
+
+    public void SetSnapshotPath(string snapshotPath)
+    {
+        using var scope = Services.CreateScope();
+        var options = scope.ServiceProvider.GetRequiredService<IOptions<RemoteLocationImportOptions>>();
+        options.Value.SqlSnapshotPath = snapshotPath;
+    }
+
+    protected override void ConfigureClient(HttpClient client)
+    {
+        base.ConfigureClient(client);
+        ResetData();
+    }
+
+    public void ResetData(string? snapshotPath = null)
+    {
+        using var scope = Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var options = scope.ServiceProvider.GetRequiredService<IOptions<RemoteLocationImportOptions>>();
+        var syncService = scope.ServiceProvider.GetRequiredService<IRemoteLocationSyncService>();
+
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.EnsureCreated();
+        options.Value.SqlSnapshotPath = snapshotPath ?? ResolveFoodGuideSqlPath();
+        syncService.SyncAsync().GetAwaiter().GetResult();
     }
 
     private static string ResolveFoodGuideSqlPath()

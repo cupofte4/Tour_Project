@@ -37,6 +37,21 @@ public class NarrationSessionManagerTests
     }
 
     [Fact]
+    public void BeginRequest_SamePoiWithDifferentLanguage_ReplacesCurrentSession()
+    {
+        var first = CreateRequest(1, 1, "", "Xin chao", requestedLanguageCode: "vi", languageCode: "vi");
+        var second = CreateRequest(1, 1, "", "Hello", requestedLanguageCode: "en", languageCode: "en");
+
+        _manager.BeginRequest(first);
+        _manager.MarkPlaying(1, NarrationContentKind.TextToSpeech);
+        var replacement = _manager.BeginRequest(second);
+
+        Assert.Equal(NarrationTransitionAction.InterruptAndReplace, replacement.Action);
+        Assert.Equal("en", replacement.State.RequestedLanguageCode);
+        Assert.Equal("en", replacement.State.LanguageCode);
+    }
+
+    [Fact]
     public void StateTransitions_AreCorrect_ForNormalFlow()
     {
         var request = CreateRequest(3, 1, "", "Narrate");
@@ -55,17 +70,17 @@ public class NarrationSessionManagerTests
     }
 
     [Fact]
-    public void SelectContent_PrefersAudio_FirstThenTts()
+    public void SelectContent_PrefersTextToSpeech_ForTranslatedNarration_AndAudioForVietnamese()
     {
         var audioPlayer = new FakeAudioNarrationPlayer(canPlay: true);
-        var audioRequest = CreateRequest(4, 1, "https://example.com/audio.mp3", "Fallback");
-        var ttsRequest = CreateRequest(4, 1, "", "Fallback");
+        var translatedRequest = CreateRequest(4, 1, "https://example.com/audio.mp3", "Fallback", requestedLanguageCode: "zh", languageCode: "zh", localeCode: "zh-CN");
+        var vietnameseRequest = CreateRequest(4, 1, "https://example.com/audio.mp3", "Tieng Viet", requestedLanguageCode: "vi", languageCode: "vi", localeCode: "vi-VN");
 
-        var audioSelection = _manager.SelectContent(audioRequest, audioPlayer);
-        var ttsSelection = _manager.SelectContent(ttsRequest, new FakeAudioNarrationPlayer(canPlay: false));
+        var translatedSelection = _manager.SelectContent(translatedRequest, audioPlayer);
+        var vietnameseSelection = _manager.SelectContent(vietnameseRequest, audioPlayer);
 
-        Assert.Equal(NarrationContentKind.Audio, audioSelection.ContentKind);
-        Assert.Equal(NarrationContentKind.TextToSpeech, ttsSelection.ContentKind);
+        Assert.Equal(NarrationContentKind.TextToSpeech, translatedSelection.ContentKind);
+        Assert.Equal(NarrationContentKind.Audio, vietnameseSelection.ContentKind);
     }
 
     [Fact]
@@ -83,7 +98,15 @@ public class NarrationSessionManagerTests
         Assert.Null(idle.ActivePoiId);
     }
 
-    private static NarrationRequest CreateRequest(int poiId, int priority, string audioUrl, string text)
+    private static NarrationRequest CreateRequest(
+        int poiId,
+        int priority,
+        string audioUrl,
+        string text,
+        string requestedLanguageCode = "en",
+        string languageCode = "en",
+        string localeCode = "en-US",
+        bool usedFallback = false)
     {
         return new NarrationRequest
         {
@@ -91,7 +114,11 @@ public class NarrationSessionManagerTests
             Priority = priority,
             Title = $"POI {poiId}",
             AudioUrl = audioUrl,
-            Text = text
+            Text = text,
+            RequestedLanguageCode = requestedLanguageCode,
+            LanguageCode = languageCode,
+            LocaleCode = localeCode,
+            UsedFallback = usedFallback
         };
     }
 
