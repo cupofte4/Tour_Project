@@ -381,56 +381,20 @@ function Home() {
             <div className="right-panel">
               <div className="panel-title">📍 Địa điểm để khám phá và review</div>
 
-              {/* Tour quick-access */}
               {/* Tour selector (active tours only) */}
-              <a
-                href="/tours"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "10px 14px",
-                  background: "linear-gradient(135deg,#0f766e,#115e59)",
-                  color: "#fff",
-                  borderRadius: 10,
-                  textDecoration: "none",
-                  fontWeight: 600,
-                  fontSize: 14,
-                }}
-              >
-                🗺️ Khám phá các Tour tham quan
-                <span style={{ marginLeft: "auto", opacity: 0.8, fontSize: 12 }}>Xem ngay →</span>
-              </a>
 
-              <div
-                style={{
-                  marginTop: 10,
-                  padding: "12px 14px",
-                  borderRadius: 10,
-                  border: "1px solid #d1fae5",
-                  background: "#ecfdf5",
-                }}
-              >
-                <div style={{ fontWeight: 800, fontSize: 13, color: "#065f46", marginBottom: 6 }}>
-                  Chọn tour đang available
+              <div className="tour-select-card">
+                <div className="tour-select-title">
+                  Chọn tour đang có sẵn
                 </div>
-                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                <div className="tour-select-row">
                   <select
                     value={selectedTourId}
                     onChange={(e) => {
                       setLocation(null);
                       setSelectedTourId(e.target.value);
                     }}
-                    style={{
-                      width: "100%",
-                      padding: "8px 10px",
-                      borderRadius: 8,
-                      border: "1px solid #a7f3d0",
-                      outline: "none",
-                      fontWeight: 650,
-                      background: "#fff",
-                      color: "#064e3b",
-                    }}
+                    className="tour-select-input"
                   >
                     <option value="">Tất cả địa điểm (không chọn tour)</option>
                     {tours.map((t) => (
@@ -440,7 +404,7 @@ function Home() {
                     ))}
                   </select>
                   {tourLoading && (
-                    <span style={{ fontSize: 12, color: "#065f46", whiteSpace: "nowrap" }}>
+                    <span className="tour-loading-status">
                       ⏳ Đang tải...
                     </span>
                   )}
@@ -485,16 +449,7 @@ function Home() {
                         pausedRef.current = !pausedRef.current;
                         setPaused((prev) => !prev);
                       }}
-                      style={{
-                        marginLeft: "auto",
-                        padding: "3px 10px",
-                        fontSize: "12px",
-                        border: "none",
-                        borderRadius: "6px",
-                        cursor: "pointer",
-                        background: paused ? "#43a047" : "#e53935",
-                        color: "white",
-                      }}
+                      className={`tour-toggle-btn ${paused ? "resume" : "pause"}`}
                     >
                       {paused ? "▶ Tiếp tục" : "⏸ Tạm dừng"}
                     </button>
@@ -503,38 +458,7 @@ function Home() {
               </div>
 
               {/* GPS Status Indicator */}
-              <div
-                style={{
-                  padding: "8px 12px",
-                  marginBottom: "12px",
-                  borderRadius: "6px",
-                  fontSize: "12px",
-                  fontWeight: "500",
-                  backgroundColor:
-                    gpsStatus === "active"
-                      ? "#e8f5e9"
-                      : gpsStatus === "loading"
-                      ? "#fff3e0"
-                      : gpsStatus === "denied"
-                      ? "#ffebee"
-                      : gpsStatus === "mock"
-                      ? "#e3f2fd"
-                      : "#f3e5f5",
-                  color:
-                    gpsStatus === "active"
-                      ? "#2e7d32"
-                      : gpsStatus === "loading"
-                      ? "#e65100"
-                      : gpsStatus === "denied"
-                      ? "#c62828"
-                      : gpsStatus === "mock"
-                      ? "#1565c0"
-                      : "#4a148c",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-              >
+              <div className={`gps-status-card gps-status-${gpsStatus}`}>
                 {gpsStatus === "active" && (
                   <>
                     <span>📡</span>
@@ -575,25 +499,12 @@ function Home() {
 
               {/* Geofence Status - Show during tour */}
               {isTourStarted && !done && (
-                <div
-                  style={{
-                    padding: "8px 12px",
-                    marginBottom: "12px",
-                    borderRadius: "6px",
-                    fontSize: "12px",
-                    fontWeight: "500",
-                    backgroundColor: "#e8f4f8",
-                    color: "#00695c",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                  }}
-                >
+                <div className="geofence-status-card">
                   <span>🎯</span>
                   <span>
                     Geofence: 50m radius
                     {location && (
-                      <span style={{ marginLeft: "8px" }}>
+                      <span className="geofence-location">
                         | POI gần nhất: <strong>{location.name}</strong>
                       </span>
                     )}
@@ -622,18 +533,7 @@ function Home() {
               {isTourStarted && !done && (
                 <button
                   onClick={() => setShowQR(true)}
-                  style={{
-                    width: "100%",
-                    padding: "9px 0",
-                    marginBottom: 8,
-                    background: "#6200ea",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 8,
-                    cursor: "pointer",
-                    fontWeight: 600,
-                    fontSize: 14,
-                  }}
+                  className="tour-qr-btn"
                 >
                   📷 Quét QR tại địa điểm này
                 </button>

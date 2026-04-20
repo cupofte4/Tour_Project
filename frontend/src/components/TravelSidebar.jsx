@@ -5,34 +5,43 @@ import {
   FaHome,
   FaUser,
   FaHeart,
-  FaCog,
   FaSignOutAlt,
   FaMapMarkedAlt,
 } from "react-icons/fa";
 
+const LOCAL_PROFILE_KEY = "localProfile";
+
 const TravelSidebar = () => {
   const navigate = useNavigate();
-  const [userInfo, setUserInfo] = useState(null);
+  const [userInfo, setUserInfo] = useState({
+    fullName: "User",
+    username: "guest",
+    avatar: null,
+    isAuthenticated: false,
+  });
 
   const loadUserData = () => {
     const user = localStorage.getItem("user");
     const username = localStorage.getItem("username");
-
-    if (!user) {
-      setUserInfo(null);
-      return;
-    }
+    const localProfile = localStorage.getItem(LOCAL_PROFILE_KEY);
 
     try {
-      const userData = JSON.parse(user);
+      const userData = user ? JSON.parse(user) : {};
+      const localData = localProfile ? JSON.parse(localProfile) : {};
       setUserInfo({
-        fullName: userData.fullName || "User",
-        username: username || userData.username || "user",
-        avatar: userData.avatar || null,
+        fullName: localData.fullName || userData.fullName || "User",
+        username: localData.username || username || userData.username || "guest",
+        avatar: localData.avatar || userData.avatar || null,
+        isAuthenticated: !!user,
       });
     } catch (error) {
       console.error("Error parsing user data:", error);
-      setUserInfo(null);
+      setUserInfo({
+        fullName: "User",
+        username: "guest",
+        avatar: null,
+        isAuthenticated: false,
+      });
     }
   };
 
@@ -40,7 +49,7 @@ const TravelSidebar = () => {
     loadUserData();
 
     const handleStorageChange = (event) => {
-      if (event.key === "user" || event.key === "username") {
+      if (event.key === "user" || event.key === "username" || event.key === LOCAL_PROFILE_KEY) {
         loadUserData();
       }
     };
@@ -63,12 +72,12 @@ const TravelSidebar = () => {
     { id: 2, label: "Khám phá Tour", icon: FaMapMarkedAlt, path: "/tours" },
     { id: 3, label: "Hồ sơ của tôi", icon: FaUser, path: "/profile" },
     { id: 4, label: "Địa điểm yêu thích", icon: FaHeart, path: "/favorites" },
-    { id: 5, label: "Cài đặt", icon: FaCog, path: "/settings" },
   ];
 
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("username");
+    localStorage.removeItem("token");
     navigate("/login");
   };
 
@@ -101,8 +110,8 @@ const TravelSidebar = () => {
           )}
         </div>
         <h3 className="user-name">{userInfo?.fullName || "User"}</h3>
-        <p className="user-email">@{userInfo?.username || "user"}</p>
-        <div className="user-divider" />
+        <p className="user-email">@{userInfo?.username || "guest"}</p>
+        <br />
       </div>
 
       <nav className="sidebar-menu">
@@ -125,12 +134,14 @@ const TravelSidebar = () => {
         })}
       </nav>
 
-      <div className="sidebar-logout">
-        <button className="logout-btn" onClick={handleLogout}>
-          <FaSignOutAlt size={16} style={{ marginRight: "8px" }} />
-          Đăng xuất
-        </button>
-      </div>
+      {userInfo?.isAuthenticated ? (
+        <div className="sidebar-logout">
+          <button className="logout-btn" onClick={handleLogout}>
+            <FaSignOutAlt size={16} style={{ marginRight: "8px" }} />
+            Đăng xuất
+          </button>
+        </div>
+      ) : null}
     </aside>
   );
 };

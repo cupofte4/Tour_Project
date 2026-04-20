@@ -1,44 +1,52 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { FaCamera, FaUserCircle } from "react-icons/fa";
 import Navbar from "../components/Navbar";
 import TravelSidebar from "../components/TravelSidebar";
 import "../styles/myprofile.css";
 
+const LOCAL_PROFILE_KEY = "localProfile";
+
 const getInitialProfileData = () => {
   const storedUser = localStorage.getItem("user");
+  const storedLocalProfile = localStorage.getItem(LOCAL_PROFILE_KEY);
 
-  if (!storedUser) {
-    return null;
+  let userData = {};
+  let localProfile = {};
+
+  try {
+    userData = storedUser ? JSON.parse(storedUser) : {};
+  } catch (error) {
+    console.error("Error parsing user data:", error);
   }
 
   try {
-    const userData = JSON.parse(storedUser);
-    return {
-      fullName: userData.fullName || userData.username || "User",
-      phone: userData.phone || "",
-      gender: userData.gender || "Nam",
-      avatar: userData.avatar || null,
-    };
+    localProfile = storedLocalProfile ? JSON.parse(storedLocalProfile) : {};
   } catch (error) {
-    console.error("Error parsing user data:", error);
-    return null;
+    console.error("Error parsing local profile data:", error);
   }
+
+  return {
+    fullName: localProfile.fullName || userData.fullName || userData.username || "User",
+    username: localProfile.username || userData.username || "guest",
+    phone: localProfile.phone || userData.phone || "",
+    gender: localProfile.gender || userData.gender || "Nam",
+    avatar: localProfile.avatar || userData.avatar || null,
+  };
 };
 
 function MyProfile() {
-  const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [originalData, setOriginalData] = useState({
     fullName: "User",
+    username: "guest",
     phone: "",
     gender: "Nam",
     avatar: null,
   });
   const [formData, setFormData] = useState({
     fullName: "User",
+    username: "guest",
     phone: "",
     gender: "Nam",
     avatar: null,
@@ -46,16 +54,9 @@ function MyProfile() {
 
   useEffect(() => {
     const initialData = getInitialProfileData();
-
-    if (!initialData) {
-      navigate("/login", { replace: true });
-      return;
-    }
-
     setOriginalData(initialData);
     setFormData(initialData);
-    setIsAuthenticated(true);
-  }, [navigate]);
+  }, []);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -88,22 +89,34 @@ function MyProfile() {
   const handleSaveClick = (event) => {
     event.preventDefault();
 
+    const updatedProfile = {
+      ...formData,
+      fullName: formData.fullName.trim() || "User",
+    };
+
+    localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(updatedProfile));
+
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      const userData = JSON.parse(storedUser);
-      const updatedUser = {
-        ...userData,
-        fullName: formData.fullName,
-        phone: formData.phone,
-        gender: formData.gender,
-        avatar: formData.avatar,
-      };
+      try {
+        const userData = JSON.parse(storedUser);
+        const updatedUser = {
+          ...userData,
+          fullName: updatedProfile.fullName,
+          phone: updatedProfile.phone,
+          gender: updatedProfile.gender,
+          avatar: updatedProfile.avatar,
+        };
 
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      window.dispatchEvent(new Event("profileUpdated"));
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+      } catch (error) {
+        console.error("Error updating stored user:", error);
+      }
     }
 
-    setOriginalData(formData);
+    window.dispatchEvent(new Event("profileUpdated"));
+    setOriginalData(updatedProfile);
+    setFormData(updatedProfile);
     setIsEditing(false);
   };
 
@@ -111,10 +124,6 @@ function MyProfile() {
     setFormData(originalData);
     setIsEditing(false);
   };
-
-  if (!isAuthenticated) {
-    return null;
-  }
 
   return (
     <>
@@ -153,8 +162,8 @@ function MyProfile() {
                 />
               </div>
 
-              <div className="form-grid">
-                <div className="form-group">
+                <div className="form-grid">
+                  <div className="form-group">
                   <label htmlFor="fullName">Họ và tên</label>
                   <input
                     type="text"
@@ -166,9 +175,21 @@ function MyProfile() {
                     placeholder="Nhập họ và tên"
                     className={isEditing ? "editing" : "disabled"}
                   />
-                </div>
+                  </div>
 
-                <div className="form-group">
+                  <div className="form-group">
+                    <label htmlFor="username">Tên hiển thị</label>
+                    <input
+                      type="text"
+                      id="username"
+                      name="username"
+                      value={formData.username}
+                      disabled
+                      className="disabled"
+                    />
+                  </div>
+
+                  <div className="form-group">
                   <label htmlFor="phone">Số điện thoại</label>
                   <input
                     type="tel"

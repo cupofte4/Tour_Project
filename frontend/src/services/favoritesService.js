@@ -1,4 +1,5 @@
 const FAVORITES_KEY_PREFIX = "favoriteLocations:";
+const GUEST_FAVORITES_KEY = `${FAVORITES_KEY_PREFIX}guest`;
 
 const getCurrentUsername = () => {
   const storedUser = localStorage.getItem("user");
@@ -22,12 +23,11 @@ const getCurrentUsername = () => {
 
 const getStorageKey = () => {
   const username = getCurrentUsername();
-  return username ? `${FAVORITES_KEY_PREFIX}${username}` : null;
+  return username ? `${FAVORITES_KEY_PREFIX}${username}` : GUEST_FAVORITES_KEY;
 };
 
 export function getFavoriteLocationIds() {
   const key = getStorageKey();
-  if (!key) return [];
 
   try {
     const raw = localStorage.getItem(key);
@@ -44,10 +44,6 @@ export function isFavoriteLocation(locationId) {
 
 export function toggleFavoriteLocation(locationId) {
   const key = getStorageKey();
-  if (!key) {
-    throw new Error("Bạn cần đăng nhập để lưu địa điểm yêu thích.");
-  }
-
   const current = getFavoriteLocationIds();
   const next = current.includes(locationId)
     ? current.filter((id) => id !== locationId)

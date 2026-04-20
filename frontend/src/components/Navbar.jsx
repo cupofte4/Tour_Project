@@ -11,10 +11,6 @@ function Navbar() {
           - Phố Ẩm Thực Vĩnh Khánh
         </span>
       </div>
-      <div className="navbar-links">
-        <a href="/" className="nav-icon" title="Trang chủ">🏠</a>
-        <a href="/tours" className="nav-icon" title="Khám phá Tour">🗺️ Tour</a>
-      </div>
     </div>
   );
 }

@@ -19,9 +19,9 @@ CREATE TABLE Users (
 );
 
 INSERT INTO Users (Username, Password, FullName, Phone, Gender, Avatar, Role, IsLocked) VALUES
-  ('nguyenvana', '123456', 'Nguyễn Văn A', NULL, NULL, NULL, 'user', b'0'),
-  ('tranthib', 'password123', 'Trần Thị B', NULL, NULL, NULL, 'user', b'0'),
-  ('traveler99', 'dulichvietnam', 'Du Khách 99', NULL, NULL, NULL, 'user', b'0'),
+  ('nguyenvana', '123456', 'Nguyễn Văn A', NULL, NULL, NULL, 'manager', b'0'),
+  ('tranthib', 'password123', 'Trần Thị B', NULL, NULL, NULL, 'manager', b'0'),
+  ('traveler99', 'dulichvietnam', 'Du Khách 99', NULL, NULL, NULL, 'manager', b'0'),
   ('manager1', 'manager123', 'Business Manager', '0911000000', NULL, NULL, 'manager', b'0'),
   ('admin', 'admin123', 'Administrator', '0900000000', 'Nam', NULL, 'admin', b'0');
 

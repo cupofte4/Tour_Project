@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import TravelSidebar from "../components/TravelSidebar";
 import { getAllLocations } from "../services/locationService";
@@ -26,34 +25,21 @@ const parseReviews = (rawReviews) => {
 };
 
 function Favorites() {
-  const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [locations, setLocations] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (!storedUser) {
-      navigate("/login", { replace: true });
-      return;
-    }
-
-    setIsAuthenticated(true);
     setFavoriteIds(getFavoriteLocationIds());
-  }, [navigate]);
+  }, []);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
-
     getAllLocations()
       .then((data) => setLocations(Array.isArray(data) ? data : []))
       .finally(() => setIsLoading(false));
-  }, [isAuthenticated]);
+  }, []);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
-
     const refreshLocations = async () => {
       const data = await getAllLocations();
       setLocations(Array.isArray(data) ? data : []);
@@ -64,7 +50,7 @@ function Favorites() {
     return () => {
       window.removeEventListener("focus", refreshLocations);
     };
-  }, [isAuthenticated]);
+  }, []);
 
   useEffect(() => {
     const syncFavorites = () => {
@@ -86,10 +72,6 @@ function Favorites() {
     toggleFavoriteLocation(locationId);
     setFavoriteIds(getFavoriteLocationIds());
   };
-
-  if (!isAuthenticated) {
-    return null;
-  }
 
   return (
     <>

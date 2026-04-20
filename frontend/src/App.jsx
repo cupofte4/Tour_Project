@@ -9,7 +9,6 @@ import ManagerDashboard from "./pages/ManagerDashboard";
 import AddLocation from "./pages/AddLocation";
 import EditLocation from "./pages/EditLocation";
 import MyProfile from "./pages/MyProfile";
-import Settings from "./pages/Settings";
 import Favorites from "./pages/Favorites";
 import TourList from "./pages/TourList";
 import TourDetail from "./pages/TourDetail";
@@ -76,9 +75,8 @@ function App() {
         <Route path="/register" element={<PublicRoute element={<Register />} />} />
 
         {/* Protected user routes */}
-        <Route path="/profile" element={<ProtectedRoute element={<MyProfile />} />} />
-        <Route path="/favorites" element={<ProtectedRoute element={<Favorites />} />} />
-        <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
+        <Route path="/profile" element={<MyProfile />} />
+        <Route path="/favorites" element={<Favorites />} />
 
         {/* Protected admin routes */}
         <Route

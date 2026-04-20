@@ -35,11 +35,11 @@ function MapView({ userLocation, locations, onSelectLocation }) {
   const currentCenter = [userLocation.lat, userLocation.lng];
 
   return (
-    <div style={{ height: "500px", width: "100%" }}>
+    <div className="map-view-shell">
       <MapContainer
         center={currentCenter}
         zoom={17}
-        style={{ height: "100%", width: "100%" }}
+        className="map-view-container"
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
