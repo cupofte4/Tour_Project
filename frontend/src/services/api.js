@@ -1,4 +1,5 @@
 const API_URL = "http://localhost:5093/api";
+import { getOrCreateDeviceId } from "./deviceId";
 
 /**
  * Fetch wrapper with JWT interceptor
@@ -15,6 +16,14 @@ export async function fetchWithAuth(url, options = {}) {
   // Add JWT token if available
   if (token) {
     headers.Authorization = `Bearer ${token}`;
+  }
+
+  // Add DeviceId header for guest identification
+  try {
+    const deviceId = getOrCreateDeviceId();
+    if (deviceId) headers["X-Device-Id"] = deviceId;
+  } catch {
+    // ignore
   }
 
   const response = await fetch(url, {

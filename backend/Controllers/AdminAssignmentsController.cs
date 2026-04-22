@@ -19,7 +19,7 @@ namespace Tour_Project.Controllers
         [HttpGet("managers")]
         public IActionResult GetManagers()
         {
-            var managers = _context.Users
+            var managers = _context.AdminUsers
                 .Where(user => Roles.Normalize(user.Role) == Roles.Manager)
                 .OrderByDescending(user => user.Id)
                 .Select(user => new
@@ -45,7 +45,7 @@ namespace Tour_Project.Controllers
                 .Select(item => new
                 {
                     id = item.Id,
-                    managerId = item.ManagerId,
+                    managerId = item.AdminUserId,
                     managerName = item.Manager != null ? item.Manager.FullName : string.Empty,
                     locationId = item.LocationId,
                     locationName = item.Location != null ? item.Location.Name : string.Empty
@@ -59,13 +59,13 @@ namespace Tour_Project.Controllers
         public IActionResult GetManagerLocations(int managerId)
         {
             var assignments = _context.LocationManagerAssignments
-                .Where(item => item.ManagerId == managerId)
+                .Where(item => item.AdminUserId == managerId)
                 .Include(item => item.Location)
                 .OrderBy(item => item.LocationId)
                 .Select(item => new
                 {
                     id = item.Id,
-                    managerId = item.ManagerId,
+                    managerId = item.AdminUserId,
                     locationId = item.LocationId,
                     location = item.Location
                 })
@@ -77,7 +77,7 @@ namespace Tour_Project.Controllers
         [HttpPost("assignments")]
         public IActionResult CreateAssignment(CreateAssignmentRequest request)
         {
-            var manager = _context.Users.Find(request.ManagerId);
+            var manager = _context.AdminUsers.Find(request.ManagerId);
             if (manager == null)
                 return NotFound(new { message = "Manager not found" });
 
@@ -90,14 +90,14 @@ namespace Tour_Project.Controllers
                 return NotFound(new { message = "Location not found" });
 
             var exists = _context.LocationManagerAssignments.Any(item =>
-                item.ManagerId == request.ManagerId && item.LocationId == request.LocationId);
+                item.AdminUserId == request.ManagerId && item.LocationId == request.LocationId);
 
             if (exists)
                 return Ok(new { message = "Already assigned" });
 
             var assignment = new LocationManagerAssignment
             {
-                ManagerId = request.ManagerId,
+                AdminUserId = request.ManagerId,
                 LocationId = request.LocationId
             };
 
@@ -107,7 +107,7 @@ namespace Tour_Project.Controllers
             return Ok(new
             {
                 id = assignment.Id,
-                managerId = assignment.ManagerId,
+                managerId = assignment.AdminUserId,
                 locationId = assignment.LocationId
             });
         }
@@ -116,7 +116,7 @@ namespace Tour_Project.Controllers
         public IActionResult DeleteAssignment([FromQuery] int managerId, [FromQuery] int locationId)
         {
             var assignment = _context.LocationManagerAssignments.FirstOrDefault(item =>
-                item.ManagerId == managerId && item.LocationId == locationId);
+                item.AdminUserId == managerId && item.LocationId == locationId);
 
             if (assignment == null)
                 return NotFound();

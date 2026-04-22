@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="../build/VinhKhanhGuide.Api.props" />
-</Project>

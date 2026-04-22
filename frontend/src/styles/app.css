@@ -464,16 +464,12 @@ audio {
   border: 1px solid #dcedc8;
 }
 
-.tour-toggle-btn,
-.tour-qr-btn {
+.tour-toggle-btn {
   border: none;
   border-radius: 8px;
   cursor: pointer;
   color: #fff;
   font-weight: 600;
-}
-
-.tour-toggle-btn {
   margin-left: auto;
   padding: 6px 12px;
   font-size: 12px;
@@ -485,14 +481,6 @@ audio {
 
 .tour-toggle-btn.resume {
   background: #43a047;
-}
-
-.tour-qr-btn {
-  width: 100%;
-  padding: 10px 0;
-  margin-bottom: 8px;
-  background: #6200ea;
-  font-size: 14px;
 }
 
 .gps-status-card,
@@ -1051,8 +1039,7 @@ audio {
 
   .favorite-btn,
   .btn-start-tour,
-  .tour-toggle-btn,
-  .tour-qr-btn {
+  .tour-toggle-btn {
     width: 100%;
     justify-content: center;
   }

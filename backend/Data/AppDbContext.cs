@@ -10,7 +10,7 @@ namespace Tour_Project.Data
         }
 
         public DbSet<Location> Locations { get; set; }
-        public DbSet<User> Users { get; set; }
+        public DbSet<AdminUser> AdminUsers { get; set; }
         public DbSet<LocationManagerAssignment> LocationManagerAssignments { get; set; }
         public DbSet<LocationStat> LocationStats { get; set; }
 
@@ -19,6 +19,9 @@ namespace Tour_Project.Data
         public DbSet<TourLocation> TourLocations { get; set; }
         public DbSet<TourSession> TourSessions { get; set; }
         public DbSet<SessionVisit> SessionVisits { get; set; }
+        // Analytics
+        public DbSet<AudioPlay> AudioPlays { get; set; }
+        public DbSet<FavoriteClick> FavoriteClicks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -45,6 +48,17 @@ namespace Tour_Project.Data
                 .WithMany(s => s.Visits)
                 .HasForeignKey(sv => sv.SessionId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Indexes and constraints for analytics/tour models
+            modelBuilder.Entity<TourLocation>()
+                .HasIndex(tl => new { tl.TourId, tl.LocationId })
+                .IsUnique(false);
+
+            modelBuilder.Entity<TourSession>()
+                .HasIndex(ts => ts.TourId);
+
+            modelBuilder.Entity<Location>()
+                .HasIndex(l => l.Name);
         }
     }
 }

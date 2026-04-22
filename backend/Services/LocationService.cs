@@ -1,3 +1,104 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Tour_Project.Data;
+using backend.Application.Location;
+using Tour_Project.Models;
+
+namespace backend.Services
+{
+    public class LocationService : ILocationService
+    {
+        private readonly AppDbContext _db;
+
+        public LocationService(AppDbContext db)
+        {
+            _db = db;
+        }
+
+        public async Task<IEnumerable<LocationDto>> GetAllAsync()
+        {
+            return await _db.Locations
+                .AsNoTracking()
+                .Select(l => new LocationDto {
+                    Id = l.Id,
+                    Name = l.Name,
+                    Description = l.Description,
+                    Latitude = l.Latitude,
+                    Longitude = l.Longitude,
+                    Address = l.Address
+                })
+                .ToListAsync();
+        }
+
+        public async Task<LocationDto?> GetByIdAsync(int id)
+        {
+            var l = await _db.Locations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == id);
+            if (l == null) return null;
+            return new LocationDto {
+                Id = l.Id,
+                Name = l.Name,
+                Description = l.Description,
+                Latitude = l.Latitude,
+                Longitude = l.Longitude,
+                Address = l.Address
+            };
+        }
+
+        public async Task<LocationDto> CreateAsync(CreateLocationRequest req)
+        {
+            var l = new Location {
+                Name = req.Name,
+                Description = req.Description,
+                Latitude = req.Latitude,
+                Longitude = req.Longitude,
+                Address = req.Address
+            };
+            _db.Locations.Add(l);
+            await _db.SaveChangesAsync();
+            return new LocationDto {
+                Id = l.Id,
+                Name = l.Name,
+                Description = l.Description,
+                Latitude = l.Latitude,
+                Longitude = l.Longitude,
+                Address = l.Address
+            };
+        }
+
+        public async Task<LocationDto?> UpdateAsync(int id, UpdateLocationRequest req)
+        {
+            var l = await _db.Locations.FindAsync(id);
+            if (l == null) return null;
+            l.Name = req.Name ?? l.Name;
+            l.Description = req.Description ?? l.Description;
+            if (req.Latitude.HasValue) l.Latitude = req.Latitude.Value;
+            if (req.Longitude.HasValue) l.Longitude = req.Longitude.Value;
+            l.Address = req.Address ?? l.Address;
+            await _db.SaveChangesAsync();
+            return new LocationDto {
+                Id = l.Id,
+                Name = l.Name,
+                Description = l.Description,
+                Latitude = l.Latitude,
+                Longitude = l.Longitude,
+                Address = l.Address
+            };
+        }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var l = await _db.Locations.FindAsync(id);
+            if (l == null) return false;
+            _db.Locations.Remove(l);
+            await _db.SaveChangesAsync();
+            return true;
+        }
+    }
+}
 namespace Tour_Project.Services
 {
     public class LocationService

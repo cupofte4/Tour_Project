@@ -242,58 +242,19 @@ namespace backend.Migrations
                     b.Property<int>("TourId")
                         .HasColumnType("int");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<string>("DeviceId")
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
                     b.HasIndex("TourId");
 
-                    b.HasIndex("UserId");
+                    
 
                     b.ToTable("TourSessions");
                 });
 
-            modelBuilder.Entity("Tour_Project.Models.User", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Avatar")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Gender")
-                        .HasColumnType("longtext");
-
-                    b.Property<bool>("IsLocked")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Phone")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Users");
-                });
+            // User entity removed — guest-only system uses DeviceId and AdminUsers for admin accounts
 
             modelBuilder.Entity("Tour_Project.Models.LocationManagerAssignment", b =>
                 {
@@ -303,7 +264,7 @@ namespace backend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Tour_Project.Models.User", "Manager")
+                    b.HasOne("Tour_Project.Models.AdminUser", "Manager")
                         .WithMany()
                         .HasForeignKey("ManagerId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -371,11 +332,7 @@ namespace backend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Tour_Project.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    // TourSession references guest DeviceId (string) — no FK to User
 
                     b.Navigation("Tour");
 

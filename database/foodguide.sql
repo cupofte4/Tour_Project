@@ -1,74 +1,104 @@
 CREATE DATABASE IF NOT EXISTS tourdb;
 USE tourdb;
 
+-- =============================
+-- DROP TABLE
+-- =============================
+DROP TABLE IF EXISTS SessionVisits;
+DROP TABLE IF EXISTS TourSessions;
+DROP TABLE IF EXISTS TourLocations;
+DROP TABLE IF EXISTS Tours;
+
 DROP TABLE IF EXISTS LocationManagerAssignments;
 DROP TABLE IF EXISTS LocationStats;
 DROP TABLE IF EXISTS Locations;
-DROP TABLE IF EXISTS Users;
+DROP TABLE IF EXISTS AdminUsers;
 
-CREATE TABLE Users (
+-- =============================
+-- ADMIN USERS
+-- =============================
+CREATE TABLE AdminUsers (
     Id INT PRIMARY KEY AUTO_INCREMENT,
-    Username VARCHAR(50) CHARACTER SET utf8mb4 NOT NULL UNIQUE,
-    Password VARCHAR(255) NOT NULL,
-    FullName VARCHAR(100) CHARACTER SET utf8mb4 NOT NULL,
-    Phone VARCHAR(30) NULL,
-    Gender VARCHAR(10) NULL,
-    Avatar LONGTEXT NULL,
-    Role VARCHAR(20) NOT NULL DEFAULT 'user',
-    IsLocked BIT NOT NULL DEFAULT b'0'
-);
+    Username VARCHAR(50) NOT NULL UNIQUE,
+    PasswordHash VARCHAR(255) NOT NULL,
+    FullName VARCHAR(100) NOT NULL,
+    Phone VARCHAR(30),
+    Role VARCHAR(20) NOT NULL DEFAULT 'admin',
+    IsLocked TINYINT(1) NOT NULL DEFAULT 0,
+    CreatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    LastLoginAt DATETIME NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT INTO Users (Username, Password, FullName, Phone, Gender, Avatar, Role, IsLocked) VALUES
-  ('nguyenvana', '123456', 'Nguyễn Văn A', NULL, NULL, NULL, 'manager', b'0'),
-  ('tranthib', 'password123', 'Trần Thị B', NULL, NULL, NULL, 'manager', b'0'),
-  ('traveler99', 'dulichvietnam', 'Du Khách 99', NULL, NULL, NULL, 'manager', b'0'),
-  ('manager1', 'manager123', 'Business Manager', '0911000000', NULL, NULL, 'manager', b'0'),
-  ('admin', 'admin123', 'Administrator', '0900000000', 'Nam', NULL, 'admin', b'0');
+INSERT INTO AdminUsers (Username, PasswordHash, FullName, Phone, Role)
+VALUES 
+('admin', 'admin123', 'Administrator', '0900000000', 'admin'),
+('manager1', 'manager123', 'Business Manager', '0911000000', 'manager');
 
+-- =============================
+-- LOCATIONS
+-- =============================
 CREATE TABLE Locations (
     Id INT PRIMARY KEY AUTO_INCREMENT,
-    Name VARCHAR(100) CHARACTER SET utf8mb4 NOT NULL,
-    Description TEXT CHARACTER SET utf8mb4 NOT NULL,
-    Image VARCHAR(255) NOT NULL,
-    Images LONGTEXT CHARACTER SET utf8mb4 NULL,
-    Address VARCHAR(255) CHARACTER SET utf8mb4 NOT NULL DEFAULT '',
-    Phone VARCHAR(30) NOT NULL DEFAULT '',
-    ReviewsJson LONGTEXT CHARACTER SET utf8mb4 NOT NULL,
+    Name VARCHAR(100) NOT NULL,
+    Slug VARCHAR(255) NOT NULL,
+    Description TEXT NOT NULL,
+    Image VARCHAR(255),
+    Images LONGTEXT,
+    Address VARCHAR(255) DEFAULT '',
+    Phone VARCHAR(30) DEFAULT '',
+    ReviewsJson LONGTEXT,
     Latitude DOUBLE NOT NULL,
     Longitude DOUBLE NOT NULL,
-    TextVi LONGTEXT CHARACTER SET utf8mb4 NULL,
-    TextEn LONGTEXT CHARACTER SET utf8mb4 NULL,
-    TextZh LONGTEXT CHARACTER SET utf8mb4 NULL,
-    TextDe LONGTEXT CHARACTER SET utf8mb4 NULL
-);
+    TextVi LONGTEXT,
+    TextEn LONGTEXT,
+    TextZh LONGTEXT,
+    TextDe LONGTEXT,
+    CreatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt DATETIME NULL,
 
+    INDEX IX_Locations_Name (Name),
+    INDEX IX_Locations_Coordinates (Latitude, Longitude)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- =============================
+-- LOCATION STATS
+-- =============================
 CREATE TABLE LocationStats (
     Id INT PRIMARY KEY AUTO_INCREMENT,
     LocationId INT NOT NULL,
     StatDate DATE NOT NULL,
-    ViewsCount INT NOT NULL DEFAULT 0,
-    AudioPlaysCount INT NOT NULL DEFAULT 0,
-    CONSTRAINT FK_LocationStats_Locations FOREIGN KEY (LocationId) REFERENCES Locations(Id) ON DELETE CASCADE,
-    UNIQUE KEY UX_LocationStats_Location_Date (LocationId, StatDate),
-    KEY IX_LocationStats_StatDate (StatDate)
+    ViewsCount INT DEFAULT 0,
+    AudioPlaysCount INT DEFAULT 0,
+
+    CONSTRAINT FK_LocationStats_Locations 
+        FOREIGN KEY (LocationId) REFERENCES Locations(Id) ON DELETE CASCADE,
+
+    UNIQUE KEY UX_LocationStats (LocationId, StatDate),
+    INDEX IX_LocationStats_Date (StatDate)
 );
 
+-- =============================
+-- LOCATION MANAGER
+-- =============================
 CREATE TABLE LocationManagerAssignments (
     Id INT PRIMARY KEY AUTO_INCREMENT,
     ManagerId INT NOT NULL,
     LocationId INT NOT NULL,
-    CONSTRAINT FK_LocationManagerAssignments_Users FOREIGN KEY (ManagerId) REFERENCES Users(Id) ON DELETE CASCADE,
-    CONSTRAINT FK_LocationManagerAssignments_Locations FOREIGN KEY (LocationId) REFERENCES Locations(Id) ON DELETE CASCADE,
-    UNIQUE KEY UX_LocationManagerAssignments_Manager_Location (ManagerId, LocationId)
+
+    CONSTRAINT FK_Manager FOREIGN KEY (ManagerId) REFERENCES AdminUsers(Id),
+    CONSTRAINT FK_Location FOREIGN KEY (LocationId) REFERENCES Locations(Id),
+
+    UNIQUE KEY UX_Manager_Location (ManagerId, LocationId)
 );
 
 INSERT INTO Locations (
-    Name, Description, Image, Images, Address, Phone, ReviewsJson,
+    Name, Slug, Description, Image, Images, Address, Phone, ReviewsJson,
     Latitude, Longitude, TextVi, TextEn, TextZh, TextDe
 )
 VALUES
 (
   'Ốc Vĩnh Khánh',
+  'oc-vinh-khanh',
   'Phố Vĩnh Khánh nổi tiếng với các món ốc tươi ngon và không khí ẩm thực sôi động về đêm.',
   'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800',
   '["https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800","https://images.unsplash.com/photo-1559847844-5315695dadae?w=800","https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800","https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800"]',
@@ -84,6 +114,7 @@ VALUES
 ),
 (
   'Phá Lấu Vĩnh Khánh',
+  'pha-lau-vinh-khanh',
   'Phá lấu là món ăn đường phố nổi tiếng với hương vị đậm đà, béo thơm và rất đặc trưng của Sài Gòn.',
   'https://images.unsplash.com/photo-1555126634-323283e090fa?w=800',
   '["https://images.unsplash.com/photo-1555126634-323283e090fa?w=800","https://images.unsplash.com/photo-1547592180-85f173990554?w=800","https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800","https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800"]',
@@ -99,6 +130,7 @@ VALUES
 ),
 (
   'Chè Vĩnh Khánh',
+  'che-vinh-khanh',
   'Khu phố này có nhiều quán chè ngon, đa dạng hương vị và rất được yêu thích vào buổi tối.',
   'https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?w=800',
   '["https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?w=800","https://images.unsplash.com/photo-1488477181946-6428a0291777?w=800","https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=800","https://images.unsplash.com/photo-1497534446932-c925b458314e?w=800"]',
@@ -114,6 +146,7 @@ VALUES
 ),
 (
   'Hải Sản Nướng',
+  'hai-san-nuong-vinh-khanh',
   'Hải sản nướng tại đây nổi bật với nguyên liệu tươi sống, mùi thơm hấp dẫn và cách chế biến đậm vị.',
   'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800',
   '["https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800","https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800","https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800","https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=800"]',
@@ -129,6 +162,7 @@ VALUES
 ),
 (
   'Bánh Tráng Nướng Q4',
+  'banh-trang-nuong-q4',
   'Quán bánh tráng nướng giòn thơm với nhiều loại topping, thích hợp ăn vặt buổi tối.',
   'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800',
   '["https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800","https://images.unsplash.com/photo-1544025162-d76694265947?w=800","https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"]',
@@ -144,6 +178,7 @@ VALUES
 ),
 (
   'Súp Cua Vĩnh Khánh',
+  'sup-cua-vinh-khanh',
   'Súp cua nóng hổi với thịt cua, nấm và trứng đánh, phù hợp cho bữa ăn nhẹ về đêm.',
   'https://images.unsplash.com/photo-1547592180-85f173990554?w=800',
   '["https://images.unsplash.com/photo-1547592180-85f173990554?w=800","https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800","https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800"]',
@@ -159,6 +194,7 @@ VALUES
 ),
 (
   'Trà Sữa Vỉa Hè',
+  'tra-sua-via-he',
   'Quầy trà sữa và trà trái cây mát lạnh, rất phù hợp để nghỉ chân sau khi ăn tối.',
   'https://images.unsplash.com/photo-1558857563-b371033873b8?w=800',
   '["https://images.unsplash.com/photo-1558857563-b371033873b8?w=800","https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800","https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800"]',
@@ -174,6 +210,7 @@ VALUES
 ),
 (
   'Xiên Nướng Đêm',
+  'xien-nuong-dem',
   'Quầy xiên nướng với thịt, rau củ và hải sản tẩm ướp đậm vị, thơm lừng về đêm.',
   'https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=800',
   '["https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=800","https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800","https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"]',
@@ -189,6 +226,7 @@ VALUES
 ),
 (
   'Bún Thái Hải Sản',
+  'bun-thai-hai-san',
   'Tô bún Thái chua cay với tôm, mực và chả cá, nổi bật bởi nước dùng đậm đà.',
   'https://images.unsplash.com/photo-1555126634-323283e090fa?w=800',
   '["https://images.unsplash.com/photo-1555126634-323283e090fa?w=800","https://images.unsplash.com/photo-1547592180-85f173990554?w=800","https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=800"]',
@@ -204,6 +242,7 @@ VALUES
 ),
 (
   'Kem Cuộn Thái',
+  'kem-cuon-thai',
   'Quầy kem cuộn mát lạnh với nhiều vị trái cây và topping bắt mắt, phù hợp kết thúc hành trình ẩm thực.',
   'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=800',
   '["https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=800","https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=800","https://images.unsplash.com/photo-1488477181946-6428a0291777?w=800"]',
@@ -218,59 +257,70 @@ VALUES
   'Willkommen beim Thai Eisrollen Stand. Dies ist ein suesser Abschluss fur einen kulinarischen Abend auf der Vinh Khanh Strasse. Das Eis wird direkt auf einer kalten Platte zubereitet, ausgerollt und zu kleinen Rollen geformt. Es gibt Sorten wie Mango, Erdbeere, Schokolade, Vanille oder Gruentee, dazu frische Fruchte, Kekse und Sossen. Ein frisches Dessert, das besonders bei jungen Leuten und Familien beliebt ist.'
 );
 
-SELECT * FROM Users;
+SELECT * FROM AdminUsers;
 SELECT * FROM Locations;
 
--- ============================================================
--- TOUR MANAGEMENT SYSTEM
--- ============================================================
-
-DROP TABLE IF EXISTS SessionVisits;
-DROP TABLE IF EXISTS TourSessions;
-DROP TABLE IF EXISTS TourLocations;
-DROP TABLE IF EXISTS Tours;
-
+-- =============================
+-- TOURS
+-- =============================
 CREATE TABLE Tours (
     Id INT PRIMARY KEY AUTO_INCREMENT,
-    Title VARCHAR(200) CHARACTER SET utf8mb4 NOT NULL,
-    Description TEXT CHARACTER SET utf8mb4 NULL,
-    CoverImage VARCHAR(500) NULL,
-    EstimatedDurationMinutes INT NOT NULL DEFAULT 60,
-    IsActive BIT NOT NULL DEFAULT b'1',
-    CreatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    Title VARCHAR(200) NOT NULL,
+    Description TEXT,
+    CoverImage VARCHAR(255),
+    EstimatedDurationMinutes INT DEFAULT 60,
+    IsActive TINYINT(1) DEFAULT 1,
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- =============================
+-- TOUR LOCATIONS
+-- =============================
 CREATE TABLE TourLocations (
     Id INT PRIMARY KEY AUTO_INCREMENT,
     TourId INT NOT NULL,
     LocationId INT NOT NULL,
-    OrderIndex INT NOT NULL DEFAULT 0,
-    IsOptional BIT NOT NULL DEFAULT b'0',
-    CONSTRAINT FK_TourLocations_Tours FOREIGN KEY (TourId) REFERENCES Tours(Id) ON DELETE CASCADE,
-    CONSTRAINT FK_TourLocations_Locations FOREIGN KEY (LocationId) REFERENCES Locations(Id) ON DELETE CASCADE,
-    UNIQUE KEY UX_TourLocations_Tour_Location (TourId, LocationId),
-    KEY IX_TourLocations_Order (TourId, OrderIndex)
+    OrderIndex INT DEFAULT 0,
+
+    CONSTRAINT FK_TL_Tour FOREIGN KEY (TourId) REFERENCES Tours(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_TL_Location FOREIGN KEY (LocationId) REFERENCES Locations(Id) ON DELETE CASCADE,
+
+    UNIQUE KEY UX_Tour_Location (TourId, LocationId),
+    INDEX IX_Tour_Order (TourId, OrderIndex)
 );
 
+-- =============================
+-- TOUR SESSIONS (GUEST SYSTEM)
+-- =============================
 CREATE TABLE TourSessions (
     Id INT PRIMARY KEY AUTO_INCREMENT,
-    UserId INT NOT NULL,
+    DeviceId VARCHAR(100) NOT NULL,
     TourId INT NOT NULL,
-    LanguageCode VARCHAR(10) NOT NULL DEFAULT 'vi',
-    StartedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    LanguageCode VARCHAR(10) DEFAULT 'vi',
+    StartedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     CompletedAt DATETIME NULL,
-    CONSTRAINT FK_TourSessions_Users FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE,
-    CONSTRAINT FK_TourSessions_Tours FOREIGN KEY (TourId) REFERENCES Tours(Id) ON DELETE CASCADE
+
+    CONSTRAINT FK_TS_Tour FOREIGN KEY (TourId) REFERENCES Tours(Id) ON DELETE CASCADE,
+
+    INDEX IX_TS_Device (DeviceId),
+    INDEX IX_TS_Tour (TourId)
 );
 
+-- =============================
+-- SESSION VISITS
+-- =============================
 CREATE TABLE SessionVisits (
     Id INT PRIMARY KEY AUTO_INCREMENT,
     SessionId INT NOT NULL,
     LocationId INT NOT NULL,
-    AudioPlayed BIT NOT NULL DEFAULT b'0',
-    VisitedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT FK_SessionVisits_Sessions FOREIGN KEY (SessionId) REFERENCES TourSessions(Id) ON DELETE CASCADE,
-    CONSTRAINT FK_SessionVisits_Locations FOREIGN KEY (LocationId) REFERENCES Locations(Id) ON DELETE CASCADE
+    AudioPlayed TINYINT(1) DEFAULT 0,
+    VisitedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT FK_SV_Session FOREIGN KEY (SessionId) REFERENCES TourSessions(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_SV_Location FOREIGN KEY (LocationId) REFERENCES Locations(Id) ON DELETE CASCADE,
+
+    UNIQUE KEY UX_Session_Location (SessionId, LocationId),
+    INDEX IX_SV_Session (SessionId)
 );
 
 -- Seed: 1 tour mẫu gồm các địa điểm Vĩnh Khánh

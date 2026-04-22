@@ -42,9 +42,9 @@ namespace backend.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_LocationManagerAssignments_Users_ManagerId",
+                        name: "FK_LocationManagerAssignments_AdminUsers_ManagerId",
                         column: x => x.ManagerId,
-                        principalTable: "Users",
+                        principalTable: "AdminUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 })
@@ -130,7 +130,8 @@ namespace backend.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    UserId = table.Column<int>(type: "int", nullable: false),
+                    // Use DeviceId (string) for guest sessions instead of UserId
+                    DeviceId = table.Column<string>(type: "longtext", nullable: false),
                     TourId = table.Column<int>(type: "int", nullable: false),
                     LanguageCode = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -146,12 +147,8 @@ namespace backend.Migrations
                         principalTable: "Tours",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_TourSessions_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                    // No FK to Users table; sessions belong to guest DeviceId
+                    // (no foreign key constraint)
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -225,10 +222,7 @@ namespace backend.Migrations
                 table: "TourSessions",
                 column: "TourId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_TourSessions_UserId",
-                table: "TourSessions",
-                column: "UserId");
+            // Index on UserId removed; sessions use DeviceId instead.
         }
 
         /// <inheritdoc />

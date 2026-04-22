@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import useHeartbeat from "./hooks/useHeartbeat";
 import { isAuthenticated, getUserRole } from "./services/authService";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -55,6 +56,9 @@ function App() {
     console.log("Auth check on app load:", authenticated);
     setAuthChecked(true);
   }, []);
+
+  // Start background heartbeat (guest heartbeat)
+  useHeartbeat();
 
   // Prevent flickering by not rendering routes until auth is checked
   if (!authChecked) {

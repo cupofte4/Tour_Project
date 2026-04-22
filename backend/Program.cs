@@ -12,7 +12,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<LocationService>();
+builder.Services.AddScoped<backend.Services.ILocationService, backend.Services.LocationService>();
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<VinhKhanhGuide.Application.Analytics.IAnalyticsService, VinhKhanhGuide.Infrastructure.Analytics.AnalyticsService>();
 
 var jwtSecretKey =
     builder.Configuration["Jwt:SecretKey"]
@@ -58,25 +60,24 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Seed database with admin user
+// Seed database with an initial admin user (if missing)
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    
-    // Check if admin user exists
-    var adminExists = db.Users.Any(u => u.Username == "admin");
-    if (!adminExists)
+
+    if (!db.AdminUsers.Any(a => a.Username == "admin"))
     {
-        db.Users.Add(new User
+        db.AdminUsers.Add(new AdminUser
         {
-            FullName = "Administrator",
             Username = "admin",
-            Password = "admin123", // TODO: Hash password in production
+            PasswordHash = "admin123", // TODO: replace with hashed password
+            FullName = "Administrator",
             Phone = "0900000000",
-            Gender = "Nam",
-            Role = Roles.Admin,
-            IsLocked = false
+            Role = "admin",
+            IsLocked = false,
+            CreatedAt = DateTime.UtcNow
         });
+
         db.SaveChanges();
     }
 }

@@ -25,7 +25,7 @@ namespace Tour_Project.Controllers
 
             var session = new TourSession
             {
-                UserId = request.UserId,
+                DeviceId = request.DeviceId ?? string.Empty,
                 TourId = request.TourId,
                 LanguageCode = request.LanguageCode ?? "vi"
             };
@@ -42,7 +42,7 @@ namespace Tour_Project.Controllers
                 .Where(s => s.Id == id)
                 .Select(s => new
                 {
-                    s.Id, s.TourId, s.UserId, s.LanguageCode,
+                    s.Id, s.TourId, s.DeviceId, s.LanguageCode,
                     s.StartedAt, s.CompletedAt,
                     visitedCount = s.Visits.Count,
                     visits = s.Visits.Select(v => new
@@ -105,7 +105,8 @@ namespace Tour_Project.Controllers
 
     public class StartSessionRequest
     {
-        public int UserId { get; set; }
+        // DeviceId provided by guest client
+        public string? DeviceId { get; set; }
         public int TourId { get; set; }
         public string? LanguageCode { get; set; }
     }

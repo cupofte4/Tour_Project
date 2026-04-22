@@ -1,17 +1,26 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
+
 namespace Tour_Project.Models
 {
+    [Index(nameof(TourId))]
     public class TourSession
     {
         public int Id { get; set; }
-        public int UserId { get; set; }
+
+        // For guest-only system use DeviceId (string) instead of UserId
+        [Required, MaxLength(200)]
+        public string DeviceId { get; set; } = string.Empty;
+
         public int TourId { get; set; }
         public string LanguageCode { get; set; } = "vi";
         public DateTime StartedAt { get; set; } = DateTime.UtcNow;
         public DateTime? CompletedAt { get; set; }
 
         public Tour? Tour { get; set; }
-        public User? User { get; set; }
-        public ICollection<SessionVisit> Visits { get; set; } = [];
+        public ICollection<SessionVisit> Visits { get; set; } = new List<SessionVisit>();
     }
 
     public class SessionVisit

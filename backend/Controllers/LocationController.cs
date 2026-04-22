@@ -9,7 +9,7 @@ namespace Tour_Project.Controllers
     [Route("api/location")]
     [ApiController]
     public class LocationController : ControllerBase
-    {   
+    {
         private static readonly JsonSerializerOptions ReviewJsonOptions = new()
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -114,33 +114,36 @@ namespace Tour_Project.Controllers
             }
 
             var reviews = DeserializeReviews(location.ReviewsJson);
-            reviews.Insert(0, new LocationReview
+
+            reviews.Insert(0, new Dictionary<string, object>
             {
-                Author = string.IsNullOrWhiteSpace(request.Author) ? "Guest" : request.Author.Trim(),
-                Rating = request.Rating,
-                Comment = comment,
-                CreatedAt = DateTime.UtcNow
+                ["author"] = string.IsNullOrWhiteSpace(request.Author) ? "Guest" : request.Author.Trim(),
+                ["rating"] = request.Rating,
+                ["comment"] = comment,
+                ["createdAt"] = DateTime.UtcNow
             });
 
             location.ReviewsJson = JsonSerializer.Serialize(reviews, ReviewJsonOptions);
             _context.SaveChanges();
+
             return Ok(location);
         }
 
-        private static List<LocationReview> DeserializeReviews(string? rawJson)
+        private static List<Dictionary<string, object>> DeserializeReviews(string? rawJson)
         {
             if (string.IsNullOrWhiteSpace(rawJson))
             {
-                return [];
+                return new List<Dictionary<string, object>>();
             }
 
             try
             {
-                return JsonSerializer.Deserialize<List<LocationReview>>(rawJson, ReviewJsonOptions) ?? [];
+                return JsonSerializer.Deserialize<List<Dictionary<string, object>>>(rawJson, ReviewJsonOptions)
+                       ?? new List<Dictionary<string, object>>();
             }
             catch
             {
-                return [];
+                return new List<Dictionary<string, object>>();
             }
         }
     }

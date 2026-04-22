@@ -12,7 +12,6 @@ import MapView from "../components/MapView";
 import AudioPlayer from "../components/AudioPlayer";
 import Navbar from "../components/Navbar";
 import TravelSidebar from "../components/TravelSidebar";
-import QRScanner from "../components/QRScanner";
 import "../styles/app.css";
 
 function Home() {
@@ -49,7 +48,6 @@ function Home() {
   const GEOFENCE_RADIUS = 50; // 50 meters
 
   const [lightbox, setLightbox] = useState(null);
-  const [showQR, setShowQR] = useState(false);
   const lastTrackedLocationRef = useRef(null);
   const mockModeRef = useRef(false);
   const currentLocationRef = useRef({ lat: 10.7590, lng: 106.7043 });
@@ -104,34 +102,7 @@ function Home() {
     setLocation(selectedLocation);
   };
 
-  /**
-   * QR scan handler — called by QRScanner with decoded locationId
-   * Finds location from already-loaded list, triggers audio
-   */
-  const handleQRDetected = (locationId) => {
-    setShowQR(false);
-
-    const found = locations.find((l) => l.id === locationId);
-    if (!found) {
-      // Location not in current list — fetch individually
-      fetch(`${API_URL}/location`)
-        .then((r) => r.json())
-        .then((all) => {
-          const target = Array.isArray(all) ? all.find((l) => l.id === locationId) : null;
-          if (target) {
-            setLocation(target);
-            audioQueue.addToQueue(target, langRef.current, true);
-            trackLocationView(target.id).catch(() => {});
-          }
-        })
-        .catch(() => {});
-      return;
-    }
-
-    setLocation(found);
-    audioQueue.addToQueue(found, langRef.current, true); // insertAtStart = true
-    trackLocationView(found.id).catch(() => {});
-  };
+  
 
   useEffect(() => {
     if (!location?.id) return;
@@ -423,13 +394,6 @@ function Home() {
                     >
                       ▶ Di chuyển
                     </button>
-                    <button
-                      className="btn-start-tour"
-                      onClick={() => setShowQR(true)}
-                      style={{ marginLeft: 8, background: "#6200ea" }}
-                    >
-                      📷 Quét QR
-                    </button>
                   </>
                 ) : done ? (
                   <>
@@ -529,15 +493,8 @@ function Home() {
 
               <AudioPlayer lang={lang} />
 
-              {/* QR button during active tour */}
-              {isTourStarted && !done && (
-                <button
-                  onClick={() => setShowQR(true)}
-                  className="tour-qr-btn"
-                >
-                  📷 Quét QR tại địa điểm này
-                </button>
-              )}
+              
+              
 
               <LocationCard
                 location={location}
@@ -565,13 +522,7 @@ function Home() {
             </div>
           )}
 
-          {/* QR Scanner modal */}
-          {showQR && (
-            <QRScanner
-              onDetected={handleQRDetected}
-              onClose={() => setShowQR(false)}
-            />
-          )}
+          
         </>
       ) : (
         // Loading state while checking role redirect
