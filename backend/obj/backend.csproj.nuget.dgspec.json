@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "E:\\CNTT_Code\\CSharp\\backend\\backend.csproj": {}
+    "e:\\CNTT_Code\\CSharp\\backend\\backend.csproj": {}
   },
   "projects": {
-    "E:\\CNTT_Code\\CSharp\\backend\\backend.csproj": {
+    "e:\\CNTT_Code\\CSharp\\backend\\backend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\CNTT_Code\\CSharp\\backend\\backend.csproj",
+        "projectUniqueName": "e:\\CNTT_Code\\CSharp\\backend\\backend.csproj",
         "projectName": "backend",
-        "projectPath": "E:\\CNTT_Code\\CSharp\\backend\\backend.csproj",
+        "projectPath": "e:\\CNTT_Code\\CSharp\\backend\\backend.csproj",
         "packagesPath": "C:\\Users\\Tea\\.nuget\\packages\\",
-        "outputPath": "E:\\CNTT_Code\\CSharp\\backend\\obj\\",
+        "outputPath": "e:\\CNTT_Code\\CSharp\\backend\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Tea\\AppData\\Roaming\\NuGet\\NuGet.Config"

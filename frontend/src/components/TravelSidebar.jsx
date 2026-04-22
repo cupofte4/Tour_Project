@@ -3,7 +3,6 @@ import { NavLink, useNavigate } from "react-router-dom";
 import {
   FaUserCircle,
   FaHome,
-  FaUser,
   FaHeart,
   FaSignOutAlt,
   FaMapMarkedAlt,
@@ -14,8 +13,8 @@ const LOCAL_PROFILE_KEY = "localProfile";
 const TravelSidebar = () => {
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState({
-    fullName: "User",
-    username: "guest",
+    fullName: "Khách tham quan",
+    username: "Guest_Mode",
     avatar: null,
     isAuthenticated: false,
   });
@@ -29,16 +28,16 @@ const TravelSidebar = () => {
       const userData = user ? JSON.parse(user) : {};
       const localData = localProfile ? JSON.parse(localProfile) : {};
       setUserInfo({
-        fullName: localData.fullName || userData.fullName || "User",
-        username: localData.username || username || userData.username || "guest",
+        fullName: localData.fullName || userData.fullName || "Khách tham quan",
+        username: localData.username || username || userData.username || "Guest_Mode",
         avatar: localData.avatar || userData.avatar || null,
         isAuthenticated: !!user,
       });
     } catch (error) {
       console.error("Error parsing user data:", error);
       setUserInfo({
-        fullName: "User",
-        username: "guest",
+        fullName: "Khách tham quan",
+        username: "Guest_Mode",
         avatar: null,
         isAuthenticated: false,
       });
@@ -70,7 +69,6 @@ const TravelSidebar = () => {
   const menuItems = [
     { id: 1, label: "Trang chủ", icon: FaHome, path: "/" },
     { id: 2, label: "Khám phá Tour", icon: FaMapMarkedAlt, path: "/tours" },
-    { id: 3, label: "Hồ sơ của tôi", icon: FaUser, path: "/profile" },
     { id: 4, label: "Địa điểm yêu thích", icon: FaHeart, path: "/favorites" },
   ];
 
@@ -109,9 +107,8 @@ const TravelSidebar = () => {
             <FaUserCircle size={56} color="rgb(30, 75, 115)" />
           )}
         </div>
-        <h3 className="user-name">{userInfo?.fullName || "User"}</h3>
-        <p className="user-email">@{userInfo?.username || "guest"}</p>
-        <br />
+        <h3 className="user-name">{userInfo?.fullName || "Khách tham quan"}</h3>
+        <p className="user-email">@{userInfo?.username || "Guest_Mode"}</p>
       </div>
 
       <nav className="sidebar-menu">

@@ -11,7 +11,7 @@ import audioQueue from "../services/audioQueueService";
 import Navbar from "../components/Navbar";
 import TravelSidebar from "../components/TravelSidebar";
 import "../styles/app.css";
-import "../styles/myprofile.css";
+import "../styles/app.css";
 
 const COOLDOWN_MS = 60000;
 

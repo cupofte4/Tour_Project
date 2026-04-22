@@ -41,6 +41,7 @@ import {
   getAllAssignments,
   unassignLocationFromManager,
 } from "../services/assignmentService";
+import { GET } from "../services/api";
 import "../styles/admin.css";
 
 const DASHBOARD_TABS = [
@@ -134,6 +135,9 @@ function AdminDashboard() {
 
   const [mapSelectedLocation, setMapSelectedLocation] = useState(null);
 
+  const [analytics, setAnalytics] = useState(null);
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
+
   const [assignments, setAssignments] = useState([]);
   const [isLoadingAssignments, setIsLoadingAssignments] = useState(true);
   const [assignmentError, setAssignmentError] = useState("");
@@ -174,7 +178,27 @@ function AdminDashboard() {
     loadUsers();
     loadLocations();
     loadAssignments();
+    loadAnalytics();
   }, [isAuthorized]);
+
+  useEffect(() => {
+    if (!isAuthorized) return;
+    const id = setInterval(() => loadAnalytics(), 20000); // refresh every 20s
+    return () => clearInterval(id);
+  }, [isAuthorized]);
+
+  const loadAnalytics = async () => {
+    setIsLoadingAnalytics(true);
+    try {
+      const data = await GET("/admin/analytics/summary");
+      setAnalytics(data || { currentActiveDevices: 0, totalAudioPlays: 0, totalFavoritesSaved: 0 });
+    } catch (error) {
+      console.error("Failed to load analytics summary:", error);
+      setAnalytics({ currentActiveDevices: 0, totalAudioPlays: 0, totalFavoritesSaved: 0 });
+    } finally {
+      setIsLoadingAnalytics(false);
+    }
+  };
 
   useEffect(() => {
     return () => {
@@ -558,21 +582,21 @@ function AdminDashboard() {
 
   const stats = [
     {
-      title: "Lượt phát audio hôm nay",
-      value: "8,542",
-      note: "Tăng 18% so với hôm qua trên các điểm nghe nổi bật",
-      icon: LuMusic4,
-    },
-    {
-      title: "Tăng trưởng người dùng app",
-      value: "+12.4%",
-      note: "Người dùng mới đang tăng đều trong 7 ngày gần nhất",
+      title: "Thiết bị đang hoạt động",
+      value: isLoadingAnalytics ? null : (analytics?.currentActiveDevices ?? 0),
+      note: "Số thiết bị có hoạt động trong 5 phút gần nhất",
       icon: LuUsers,
     },
     {
-      title: "Tần suất quay lại trải nghiệm",
-      value: "3.2x",
-      note: "Mỗi người dùng hoạt động quay lại app trung bình 3.2 lần mỗi tuần",
+      title: "Lượt phát audio",
+      value: isLoadingAnalytics ? null : (analytics?.totalAudioPlays ?? 0),
+      note: "Tổng số lần phát audio",
+      icon: LuMusic4,
+    },
+    {
+      title: "Lượt yêu thích",
+      value: isLoadingAnalytics ? null : (analytics?.totalFavoritesSaved ?? 0),
+      note: "Tổng số lượt yêu thích",
       icon: LuSparkles,
     },
   ];

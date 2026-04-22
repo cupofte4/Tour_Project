@@ -4,7 +4,7 @@ import { getAllTours } from "../services/tourService";
 import Navbar from "../components/Navbar";
 import TravelSidebar from "../components/TravelSidebar";
 import "../styles/app.css";
-import "../styles/myprofile.css";
+import "../styles/app.css";
 
 export default function TourList() {
   const [tours, setTours] = useState([]);

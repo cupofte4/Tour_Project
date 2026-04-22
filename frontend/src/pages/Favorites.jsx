@@ -7,7 +7,7 @@ import {
   toggleFavoriteLocation,
 } from "../services/favoritesService";
 import "../styles/app.css";
-import "../styles/myprofile.css";
+import "../styles/app.css";
 
 const parseReviews = (rawReviews) => {
   if (!rawReviews) return [];

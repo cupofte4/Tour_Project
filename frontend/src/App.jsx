@@ -9,7 +9,6 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ManagerDashboard from "./pages/ManagerDashboard";
 import AddLocation from "./pages/AddLocation";
 import EditLocation from "./pages/EditLocation";
-import MyProfile from "./pages/MyProfile";
 import Favorites from "./pages/Favorites";
 import TourList from "./pages/TourList";
 import TourDetail from "./pages/TourDetail";
@@ -79,7 +78,7 @@ function App() {
         <Route path="/register" element={<PublicRoute element={<Register />} />} />
 
         {/* Protected user routes */}
-        <Route path="/profile" element={<MyProfile />} />
+        {/* profile route removed intentionally (guest-only client) */}
         <Route path="/favorites" element={<Favorites />} />
 
         {/* Protected admin routes */}

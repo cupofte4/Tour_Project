@@ -4,7 +4,8 @@ export async function login(username, password) {
   const res = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
+    // Backend expects AdminUser with Username and PasswordHash fields
+    body: JSON.stringify({ Username: username, PasswordHash: password }),
   });
 
   if (res.status === 401) {
@@ -33,7 +34,8 @@ export async function register(fullName, username, password) {
   const res = await fetch(`${API_URL}/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ fullName, username, password }),
+    // If register endpoint exists, backend expects RegisterRequest shape
+    body: JSON.stringify({ FullName: fullName, Username: username, Password: password }),
   });
 
   if (res.status === 400) return null;

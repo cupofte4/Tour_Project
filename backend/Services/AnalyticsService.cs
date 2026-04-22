@@ -57,9 +57,23 @@ public sealed class AnalyticsService : IAnalyticsService
         var audioPlays = await _db.AudioPlays.AsNoTracking().LongCountAsync(cancellationToken);
         var favorites = await _db.FavoriteClicks.AsNoTracking().LongCountAsync(cancellationToken);
 
+        // Approximate current active devices by distinct DeviceId seen in recent events (last 5 minutes)
+        var since = DateTimeOffset.UtcNow.AddMinutes(-5);
+
+        var audioDevices = _db.AudioPlays.AsNoTracking()
+            .Where(x => x.OccurredAtUtc >= since)
+            .Select(x => x.DeviceId);
+
+        var favDevices = _db.FavoriteClicks.AsNoTracking()
+            .Where(x => x.OccurredAtUtc >= since)
+            .Select(x => x.DeviceId);
+
+        var distinctDevicesQuery = audioDevices.Union(favDevices).Where(id => !string.IsNullOrEmpty(id));
+        var activeCount = await distinctDevicesQuery.Distinct().CountAsync(cancellationToken);
+
         return new AnalyticsSummaryDto
         {
-            CurrentActiveDevices = 0,
+            CurrentActiveDevices = (int)activeCount,
             TotalAudioPlays = audioPlays,
             TotalFavoritesSaved = favorites
         };

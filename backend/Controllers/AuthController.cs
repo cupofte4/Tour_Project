@@ -78,14 +78,6 @@ namespace Tour_Project.Controllers
         }
     }
 
-    // Role field removed — backend assigns role, not client
-    public class RegisterRequest
-    {
-        public string FullName { get; set; } = string.Empty;
-        public string Username { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-    }
-
     public class ChangePasswordRequest
     {
         public string Username { get; set; } = string.Empty;

@@ -38,7 +38,7 @@ export async function trackAudioPlay(locationId) {
 export async function sendHeartbeat() {
   try {
     const deviceId = getOrCreateDeviceId();
-    return await POST("/api/analytics/heartbeat", {
+    return await POST("/analytics/heartbeat", {
       sessionId: deviceId, // using deviceId as session when client doesn't have a session
       deviceId,
       occurredAtUtc: new Date().toISOString(),
