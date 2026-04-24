@@ -214,7 +214,7 @@ function stop() {
   }
 }
 
-async function speakChunk(chunk, langCode, voice, sessionId) {
+async function speakChunk(chunk, langCode, voice, sessionId, onStart) {
   if (sessionId !== currentSessionId || !window?.speechSynthesis) {
     return;
   }
@@ -230,6 +230,9 @@ async function speakChunk(chunk, langCode, voice, sessionId) {
       utterance.voice = voice;
     }
 
+    utterance.onstart = () => {
+      onStart?.();
+    };
     utterance.onend = () => resolve();
     utterance.onerror = () => resolve();
 
@@ -237,7 +240,7 @@ async function speakChunk(chunk, langCode, voice, sessionId) {
   });
 }
 
-async function playChunks(text, langCode) {
+async function playChunks(text, langCode, onPlaybackStart) {
   if (!window?.speechSynthesis) return;
 
   const chunks = splitTextIntoChunks(text, langCode);
@@ -251,13 +254,18 @@ async function playChunks(text, langCode) {
   await wait(60);
 
   const voice = getVoiceForLang(langCode);
+  let hasStarted = false;
 
   for (const chunk of chunks) {
     if (sessionId !== currentSessionId) {
       return;
     }
 
-    await speakChunk(chunk, langCode, voice, sessionId);
+    await speakChunk(chunk, langCode, voice, sessionId, () => {
+      if (hasStarted) return;
+      hasStarted = true;
+      onPlaybackStart?.();
+    });
 
     if (langCode === "zh-CN") {
       await wait(40);
@@ -282,11 +290,11 @@ async function speakLocationAsync(location, langCode) {
   const text = getTextForLang(location, langCode);
   if (!text) return;
 
-  if (location?.id) {
-    trackAudioPlay(location.id).catch(() => {});
-  }
-
-  await playChunks(text, langCode);
+  await playChunks(text, langCode, () => {
+    if (location?.id) {
+      trackAudioPlay(location.id).catch(() => {});
+    }
+  });
 }
 
 export { speak, speakLocation, speakLocationAsync, stop, LANGUAGES, getTextForLang };

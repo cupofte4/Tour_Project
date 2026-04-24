@@ -1,9 +1,13 @@
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Tour_Project.Data;
 
 #nullable disable
 
 namespace backend.Migrations
 {
+    [DbContext(typeof(AppDbContext))]
+    [Migration("20260326090000_AddLocationContactAndReviews")]
     public partial class AddLocationContactAndReviews : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

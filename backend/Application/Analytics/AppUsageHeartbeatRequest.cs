@@ -11,4 +11,10 @@ public sealed class AppUsageHeartbeatRequest
     public string Platform { get; init; } = string.Empty;
 
     public string AppVersion { get; init; } = string.Empty;
+
+    public string Path { get; init; } = string.Empty;
+
+    public string EventType { get; init; } = "heartbeat";
+
+    public string UserAgent { get; init; } = string.Empty;
 }

@@ -47,7 +47,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))
+        new MySqlServerVersion(new Version(8, 0, 36))
     ));
 
 builder.Services.AddCors(options =>
@@ -64,6 +64,27 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    const int maxDatabaseAttempts = 10;
+    var databaseReady = false;
+
+    for (var attempt = 1; attempt <= maxDatabaseAttempts; attempt++)
+    {
+        try
+        {
+            db.Database.Migrate();
+            databaseReady = true;
+            break;
+        }
+        catch when (attempt < maxDatabaseAttempts)
+        {
+            Thread.Sleep(TimeSpan.FromSeconds(5));
+        }
+    }
+
+    if (!databaseReady)
+    {
+        throw new InvalidOperationException("Database is not ready after multiple connection attempts.");
+    }
 
     if (!db.AdminUsers.Any(a => a.Username == "admin"))
     {
@@ -85,11 +106,17 @@ using (var scope = app.Services.CreateScope())
 app.UseCors("AllowAll");
 app.UseStaticFiles();
 
-app.MapOpenApi();
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/openapi/v1.json", "Tour Project API v1");
+    options.RoutePrefix = "swagger";
+});
 
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapGet("/", () => Results.Redirect("/swagger"));
+app.MapOpenApi();
 app.MapControllers();
 
 app.Run();

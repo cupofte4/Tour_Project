@@ -20,8 +20,12 @@ namespace Tour_Project.Data
         public DbSet<TourSession> TourSessions { get; set; }
         public DbSet<SessionVisit> SessionVisits { get; set; }
         // Analytics
+        public DbSet<AppUsageHeartbeat> AppUsageHeartbeats { get; set; }
         public DbSet<AudioPlay> AudioPlays { get; set; }
         public DbSet<FavoriteClick> FavoriteClicks { get; set; }
+        public DbSet<VisitorDevice> VisitorDevices { get; set; }
+        public DbSet<AnalyticsEvent> AnalyticsEvents { get; set; }
+        public DbSet<LocationFavoriteState> LocationFavoriteStates { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -49,16 +53,50 @@ namespace Tour_Project.Data
                 .HasForeignKey(sv => sv.SessionId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Indexes and constraints for analytics/tour models
-            modelBuilder.Entity<TourLocation>()
-                .HasIndex(tl => new { tl.TourId, tl.LocationId })
-                .IsUnique(false);
-
             modelBuilder.Entity<TourSession>()
                 .HasIndex(ts => ts.TourId);
 
             modelBuilder.Entity<Location>()
                 .HasIndex(l => l.Name);
+
+            modelBuilder.Entity<AppUsageHeartbeat>()
+                .HasIndex(x => new { x.DeviceId, x.OccurredAtUtc });
+
+            modelBuilder.Entity<VisitorDevice>()
+                .HasIndex(x => x.DeviceId)
+                .IsUnique();
+
+            modelBuilder.Entity<VisitorDevice>()
+                .Property(x => x.DeviceId)
+                .HasMaxLength(128);
+
+            modelBuilder.Entity<VisitorDevice>()
+                .Property(x => x.LastPath)
+                .HasMaxLength(1024);
+
+            modelBuilder.Entity<VisitorDevice>()
+                .Property(x => x.LastUserAgent)
+                .HasMaxLength(512);
+
+            modelBuilder.Entity<AnalyticsEvent>()
+                .Property(x => x.DeviceId)
+                .HasMaxLength(128);
+
+            modelBuilder.Entity<AnalyticsEvent>()
+                .Property(x => x.EventType)
+                .HasMaxLength(64);
+
+            modelBuilder.Entity<AnalyticsEvent>()
+                .Property(x => x.Path)
+                .HasMaxLength(1024);
+
+            modelBuilder.Entity<LocationFavoriteState>()
+                .HasIndex(x => new { x.DeviceId, x.LocationId })
+                .IsUnique();
+
+            modelBuilder.Entity<LocationFavoriteState>()
+                .Property(x => x.DeviceId)
+                .HasMaxLength(128);
         }
     }
 }

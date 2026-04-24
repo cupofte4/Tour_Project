@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "e:\\CNTT_Code\\CSharp\\backend\\backend.csproj": {}
+    "/Users/tranhau/Documents/Tour_Project/backend/backend.csproj": {}
   },
   "projects": {
-    "e:\\CNTT_Code\\CSharp\\backend\\backend.csproj": {
+    "/Users/tranhau/Documents/Tour_Project/backend/backend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "e:\\CNTT_Code\\CSharp\\backend\\backend.csproj",
+        "projectUniqueName": "/Users/tranhau/Documents/Tour_Project/backend/backend.csproj",
         "projectName": "backend",
-        "projectPath": "e:\\CNTT_Code\\CSharp\\backend\\backend.csproj",
-        "packagesPath": "C:\\Users\\Tea\\.nuget\\packages\\",
-        "outputPath": "e:\\CNTT_Code\\CSharp\\backend\\obj\\",
+        "projectPath": "/Users/tranhau/Documents/Tour_Project/backend/backend.csproj",
+        "packagesPath": "/Users/tranhau/.nuget/packages/",
+        "outputPath": "/Users/tranhau/Documents/Tour_Project/backend/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Tea\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/Users/tranhau/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
@@ -66,6 +66,10 @@
               "target": "Package",
               "version": "[9.0.0, )"
             },
+            "Swashbuckle.AspNetCore": {
+              "target": "Package",
+              "version": "[10.1.7, )"
+            },
             "System.IdentityModel.Tokens.Jwt": {
               "target": "Package",
               "version": "[8.1.2, )"
@@ -90,7 +94,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.201/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "/Users/tranhau/.dotnet/sdk/10.0.201/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

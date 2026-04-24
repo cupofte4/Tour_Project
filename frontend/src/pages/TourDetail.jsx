@@ -6,7 +6,6 @@ import {
   startTourSession,
   recordVisit,
 } from "../services/tourService";
-import { trackAudioPlay } from "../services/analyticsService";
 import audioQueue from "../services/audioQueueService";
 import Navbar from "../components/Navbar";
 import TravelSidebar from "../components/TravelSidebar";
@@ -56,7 +55,6 @@ export default function TourDetail() {
         return next;
       });
       if (sessionId) recordVisit(sessionId, locationId, true);
-      trackAudioPlay(locationId);
     },
     [id, sessionId],
   );

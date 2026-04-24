@@ -1,6 +1,6 @@
-import API_URL from "./api";
+import API_URL, { API_ORIGIN } from "./api";
 
-const PUBLIC_BASE_URL = API_URL.replace(/\/api$/, "");
+const PUBLIC_BASE_URL = API_ORIGIN;
 
 async function uploadFile(file, endpoint, errorMessage) {
   const formData = new FormData();

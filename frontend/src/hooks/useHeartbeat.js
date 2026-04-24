@@ -1,24 +1,22 @@
 import { useEffect, useRef } from "react";
 import { sendHeartbeat } from "../services/analyticsService";
 
-// Sends heartbeat periodically while app is active/visible.
-// intervalMs default: 5 minutes
-export default function useHeartbeat({ intervalMs = 5 * 60 * 1000 } = {}) {
+// Sends public-site page view and heartbeat events while the tab is active.
+export default function useHeartbeat({ intervalMs = 60 * 1000, enabled = true, pageKey = "" } = {}) {
   const intervalIdRef = useRef(null);
 
   useEffect(() => {
-    let mounted = true;
+    if (!enabled) return undefined;
 
-    async function doHeartbeat() {
+    async function doHeartbeat(eventType = "heartbeat") {
       try {
-        await sendHeartbeat();
+        await sendHeartbeat(eventType);
       } catch {
         // swallow
       }
     }
 
-    // send initial heartbeat
-    doHeartbeat();
+    doHeartbeat("page_view");
 
     function startInterval() {
       if (intervalIdRef.current) return;
@@ -38,7 +36,6 @@ export default function useHeartbeat({ intervalMs = 5 * 60 * 1000 } = {}) {
       if (document.hidden) {
         stopInterval();
       } else {
-        // immediate heartbeat when tab becomes visible
         doHeartbeat();
         startInterval();
       }
@@ -50,9 +47,8 @@ export default function useHeartbeat({ intervalMs = 5 * 60 * 1000 } = {}) {
 
     // cleanup
     return () => {
-      mounted = false;
       stopInterval();
       document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [intervalMs]);
+  }, [enabled, intervalMs, pageKey]);
 }

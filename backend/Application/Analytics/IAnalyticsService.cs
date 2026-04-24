@@ -8,6 +8,8 @@ public interface IAnalyticsService
 
     Task RecordHeartbeatAsync(AppUsageHeartbeatRequest request, CancellationToken cancellationToken = default);
 
+    Task RecordEventAsync(AnalyticsEventRequest request, CancellationToken cancellationToken = default);
+
     Task<AnalyticsSummaryDto> GetSummaryAsync(CancellationToken cancellationToken = default);
 
     Task<IEnumerable<DailyMetricsDto>> GetChartDataAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default);
@@ -18,6 +20,8 @@ public sealed class AnalyticsSummaryDto
     public int CurrentActiveDevices { get; init; }
     public long TotalAudioPlays { get; init; }
     public long TotalFavoritesSaved { get; init; }
+    public long TotalVisitorsToday { get; init; }
+    public long TotalVisitors { get; init; }
 }
 
 public sealed class DailyMetricsDto

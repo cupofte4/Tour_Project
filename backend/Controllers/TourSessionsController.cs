@@ -77,7 +77,7 @@ namespace Tour_Project.Controllers
 
             // Kiểm tra hoàn thành tour
             var totalPOIs = await _context.TourLocations
-                .CountAsync(tl => tl.TourId == session.TourId && !tl.IsOptional);
+                .CountAsync(tl => tl.TourId == session.TourId);
             var visitedCount = await _context.SessionVisits
                 .CountAsync(v => v.SessionId == id);
 

@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getNearLocation, getAllLocations } from "../services/locationService";
 import { getAllTours, getTourLocations } from "../services/tourService";
 import { LANGUAGES } from "../services/ttsService";
 import { trackLocationView } from "../services/analyticsService";
-import { checkGeofence } from "../services/api";
 import API_URL from "../services/api";
 import audioQueue from "../services/audioQueueService";
 import LocationCard from "../components/LocationCard";
@@ -13,6 +11,102 @@ import AudioPlayer from "../components/AudioPlayer";
 import Navbar from "../components/Navbar";
 import TravelSidebar from "../components/TravelSidebar";
 import "../styles/app.css";
+
+const GPS_MODES = {
+  REAL: "real",
+  DEMO: "demo",
+};
+const DEMO_ANIMATION_STEPS = 24;
+const DEMO_ANIMATION_INTERVAL_MS = 45;
+
+function haversineDistance(lat1, lng1, lat2, lng2) {
+  const toRad = (value) => (value * Math.PI) / 180;
+  const earthRadius = 6371000;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+
+  return earthRadius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function getCoordinates(locationItem) {
+  return {
+    lat: Number(locationItem?.Latitude ?? locationItem?.latitude),
+    lng: Number(locationItem?.Longitude ?? locationItem?.longitude),
+  };
+}
+
+function isLocalhostHost(hostname) {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+}
+
+function canUseBrowserGeolocation() {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
+  return Boolean(navigator.geolocation) && (window.isSecureContext || isLocalhostHost(window.location.hostname));
+}
+
+function getGeolocationUnavailableMessage() {
+  if (typeof navigator !== "undefined" && !navigator.geolocation) {
+    return "Trình duyệt của bạn không hỗ trợ định vị. App đang dùng vị trí demo gần POI để bạn trình bày tour.";
+  }
+
+  return "Theo dõi vị trí trực tiếp chỉ hoạt động trên HTTPS hoặc localhost. App đang dùng vị trí demo gần POI để bạn trình bày tour.";
+}
+
+function createDirectionsUrl(destination) {
+  const { lat, lng } = getCoordinates(destination);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+
+  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+}
+
+function createLocationAtPoi(poi) {
+  const { lat, lng } = getCoordinates(poi);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+
+  return {
+    lat,
+    lng,
+    accuracy: 8,
+    isDemo: true,
+  };
+}
+
+function normalizeTourLocationRecords(records) {
+  return (Array.isArray(records) ? records : [])
+    .map((record) => {
+      const source = record?.location ?? record?.Location ?? record;
+      if (!source) return null;
+
+      const normalized = {
+        ...source,
+        id: source.id ?? source.Id ?? record?.locationId ?? record?.LocationId,
+        name: source.name ?? source.Name ?? "",
+        description: source.description ?? source.Description ?? "",
+        image: source.image ?? source.Image ?? "",
+        images: source.images ?? source.Images ?? "[]",
+        address: source.address ?? source.Address ?? "",
+        phone: source.phone ?? source.Phone ?? "",
+        reviewsJson: source.reviewsJson ?? source.ReviewsJson ?? "[]",
+        latitude: Number(source.latitude ?? source.Latitude),
+        longitude: Number(source.longitude ?? source.Longitude),
+        textVi: source.textVi ?? source.TextVi ?? "",
+        textEn: source.textEn ?? source.TextEn ?? "",
+        textZh: source.textZh ?? source.TextZh ?? "",
+        textDe: source.textDe ?? source.TextDe ?? "",
+        orderIndex: Number(record?.orderIndex ?? record?.OrderIndex ?? 0),
+      };
+
+      if (!normalized.id) return null;
+      if (!Number.isFinite(normalized.latitude) || !Number.isFinite(normalized.longitude)) return null;
+
+      return normalized;
+    })
+    .filter(Boolean)
+    .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+}
 
 function Home() {
   const navigate = useNavigate();
@@ -30,13 +124,20 @@ function Home() {
   const [paused, setPaused] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isTourStarted, setIsTourStarted] = useState(false);
-  const [gpsStatus, setGpsStatus] = useState("waiting"); // waiting, loading, active, denied, error
+  const [gpsStatus, setGpsStatus] = useState("demo"); // demo, loading, active, denied, error
+  const [gpsMode, setGpsMode] = useState(GPS_MODES.DEMO);
+  const [demoPoiIndex, setDemoPoiIndex] = useState(0);
+  const [isMovingDemo, setIsMovingDemo] = useState(false);
   const [gpsError, setGpsError] = useState(null);
+  const [movementError, setMovementError] = useState("");
   const langRef = useRef(lang);
   const visitedRef = useRef(new Set());
-  const runningRef = useRef(false);
   const pausedRef = useRef(false);
   const watchIdRef = useRef(null);
+  const demoAnimationTimerRef = useRef(null);
+  const locationsRef = useRef([]);
+  const currentLocationRef = useRef(userLocation);
+  const loadLocationsRequestRef = useRef(0);
   
   // Geofence debounce: Only check geofence every 5 seconds
   const lastGeofenceCheckRef = useRef(0);
@@ -49,31 +150,35 @@ function Home() {
 
   const [lightbox, setLightbox] = useState(null);
   const lastTrackedLocationRef = useRef(null);
-  const mockModeRef = useRef(false);
-  const currentLocationRef = useRef({ lat: 10.7590, lng: 106.7043 });
+  const liveGeolocationAvailable = canUseBrowserGeolocation();
+  const canUseRealGps = gpsMode === GPS_MODES.REAL && gpsStatus === "active";
+  const canUseDemoGps = gpsMode === GPS_MODES.DEMO && locations.length > 0;
+  const canUseTourLocation = canUseRealGps || canUseDemoGps;
 
   // Guest mode: Home is public — no login required
   const user = (() => { try { return JSON.parse(localStorage.getItem("user")); } catch { return null; } })();
   const userRole = (user?.role || "").toLowerCase();
 
   const loadLocations = async () => {
+    const requestId = ++loadLocationsRequestRef.current;
+    setTourLoading(Boolean(selectedTourId));
+
     try {
       if (selectedTourId) {
-        setTourLoading(true);
         const tourLocs = await getTourLocations(selectedTourId);
-        const ordered = (Array.isArray(tourLocs) ? tourLocs : [])
-          .sort((a, b) => (a?.orderIndex ?? 0) - (b?.orderIndex ?? 0))
-          .map((tl) => tl?.location)
-          .filter(Boolean);
-        setLocations(ordered);
+        if (requestId !== loadLocationsRequestRef.current) return;
+        setLocations(normalizeTourLocationRecords(tourLocs));
       } else {
-        const data = await getAllLocations();
-        setLocations(Array.isArray(data) ? data : []);
+        if (requestId !== loadLocationsRequestRef.current) return;
+        setLocations([]);
       }
     } catch {
+      if (requestId !== loadLocationsRequestRef.current) return;
       setLocations([]);
     } finally {
-      setTourLoading(false);
+      if (requestId === loadLocationsRequestRef.current) {
+        setTourLoading(false);
+      }
     }
   };
 
@@ -100,9 +205,158 @@ function Home() {
   const handleMapLocationSelect = (selectedLocation) => {
     if (!selectedLocation?.id) return;
     setLocation(selectedLocation);
+    if (gpsMode === GPS_MODES.DEMO && locationsRef.current.length > 0) {
+      const selectedIndex = locationsRef.current.findIndex((item) => item.id === selectedLocation.id);
+      const nextDemoLocation = createLocationAtPoi(selectedLocation);
+
+      if (selectedIndex >= 0) {
+        setDemoPoiIndex(selectedIndex);
+      }
+      if (nextDemoLocation) {
+        currentLocationRef.current = nextDemoLocation;
+        setUserLocation(nextDemoLocation);
+      }
+    }
   };
 
-  
+  const openSelectedLocationDirections = () => {
+    if (!location?.id) {
+      setMovementError("HTTP không hỗ trợ theo dõi vị trí trực tiếp. Hãy chọn một POI trên bản đồ để mở chỉ đường.");
+      return;
+    }
+
+    const directionsUrl = createDirectionsUrl(location);
+    if (!directionsUrl) {
+      setMovementError("POI đã chọn chưa có tọa độ hợp lệ để mở chỉ đường.");
+      return;
+    }
+
+    setMovementError("Đang mở Google Maps để chỉ đường tới POI đã chọn. Theo dõi trực tiếp cần HTTPS hoặc localhost.");
+    window.open(directionsUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const clearDemoAnimation = () => {
+    if (demoAnimationTimerRef.current !== null) {
+      window.clearTimeout(demoAnimationTimerRef.current);
+      demoAnimationTimerRef.current = null;
+    }
+  };
+
+  const findDemoStartIndex = () => {
+    if (location?.id) {
+      const selectedIndex = locationsRef.current.findIndex((item) => item.id === location.id);
+      if (selectedIndex >= 0) return selectedIndex;
+    }
+
+    return 0;
+  };
+
+  const setDemoPositionToPoi = (poiIndex, { selectPoi = false } = {}) => {
+    const poi = locationsRef.current[poiIndex];
+    const nextDemoLocation = createLocationAtPoi(poi);
+    if (!nextDemoLocation) return false;
+
+    currentLocationRef.current = nextDemoLocation;
+    setDemoPoiIndex(poiIndex);
+    setUserLocation(nextDemoLocation);
+    if (selectPoi) {
+      setLocation(poi);
+    }
+
+    return true;
+  };
+
+  const enableDemoLocation = (message) => {
+    clearDemoAnimation();
+    setGpsStatus("demo");
+    setGpsMode(GPS_MODES.DEMO);
+    setGpsError(message);
+    setIsMovingDemo(false);
+
+    if (locationsRef.current.length > 0) {
+      setDemoPositionToPoi(findDemoStartIndex(), { selectPoi: Boolean(location?.id) });
+    }
+  };
+
+  const triggerPoiArrival = (poi) => {
+    if (!poi?.id) return;
+
+    setLocation(poi);
+
+    if (visitedRef.current.has(poi.id) || isInCooldown(poi.id)) {
+      return;
+    }
+
+    visitedRef.current.add(poi.id);
+    markPoiAsPlayed(poi.id);
+    audioQueue.addToQueue(poi, langRef.current);
+
+    if (visitedRef.current.size >= locationsRef.current.length) {
+      setDone(true);
+    }
+  };
+
+  const animateDemoToPoi = (targetIndex) => {
+    const targetPoi = locationsRef.current[targetIndex];
+    const targetLocation = createLocationAtPoi(targetPoi);
+    const startLocation = currentLocationRef.current;
+
+    if (!targetLocation || !Number.isFinite(startLocation?.lat) || !Number.isFinite(startLocation?.lng)) {
+      if (setDemoPositionToPoi(targetIndex, { selectPoi: true })) {
+        triggerPoiArrival(targetPoi);
+      }
+      return;
+    }
+
+    clearDemoAnimation();
+    setIsMovingDemo(true);
+    setMovementError("");
+
+    let step = 0;
+    const tick = () => {
+      step += 1;
+      const progress = Math.min(step / DEMO_ANIMATION_STEPS, 1);
+      const nextLocation = {
+        lat: startLocation.lat + (targetLocation.lat - startLocation.lat) * progress,
+        lng: startLocation.lng + (targetLocation.lng - startLocation.lng) * progress,
+        accuracy: targetLocation.accuracy,
+        isDemo: true,
+      };
+
+      currentLocationRef.current = nextLocation;
+      setUserLocation(nextLocation);
+
+      if (progress < 1) {
+        demoAnimationTimerRef.current = window.setTimeout(tick, DEMO_ANIMATION_INTERVAL_MS);
+        return;
+      }
+
+      demoAnimationTimerRef.current = null;
+      currentLocationRef.current = targetLocation;
+      setUserLocation(targetLocation);
+      setDemoPoiIndex(targetIndex);
+      setIsMovingDemo(false);
+      triggerPoiArrival(targetPoi);
+    };
+
+    tick();
+  };
+
+  const moveDemoToNextPoi = () => {
+    if (isMovingDemo || locationsRef.current.length === 0) return;
+
+    if (!isTourStarted) {
+      setIsTourStarted(true);
+      const startIndex = Math.min(demoPoiIndex, locationsRef.current.length - 1);
+      setDemoPositionToPoi(startIndex, { selectPoi: true });
+      triggerPoiArrival(locationsRef.current[startIndex]);
+      return;
+    }
+
+    const nextIndex = (demoPoiIndex + 1) % locationsRef.current.length;
+    setDone(false);
+    animateDemoToPoi(nextIndex);
+  };
 
   useEffect(() => {
     if (!location?.id) return;
@@ -111,6 +365,14 @@ function Home() {
     lastTrackedLocationRef.current = location.id;
     trackLocationView(location.id).catch(() => {});
   }, [location]);
+
+  useEffect(() => {
+    locationsRef.current = locations;
+  }, [locations]);
+
+  useEffect(() => {
+    currentLocationRef.current = userLocation;
+  }, [userLocation]);
 
   /**
    * Check if POI is in cooldown (recently played)
@@ -150,49 +412,59 @@ function Home() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    // Reset mock mode when GPS setup starts
-    mockModeRef.current = false;
-
-    if (!navigator.geolocation) {
-      setGpsStatus("error");
-      setGpsError("Trình duyệt của bạn không hỗ trợ GPS");
+    if (!liveGeolocationAvailable) {
+      enableDemoLocation(getGeolocationUnavailableMessage());
       return;
     }
 
     setGpsStatus("loading");
+    setGpsError(null);
 
     const successCallback = (position) => {
       const { latitude, longitude, accuracy } = position.coords;
-      
-      setUserLocation({
+      const nextRealLocation = {
         lat: latitude,
         lng: longitude,
         accuracy: Math.round(accuracy),
-      });
+      };
+      
+      clearDemoAnimation();
+      currentLocationRef.current = nextRealLocation;
+      setUserLocation(nextRealLocation);
       
       setGpsStatus("active");
+      setGpsMode(GPS_MODES.REAL);
+      setIsMovingDemo(false);
       setGpsError(null);
+      setMovementError("");
       
       console.log(`📍 GPS Updated: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} (±${Math.round(accuracy)}m)`);
     };
 
     const errorCallback = (error) => {
-      if (mockModeRef.current) return;
       console.error("GPS Error:", error);
+      const requiresSecureOrigin =
+        typeof window !== "undefined" &&
+        !window.isSecureContext &&
+        window.location.hostname !== "localhost" &&
+        window.location.hostname !== "127.0.0.1";
 
       if (error.code === 1) {
-        setGpsStatus("denied");
-        setGpsError("Bạn đã từ chối quyền truy cập GPS. Vui lòng bật GPS trong cài đặt.");
-      } else if (error.code === 2 || error.code === 3) {
-        mockModeRef.current = true;
-        setGpsStatus("mock");
-        setUserLocation({ lat: 10.7590, lng: 106.7043, accuracy: 50 });
-        setGpsError(null);
-        if (watchIdRef.current !== null) {
-          navigator.geolocation.clearWatch(watchIdRef.current);
-          watchIdRef.current = null;
-        }
-        console.log("🎭 Switched to mock location mode");
+        enableDemoLocation(
+          requiresSecureOrigin
+            ? "Trình duyệt chỉ cho phép lấy vị trí trên HTTPS hoặc localhost. App đang dùng vị trí demo gần POI để bạn trình bày tour."
+            : "Bạn đã từ chối quyền truy cập vị trí. App đang dùng vị trí demo gần POI để bạn trình bày tour.",
+        );
+      } else if (error.code === 2) {
+        enableDemoLocation(
+          requiresSecureOrigin
+            ? "Không thể lấy vị trí trên kết nối hiện tại. Hãy dùng HTTPS hoặc localhost rồi thử lại."
+            : "Không thể xác định vị trí hiện tại. App đang dùng vị trí demo gần POI để bạn trình bày tour.",
+        );
+      } else if (error.code === 3) {
+        enableDemoLocation("Hết thời gian chờ lấy vị trí. App đang dùng vị trí demo gần POI để bạn trình bày tour.");
+      } else {
+        enableDemoLocation("Không thể lấy vị trí hiện tại. App đang dùng vị trí demo gần POI để bạn trình bày tour.");
       }
     };
 
@@ -219,11 +491,48 @@ function Home() {
         console.log("🛑 GPS Watch stopped");
       }
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, liveGeolocationAvailable]);
+
+  useEffect(() => {
+    if (gpsMode !== GPS_MODES.DEMO || locations.length === 0) return;
+    if (isMovingDemo) return;
+
+    const startIndex = Math.min(findDemoStartIndex(), locations.length - 1);
+    const startDemoLocation = createLocationAtPoi(locations[startIndex]);
+    if (!startDemoLocation) return;
+
+    currentLocationRef.current = startDemoLocation;
+    setDemoPoiIndex(startIndex);
+    setUserLocation(startDemoLocation);
+  }, [gpsMode, isMovingDemo, locations]);
 
   useEffect(() => {
     langRef.current = lang;
   }, [lang]);
+
+  useEffect(() => {
+    return () => {
+      clearDemoAnimation();
+    };
+  }, []);
+
+  useEffect(() => {
+    pausedRef.current = false;
+    visitedRef.current = new Set();
+    poiCooldownMapRef.current = new Map();
+    lastGeofenceCheckRef.current = 0;
+    clearDemoAnimation();
+    lastTrackedLocationRef.current = null;
+    setPaused(false);
+    setDone(false);
+    setIsTourStarted(false);
+    setIsMovingDemo(false);
+    setDemoPoiIndex(0);
+    setMovementError("");
+    setLocation(null);
+    setLocations([]);
+    audioQueue.stop();
+  }, [selectedTourId]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -245,69 +554,85 @@ function Home() {
 
   useEffect(() => {
     if (!isAuthenticated || !isTourStarted) {
-      runningRef.current = false;
       audioQueue.stop();
       return;
     }
 
-    if (gpsStatus !== "active" && gpsStatus !== "mock") {
-      console.warn("Tour started but GPS not active yet:", gpsStatus);
+    if (gpsMode !== GPS_MODES.REAL) {
       return;
     }
 
-    // Khởi tạo vị trí giả lập từ userLocation hiện tại
-    currentLocationRef.current = { lat: userLocation.lat, lng: userLocation.lng };
-    runningRef.current = true;
+    if (!selectedTourId || locations.length === 0) {
+      setMovementError("Hãy chọn một tour trước khi bắt đầu di chuyển.");
+      return;
+    }
 
-    const run = async () => {
-      while (runningRef.current && visitedRef.current.size < 4) {
-        if (!runningRef.current) break;
+    if (!canUseRealGps) {
+      setMovementError(gpsError || "Vị trí chưa sẵn sàng. Hãy cấp quyền vị trí rồi thử lại.");
+      return;
+    }
 
-        while (pausedRef.current) {
-          await new Promise((resolve) => setTimeout(resolve, 300));
-        }
+    if (pausedRef.current) {
+      return;
+    }
 
-        // Tăng dần lat/lng để giả lập di chuyển
-        currentLocationRef.current.lat += 0.00006;
-        currentLocationRef.current.lng += 0.00006;
-        setUserLocation({ ...currentLocationRef.current, accuracy: 50 });
+    const now = Date.now();
+    if (now - lastGeofenceCheckRef.current < GEOFENCE_CHECK_INTERVAL) {
+      return;
+    }
 
-        const { lat, lng } = currentLocationRef.current;
-        const geofenceData = await checkGeofence(lat, lng);
+    lastGeofenceCheckRef.current = now;
+    setMovementError("");
 
-        if (geofenceData && geofenceData.inGeofence && geofenceData.nearbyPOI) {
-          const poi = geofenceData.nearbyPOI;
+    const candidates = locations
+      .map((item) => {
+        const { lat, lng } = getCoordinates(item);
+        return {
+          ...item,
+          lat,
+          lng,
+          distance: haversineDistance(userLocation.lat, userLocation.lng, lat, lng),
+        };
+      })
+      .filter((item) => Number.isFinite(item.lat) && Number.isFinite(item.lng))
+      .filter((item) => !visitedRef.current.has(item.id))
+      .filter((item) => !isInCooldown(item.id))
+      .filter((item) => item.distance <= GEOFENCE_RADIUS)
+      .sort((a, b) => a.distance - b.distance);
 
-          if (!visitedRef.current.has(poi.id) && !isInCooldown(poi.id)) {
-            visitedRef.current.add(poi.id);
-            markPoiAsPlayed(poi.id);
-            setLocation(poi);
-            console.log(`📍 Geofence triggered! POI: ${poi.name}, Distance: ${geofenceData.distance}m`);
-            audioQueue.addToQueue(poi, langRef.current);
+    if (candidates.length === 0) {
+      return;
+    }
 
-            if (visitedRef.current.size >= 4) {
-              setDone(true);
-              break;
-            }
-          }
-        } else {
-          const data = await getNearLocation(lat, lng);
-          if (data && !visitedRef.current.has(data.id)) {
-            setLocation(data);
-          }
-        }
+    const poi = candidates[0];
+    visitedRef.current.add(poi.id);
+    markPoiAsPlayed(poi.id);
+    setLocation(poi);
+    audioQueue.addToQueue(poi, langRef.current);
 
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-      }
-    };
+    if (visitedRef.current.size >= locations.length) {
+      setDone(true);
+    }
+  }, [
+    gpsError,
+    gpsMode,
+    isAuthenticated,
+    isTourStarted,
+    locations,
+    selectedTourId,
+    userLocation.lat,
+    userLocation.lng,
+    canUseRealGps,
+  ]);
 
-    run();
+  useEffect(() => {
+    if (!location?.id) return;
 
-    return () => {
-      runningRef.current = false;
-      audioQueue.stop();
-    };
-  }, [isAuthenticated, isTourStarted, gpsStatus]);
+    const stillExists = locations.some((item) => item.id === location.id);
+    if (!stillExists) {
+      setLocation(null);
+    }
+  }, [location, locations]);
 
   return (
     <div>
@@ -319,6 +644,7 @@ function Home() {
             <div className="left-col">
               <div className="map">
                 <MapView
+                  key={selectedTourId || "no-tour"}
                   userLocation={userLocation}
                   locations={locations}
                   onSelectLocation={handleMapLocationSelect}
@@ -362,12 +688,11 @@ function Home() {
                   <select
                     value={selectedTourId}
                     onChange={(e) => {
-                      setLocation(null);
                       setSelectedTourId(e.target.value);
                     }}
                     className="tour-select-input"
                   >
-                    <option value="">Tất cả địa điểm (không chọn tour)</option>
+                    <option value="">Chưa chọn tour</option>
                     {tours.map((t) => (
                       <option key={t.id} value={String(t.id)}>
                         {t.title} ({t.locationCount} POI)
@@ -386,18 +711,66 @@ function Home() {
                 {!isTourStarted ? (
                   <>
                     <span style={{ marginRight: 8 }}>🗺️</span>
-                    Click vào point trên bản đồ để xem thông tin và đánh giá, hoặc bắt đầu di chuyển để nghe audio tự động.
+                    {gpsMode === GPS_MODES.DEMO
+                      ? locations.length > 0
+                        ? "Demo Mode: vị trí đang đặt tại POI đầu tiên của tour. Bấm Di chuyển để phát điểm hiện tại."
+                        : "Demo Mode: hãy chọn tour có POI để bắt đầu di chuyển."
+                      : liveGeolocationAvailable
+                      ? "Click vào point trên bản đồ để xem thông tin và đánh giá. Để nghe audio tự động, hãy chọn tour rồi bắt đầu di chuyển."
+                      : "HTTP không hỗ trợ theo dõi vị trí trực tiếp. Hãy chọn một POI trên bản đồ rồi bấm Di chuyển để mở chỉ đường."}
                     <button
                       className="btn-start-tour"
-                      onClick={() => setIsTourStarted(true)}
-                      disabled={gpsStatus !== "active" && gpsStatus !== "mock"}
+                      onClick={() => {
+                        if (!selectedTourId) {
+                          setMovementError("Hãy chọn một tour trước khi bắt đầu di chuyển.");
+                          return;
+                        }
+
+                        if (gpsMode === GPS_MODES.DEMO) {
+                          moveDemoToNextPoi();
+                          return;
+                        }
+
+                        if (!liveGeolocationAvailable) {
+                          openSelectedLocationDirections();
+                          return;
+                        }
+
+                        if (!canUseTourLocation) {
+                          setMovementError(gpsError || "Vị trí chưa sẵn sàng. Hãy cấp quyền vị trí rồi thử lại.");
+                          return;
+                        }
+
+                        setMovementError("");
+                        setIsTourStarted(true);
+                      }}
+                      disabled={
+                        !selectedTourId ||
+                        locations.length === 0 ||
+                        (gpsMode === GPS_MODES.REAL ? !canUseRealGps : !canUseDemoGps) ||
+                        isMovingDemo
+                      }
                     >
                       ▶ Di chuyển
                     </button>
                   </>
                 ) : done ? (
                   <>
-                    <span style={{ marginRight: 8 }}>✅</span> Đã hoàn thành tour - 4/4 địa điểm
+                    <span style={{ marginRight: 8 }}>✅</span> Đã hoàn thành tour - {locations.length}/{locations.length} địa điểm
+                  </>
+                ) : gpsMode === GPS_MODES.DEMO ? (
+                  <>
+                    <span className={isMovingDemo ? "pulse-dot" : ""} />
+                    {isMovingDemo
+                      ? "Demo Mode: đang di chuyển tới POI kế tiếp..."
+                      : `Demo Mode: đang ở POI ${Math.min(demoPoiIndex + 1, locations.length)}/${locations.length}`}
+                    <button
+                      className="btn-start-tour"
+                      onClick={moveDemoToNextPoi}
+                      disabled={isMovingDemo || locations.length === 0}
+                    >
+                      ▶ Di chuyển
+                    </button>
                   </>
                 ) : (
                   <>
@@ -421,13 +794,29 @@ function Home() {
                 )}
               </div>
 
+              {movementError ? (
+                <div className="gps-status-card gps-status-error">
+                  <span>⚠️</span>
+                  <span>{movementError}</span>
+                </div>
+              ) : null}
+
               {/* GPS Status Indicator */}
               <div className={`gps-status-card gps-status-${gpsStatus}`}>
-                {gpsStatus === "active" && (
+                {gpsMode === GPS_MODES.REAL && gpsStatus === "active" && (
                   <>
                     <span>📡</span>
                     <span>
                       GPS Active - {userLocation.lat?.toFixed(4)}, {userLocation.lng?.toFixed(4)}
+                      {userLocation.accuracy && <span> (±{userLocation.accuracy}m)</span>}
+                    </span>
+                  </>
+                )}
+                {gpsMode === GPS_MODES.DEMO && (
+                  <>
+                    <span>📍</span>
+                    <span>
+                      Demo Mode - {userLocation.lat?.toFixed(4)}, {userLocation.lng?.toFixed(4)}
                       {userLocation.accuracy && <span> (±{userLocation.accuracy}m)</span>}
                     </span>
                   </>
@@ -442,15 +831,6 @@ function Home() {
                   <>
                     <span>❌</span>
                     <span>{gpsError || "GPS bị từ chối"}</span>
-                  </>
-                )}
-                {gpsStatus === "mock" && (
-                  <>
-                    <span>ᯓ➤</span>
-                    <span>
-                      GPS Tracking - {userLocation.lat?.toFixed(4)}, {userLocation.lng?.toFixed(4)}
-                      {userLocation.accuracy && <span> (±{userLocation.accuracy}m)</span>}
-                    </span>
                   </>
                 )}
                 {gpsStatus === "error" && (

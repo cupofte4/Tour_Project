@@ -12,16 +12,24 @@ namespace backend.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "Audio",
-                table: "Locations");
-
-            migrationBuilder.AddColumn<bool>(
-                name: "IsLocked",
-                table: "Users",
-                type: "tinyint(1)",
-                nullable: false,
-                defaultValue: false);
+            migrationBuilder.Sql(
+                """
+                SET @column_exists = (
+                    SELECT COUNT(*)
+                    FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_SCHEMA = DATABASE()
+                      AND TABLE_NAME = 'Locations'
+                      AND COLUMN_NAME = 'Audio'
+                );
+                SET @drop_audio_sql = IF(
+                    @column_exists > 0,
+                    'ALTER TABLE `Locations` DROP COLUMN `Audio`;',
+                    'SELECT 1;'
+                );
+                PREPARE drop_audio_stmt FROM @drop_audio_sql;
+                EXECUTE drop_audio_stmt;
+                DEALLOCATE PREPARE drop_audio_stmt;
+                """);
 
             migrationBuilder.CreateTable(
                 name: "LocationManagerAssignments",
@@ -245,10 +253,6 @@ namespace backend.Migrations
 
             migrationBuilder.DropTable(
                 name: "Tours");
-
-            migrationBuilder.DropColumn(
-                name: "IsLocked",
-                table: "Users");
 
             migrationBuilder.AddColumn<string>(
                 name: "Audio",

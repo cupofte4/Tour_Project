@@ -137,6 +137,7 @@ function AdminDashboard() {
 
   const [analytics, setAnalytics] = useState(null);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
+  const [analyticsError, setAnalyticsError] = useState("");
 
   const [assignments, setAssignments] = useState([]);
   const [isLoadingAssignments, setIsLoadingAssignments] = useState(true);
@@ -189,12 +190,24 @@ function AdminDashboard() {
 
   const loadAnalytics = async () => {
     setIsLoadingAnalytics(true);
+    setAnalyticsError("");
     try {
       const data = await GET("/admin/analytics/summary");
-      setAnalytics(data || { currentActiveDevices: 0, totalAudioPlays: 0, totalFavoritesSaved: 0 });
+      setAnalytics(data || {
+        currentActiveDevices: 0,
+        totalAudioPlays: 0,
+        totalFavoritesSaved: 0,
+        totalVisitors: 0,
+      });
     } catch (error) {
       console.error("Failed to load analytics summary:", error);
-      setAnalytics({ currentActiveDevices: 0, totalAudioPlays: 0, totalFavoritesSaved: 0 });
+      setAnalyticsError("Không tải được số liệu analytics. Dashboard sẽ thử lại tự động.");
+      setAnalytics({
+        currentActiveDevices: 0,
+        totalAudioPlays: 0,
+        totalFavoritesSaved: 0,
+        totalVisitors: 0,
+      });
     } finally {
       setIsLoadingAnalytics(false);
     }
@@ -596,8 +609,14 @@ function AdminDashboard() {
     {
       title: "Lượt yêu thích",
       value: isLoadingAnalytics ? null : (analytics?.totalFavoritesSaved ?? 0),
-      note: "Tổng số lượt yêu thích",
+      note: "Tổng số lượt yêu thích hiện tại",
       icon: LuSparkles,
+    },
+    {
+      title: "Khách truy cập",
+      value: isLoadingAnalytics ? null : (analytics?.totalVisitors ?? analytics?.totalVisitorsToday ?? 0),
+      note: "Tổng số thiết bị đã truy cập website",
+      icon: LuArrowUpRight,
     },
   ];
 
@@ -607,7 +626,14 @@ function AdminDashboard() {
     <div className="map-tab-layout">
       <div className="map-panel">
         <MapView
-          userLocation={{ lat: 10.7593, lng: 106.7046 }}
+          userLocation={
+            mapSelectedLocation
+              ? {
+                  lat: Number(mapSelectedLocation.latitude ?? mapSelectedLocation.Latitude),
+                  lng: Number(mapSelectedLocation.longitude ?? mapSelectedLocation.Longitude),
+                }
+              : null
+          }
           locations={locations}
           onSelectLocation={(loc) => setMapSelectedLocation(loc)}
         />
@@ -1813,6 +1839,9 @@ function AdminDashboard() {
         <div className="admin-content">
           {activeMenu === "overview" && (
             <>
+              {analyticsError && (
+                <div className="admin-feedback admin-feedback-error">{analyticsError}</div>
+              )}
               <section className="stats-grid">
                 {stats.map((stat) => {
                   const Icon = stat.icon;
@@ -1826,7 +1855,9 @@ function AdminDashboard() {
                       </div>
                       <div className="stat-copy">
                         <p className="stat-title">{stat.title}</p>
-                        <h3 className="stat-value">{stat.value}</h3>
+                        <h3 className="stat-value">
+                          {stat.value === null ? "..." : stat.value}
+                        </h3>
                         <p className="stat-note">{stat.note}</p>
                       </div>
                     </article>

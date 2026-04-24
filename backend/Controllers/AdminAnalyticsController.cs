@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Tour_Project.Models;
 using VinhKhanhGuide.Application.Analytics;
 
 namespace VinhKhanhGuide.Api.Controllers;
 
 [ApiController]
 [Route("api/admin/analytics")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = Roles.Admin)]
 public sealed class AdminAnalyticsController(IAnalyticsService analyticsService) : ControllerBase
 {
     [HttpGet("summary")]

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import useHeartbeat from "./hooks/useHeartbeat";
 import { isAuthenticated, getUserRole } from "./services/authService";
@@ -45,6 +45,16 @@ function PublicRoute({ element }) {
   return element;
 }
 
+function PublicAnalyticsTracker() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.toLowerCase().startsWith("/admin");
+  useHeartbeat({
+    enabled: !isAdminRoute,
+    pageKey: `${location.pathname}${location.search}`,
+  });
+  return null;
+}
+
 function App() {
   const [authChecked, setAuthChecked] = useState(false);
 
@@ -55,9 +65,6 @@ function App() {
     console.log("Auth check on app load:", authenticated);
     setAuthChecked(true);
   }, []);
-
-  // Start background heartbeat (guest heartbeat)
-  useHeartbeat();
 
   // Prevent flickering by not rendering routes until auth is checked
   if (!authChecked) {
@@ -71,6 +78,7 @@ function App() {
         v7_relativeSplatPath: true,
       }}
     >
+      <PublicAnalyticsTracker />
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Home />} />

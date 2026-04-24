@@ -1,0 +1,13 @@
+.git
+.gitignore
+.DS_Store
+
+backend/bin
+backend/obj
+backend/bin_build
+backend/build-check
+
+frontend/node_modules
+frontend/dist
+
+**/.DS_Store

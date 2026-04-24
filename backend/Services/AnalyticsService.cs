@@ -8,6 +8,13 @@ namespace VinhKhanhGuide.Infrastructure.Analytics;
 public sealed class AnalyticsService : IAnalyticsService
 {
     private readonly AppDbContext _db;
+    private static readonly SemaphoreSlim SchemaLock = new(1, 1);
+    private static bool _schemaEnsured;
+    private static readonly HashSet<string> VisitEventTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "page_view",
+        "heartbeat"
+    };
 
     public AnalyticsService(AppDbContext db)
     {
@@ -16,66 +23,160 @@ public sealed class AnalyticsService : IAnalyticsService
 
     public async Task RecordAudioPlayAsync(AudioPlayRequest request, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(request.DeviceId)) throw new ArgumentException("DeviceId is required.", nameof(request));
+        await EnsureAnalyticsSchemaAsync(cancellationToken);
+
+        var deviceId = NormalizeDeviceId(request.DeviceId);
+        if (string.IsNullOrWhiteSpace(deviceId)) throw new ArgumentException("DeviceId is required.", nameof(request));
 
         var entity = new AudioPlay
         {
-            DeviceId = request.DeviceId.Trim(),
+            DeviceId = deviceId,
             LocationId = request.LocationId,
             AudioId = request.AudioId,
             OccurredAtUtc = request.OccurredAtUtc ?? DateTimeOffset.UtcNow
         };
 
         await _db.AudioPlays.AddAsync(entity, cancellationToken);
+        await AddEventAsync(deviceId, "audio_play", request.LocationId, string.Empty, entity.OccurredAtUtc, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
     public async Task RecordFavoriteClickAsync(FavoriteClickRequest request, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(request.DeviceId)) throw new ArgumentException("DeviceId is required.", nameof(request));
+        await EnsureAnalyticsSchemaAsync(cancellationToken);
+
+        var deviceId = NormalizeDeviceId(request.DeviceId);
+        if (string.IsNullOrWhiteSpace(deviceId)) throw new ArgumentException("DeviceId is required.", nameof(request));
+
+        var now = request.OccurredAtUtc ?? DateTimeOffset.UtcNow;
+        var state = await _db.LocationFavoriteStates
+            .FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.LocationId == request.LocationId, cancellationToken);
+        var previousValue = state?.IsFavorited;
+
+        if (state is null && !request.IsFavorite)
+        {
+            return;
+        }
+
+        if (state is null)
+        {
+            state = new LocationFavoriteState
+            {
+                DeviceId = deviceId,
+                LocationId = request.LocationId,
+                IsFavorited = request.IsFavorite,
+                FavoritedAtUtc = request.IsFavorite ? now : null,
+                UpdatedAtUtc = now
+            };
+            await _db.LocationFavoriteStates.AddAsync(state, cancellationToken);
+        }
+        else if (state.IsFavorited != request.IsFavorite)
+        {
+            state.IsFavorited = request.IsFavorite;
+            state.FavoritedAtUtc = request.IsFavorite ? now : state.FavoritedAtUtc;
+            state.UpdatedAtUtc = now;
+        }
+
+        if (previousValue == request.IsFavorite)
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+            return;
+        }
 
         var entity = new FavoriteClick
         {
-            DeviceId = request.DeviceId.Trim(),
+            DeviceId = deviceId,
             LocationId = request.LocationId,
             IsFavorite = request.IsFavorite,
-            OccurredAtUtc = request.OccurredAtUtc ?? DateTimeOffset.UtcNow
+            OccurredAtUtc = now
         };
 
         await _db.FavoriteClicks.AddAsync(entity, cancellationToken);
+        await AddEventAsync(
+            deviceId,
+            request.IsFavorite ? "favorite_add" : "favorite_remove",
+            request.LocationId,
+            string.Empty,
+            now,
+            cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
     public async Task RecordHeartbeatAsync(AppUsageHeartbeatRequest request, CancellationToken cancellationToken = default)
     {
-        // Heartbeat tracking removed: no-op to satisfy interface while AppUsageSession entity is deleted.
-        await Task.CompletedTask;
+        await EnsureAnalyticsSchemaAsync(cancellationToken);
+
+        var deviceId = NormalizeDeviceId(request.DeviceId);
+        if (string.IsNullOrWhiteSpace(deviceId)) throw new ArgumentException("DeviceId is required.", nameof(request));
+
+        var path = NormalizePath(request.Path);
+        if (IsAdminPath(path)) return;
+
+        var now = request.OccurredAtUtc ?? DateTimeOffset.UtcNow;
+        var eventType = VisitEventTypes.Contains(request.EventType) ? request.EventType : "heartbeat";
+
+        await UpsertVisitorDeviceAsync(deviceId, path, request.UserAgent, now, cancellationToken);
+
+        var entity = new AppUsageHeartbeat
+        {
+            SessionId = request.SessionId?.Trim() ?? string.Empty,
+            DeviceId = deviceId,
+            OccurredAtUtc = now,
+            Platform = request.Platform?.Trim() ?? string.Empty,
+            AppVersion = request.AppVersion?.Trim() ?? string.Empty
+        };
+
+        await _db.AppUsageHeartbeats.AddAsync(entity, cancellationToken);
+        await AddEventAsync(deviceId, eventType, null, path, now, cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RecordEventAsync(AnalyticsEventRequest request, CancellationToken cancellationToken = default)
+    {
+        await EnsureAnalyticsSchemaAsync(cancellationToken);
+
+        var deviceId = NormalizeDeviceId(request.DeviceId);
+        if (string.IsNullOrWhiteSpace(deviceId)) throw new ArgumentException("DeviceId is required.", nameof(request));
+
+        var eventType = (request.EventType ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(eventType)) throw new ArgumentException("EventType is required.", nameof(request));
+
+        var path = NormalizePath(request.Path);
+        if (IsAdminPath(path)) return;
+
+        await AddEventAsync(
+            deviceId,
+            eventType.Length > 64 ? eventType[..64] : eventType,
+            request.LocationId,
+            path,
+            request.CreatedAtUtc ?? DateTimeOffset.UtcNow,
+            cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<AnalyticsSummaryDto> GetSummaryAsync(CancellationToken cancellationToken = default)
     {
+        await EnsureAnalyticsSchemaAsync(cancellationToken);
+
         var audioPlays = await _db.AudioPlays.AsNoTracking().LongCountAsync(cancellationToken);
-        var favorites = await _db.FavoriteClicks.AsNoTracking().LongCountAsync(cancellationToken);
+        var favorites = await _db.LocationFavoriteStates.AsNoTracking()
+            .LongCountAsync(x => x.IsFavorited, cancellationToken);
 
-        // Approximate current active devices by distinct DeviceId seen in recent events (last 5 minutes)
-        var since = DateTimeOffset.UtcNow.AddMinutes(-5);
+        var activeSince = DateTimeOffset.UtcNow.AddMinutes(-5);
 
-        var audioDevices = _db.AudioPlays.AsNoTracking()
-            .Where(x => x.OccurredAtUtc >= since)
-            .Select(x => x.DeviceId);
+        var activeCount = await _db.VisitorDevices.AsNoTracking()
+            .CountAsync(x => x.LastSeenAtUtc >= activeSince, cancellationToken);
 
-        var favDevices = _db.FavoriteClicks.AsNoTracking()
-            .Where(x => x.OccurredAtUtc >= since)
-            .Select(x => x.DeviceId);
-
-        var distinctDevicesQuery = audioDevices.Union(favDevices).Where(id => !string.IsNullOrEmpty(id));
-        var activeCount = await distinctDevicesQuery.Distinct().CountAsync(cancellationToken);
+        var visitors = await _db.VisitorDevices.AsNoTracking()
+            .LongCountAsync(cancellationToken);
 
         return new AnalyticsSummaryDto
         {
             CurrentActiveDevices = (int)activeCount,
             TotalAudioPlays = audioPlays,
-            TotalFavoritesSaved = favorites
+            TotalFavoritesSaved = favorites,
+            TotalVisitorsToday = visitors,
+            TotalVisitors = visitors
         };
     }
 
@@ -90,7 +191,7 @@ public sealed class AnalyticsService : IAnalyticsService
             .Select(g => new { Date = g.Key, Count = g.LongCount() });
 
         var favQuery = _db.FavoriteClicks.AsNoTracking()
-            .Where(x => x.OccurredAtUtc.Date >= start && x.OccurredAtUtc.Date <= end)
+            .Where(x => x.IsFavorite && x.OccurredAtUtc.Date >= start && x.OccurredAtUtc.Date <= end)
             .GroupBy(x => x.OccurredAtUtc.Date)
             .Select(g => new { Date = g.Key, Count = g.LongCount() });
 
@@ -107,5 +208,170 @@ public sealed class AnalyticsService : IAnalyticsService
         }
 
         return result;
+    }
+
+    private static string NormalizeDeviceId(string deviceId)
+        => (deviceId ?? string.Empty).Trim();
+
+    private static string NormalizePath(string path)
+    {
+        var normalized = (path ?? "/").Trim();
+        return string.IsNullOrWhiteSpace(normalized) ? "/" : normalized;
+    }
+
+    private static bool IsAdminPath(string path)
+        => path.StartsWith("/admin", StringComparison.OrdinalIgnoreCase);
+
+    private async Task UpsertVisitorDeviceAsync(
+        string deviceId,
+        string path,
+        string userAgent,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var visitor = await _db.VisitorDevices
+            .FirstOrDefaultAsync(x => x.DeviceId == deviceId, cancellationToken);
+
+        if (visitor is null)
+        {
+            visitor = new VisitorDevice
+            {
+                DeviceId = deviceId,
+                FirstSeenAtUtc = now,
+                LastSeenAtUtc = now
+            };
+            await _db.VisitorDevices.AddAsync(visitor, cancellationToken);
+        }
+
+        visitor.LastSeenAtUtc = now;
+        visitor.LastPath = path.Length > 1024 ? path[..1024] : path;
+        var trimmedUserAgent = (userAgent ?? string.Empty).Trim();
+        visitor.LastUserAgent = trimmedUserAgent.Length > 512 ? trimmedUserAgent[..512] : trimmedUserAgent;
+    }
+
+    private async Task AddEventAsync(
+        string deviceId,
+        string eventType,
+        int? locationId,
+        string path,
+        DateTimeOffset createdAtUtc,
+        CancellationToken cancellationToken)
+    {
+        await _db.AnalyticsEvents.AddAsync(new AnalyticsEvent
+        {
+            DeviceId = deviceId,
+            EventType = eventType,
+            LocationId = locationId,
+            Path = path.Length > 1024 ? path[..1024] : path,
+            CreatedAtUtc = createdAtUtc
+        }, cancellationToken);
+    }
+
+    private async Task EnsureAnalyticsSchemaAsync(CancellationToken cancellationToken)
+    {
+        if (_schemaEnsured) return;
+
+        await SchemaLock.WaitAsync(cancellationToken);
+        try
+        {
+            if (_schemaEnsured) return;
+
+            await _db.Database.ExecuteSqlRawAsync(
+                """
+                CREATE TABLE IF NOT EXISTS `AudioPlays` (
+                    `Id` bigint NOT NULL AUTO_INCREMENT,
+                    `DeviceId` varchar(128) NOT NULL,
+                    `LocationId` int NOT NULL,
+                    `AudioId` int NULL,
+                    `OccurredAtUtc` datetime(6) NOT NULL,
+                    CONSTRAINT `PK_AudioPlays` PRIMARY KEY (`Id`)
+                );
+
+                CREATE TABLE IF NOT EXISTS `FavoriteClicks` (
+                    `Id` bigint NOT NULL AUTO_INCREMENT,
+                    `DeviceId` varchar(128) NOT NULL,
+                    `LocationId` int NOT NULL,
+                    `IsFavorite` tinyint(1) NOT NULL,
+                    `OccurredAtUtc` datetime(6) NOT NULL,
+                    CONSTRAINT `PK_FavoriteClicks` PRIMARY KEY (`Id`)
+                );
+
+                CREATE TABLE IF NOT EXISTS `AppUsageHeartbeats` (
+                    `Id` bigint NOT NULL AUTO_INCREMENT,
+                    `SessionId` varchar(128) NOT NULL,
+                    `DeviceId` varchar(128) NOT NULL,
+                    `OccurredAtUtc` datetime(6) NOT NULL,
+                    `Platform` varchar(128) NOT NULL,
+                    `AppVersion` varchar(64) NOT NULL,
+                    CONSTRAINT `PK_AppUsageHeartbeats` PRIMARY KEY (`Id`)
+                );
+
+                CREATE TABLE IF NOT EXISTS `VisitorDevices` (
+                    `Id` bigint NOT NULL AUTO_INCREMENT,
+                    `DeviceId` varchar(128) NOT NULL,
+                    `FirstSeenAtUtc` datetime(6) NOT NULL,
+                    `LastSeenAtUtc` datetime(6) NOT NULL,
+                    `LastPath` varchar(1024) NOT NULL,
+                    `LastUserAgent` varchar(512) NOT NULL,
+                    CONSTRAINT `PK_VisitorDevices` PRIMARY KEY (`Id`)
+                );
+
+                CREATE TABLE IF NOT EXISTS `AnalyticsEvents` (
+                    `Id` bigint NOT NULL AUTO_INCREMENT,
+                    `DeviceId` varchar(128) NOT NULL,
+                    `EventType` varchar(64) NOT NULL,
+                    `LocationId` int NULL,
+                    `Path` varchar(1024) NOT NULL,
+                    `CreatedAtUtc` datetime(6) NOT NULL,
+                    CONSTRAINT `PK_AnalyticsEvents` PRIMARY KEY (`Id`)
+                );
+
+                CREATE TABLE IF NOT EXISTS `LocationFavoriteStates` (
+                    `Id` bigint NOT NULL AUTO_INCREMENT,
+                    `DeviceId` varchar(128) NOT NULL,
+                    `LocationId` int NOT NULL,
+                    `IsFavorited` tinyint(1) NOT NULL,
+                    `FavoritedAtUtc` datetime(6) NULL,
+                    `UpdatedAtUtc` datetime(6) NOT NULL,
+                    CONSTRAINT `PK_LocationFavoriteStates` PRIMARY KEY (`Id`)
+                );
+                """,
+                cancellationToken);
+
+            await EnsureIndexAsync("AppUsageHeartbeats", "IX_AppUsageHeartbeats_DeviceId_OccurredAtUtc", "CREATE INDEX `IX_AppUsageHeartbeats_DeviceId_OccurredAtUtc` ON `AppUsageHeartbeats` (`DeviceId`(128), `OccurredAtUtc`);", cancellationToken);
+            await EnsureIndexAsync("VisitorDevices", "IX_VisitorDevices_DeviceId", "CREATE UNIQUE INDEX `IX_VisitorDevices_DeviceId` ON `VisitorDevices` (`DeviceId`);", cancellationToken);
+            await EnsureIndexAsync("VisitorDevices", "IX_VisitorDevices_LastSeenAtUtc", "CREATE INDEX `IX_VisitorDevices_LastSeenAtUtc` ON `VisitorDevices` (`LastSeenAtUtc`);", cancellationToken);
+            await EnsureIndexAsync("AnalyticsEvents", "IX_AnalyticsEvents_DeviceId_CreatedAtUtc", "CREATE INDEX `IX_AnalyticsEvents_DeviceId_CreatedAtUtc` ON `AnalyticsEvents` (`DeviceId`, `CreatedAtUtc`);", cancellationToken);
+            await EnsureIndexAsync("AnalyticsEvents", "IX_AnalyticsEvents_EventType_CreatedAtUtc", "CREATE INDEX `IX_AnalyticsEvents_EventType_CreatedAtUtc` ON `AnalyticsEvents` (`EventType`, `CreatedAtUtc`);", cancellationToken);
+            await EnsureIndexAsync("LocationFavoriteStates", "IX_LocationFavoriteStates_DeviceId_LocationId", "CREATE UNIQUE INDEX `IX_LocationFavoriteStates_DeviceId_LocationId` ON `LocationFavoriteStates` (`DeviceId`, `LocationId`);", cancellationToken);
+            await EnsureIndexAsync("LocationFavoriteStates", "IX_LocationFavoriteStates_IsFavorited", "CREATE INDEX `IX_LocationFavoriteStates_IsFavorited` ON `LocationFavoriteStates` (`IsFavorited`);", cancellationToken);
+
+            _schemaEnsured = true;
+        }
+        finally
+        {
+            SchemaLock.Release();
+        }
+    }
+
+    private async Task EnsureIndexAsync(string tableName, string indexName, string createSql, CancellationToken cancellationToken)
+    {
+        var indexExists = await _db.Database
+            .SqlQueryRaw<int>(
+                """
+                SELECT COUNT(*) AS `Value`
+                FROM INFORMATION_SCHEMA.STATISTICS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = {0}
+                  AND INDEX_NAME = {1}
+                """,
+                tableName,
+                indexName)
+            .SingleAsync(cancellationToken);
+
+        if (indexExists == 0)
+        {
+            await _db.Database.ExecuteSqlRawAsync(createSql, cancellationToken);
+        }
     }
 }

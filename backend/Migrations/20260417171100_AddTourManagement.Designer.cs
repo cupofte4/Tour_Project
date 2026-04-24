@@ -335,8 +335,6 @@ namespace backend.Migrations
                     // TourSession references guest DeviceId (string) — no FK to User
 
                     b.Navigation("Tour");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Tour_Project.Models.Tour", b =>

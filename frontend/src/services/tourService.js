@@ -1,4 +1,5 @@
 import API_URL, { GET, POST, PUT, DELETE, PATCH } from "./api";
+import { getOrCreateDeviceId } from "./deviceId";
 
 // ── Tours ──────────────────────────────────────────────────
 
@@ -65,8 +66,12 @@ export async function reorderTourLocations(tourId, items) {
 
 // ── Sessions ───────────────────────────────────────────────
 
-export async function startTourSession(userId, tourId, languageCode = "vi") {
-  return await POST("/sessions", { userId, tourId, languageCode });
+export async function startTourSession(_userId, tourId, languageCode = "vi") {
+  return await POST("/sessions", {
+    deviceId: getOrCreateDeviceId(),
+    tourId,
+    languageCode,
+  });
 }
 
 export async function getSession(sessionId) {

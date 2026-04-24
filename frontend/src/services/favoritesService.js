@@ -1,3 +1,5 @@
+import { trackFavoriteClick } from "./analyticsService";
+
 const FAVORITES_KEY_PREFIX = "favoriteLocations:";
 const GUEST_FAVORITES_KEY = `${FAVORITES_KEY_PREFIX}guest`;
 
@@ -51,6 +53,8 @@ export function toggleFavoriteLocation(locationId) {
 
   localStorage.setItem(key, JSON.stringify(next));
   window.dispatchEvent(new Event("favoritesUpdated"));
+  const isFavorite = next.includes(locationId);
+  trackFavoriteClick(locationId, isFavorite).catch(() => {});
 
-  return next.includes(locationId);
+  return isFavorite;
 }

@@ -90,7 +90,7 @@ namespace Tour_Project.Controllers
                 {
                     tl.Id,
                     tl.OrderIndex,
-                    tl.IsOptional,
+                    isOptional = false,
                     location = new
                     {
                         tl.Location!.Id,

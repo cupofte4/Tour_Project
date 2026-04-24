@@ -361,7 +361,14 @@ function ManagerDashboard() {
     <div className="map-tab-layout">
       <div className="map-panel">
         <MapView
-          userLocation={{ lat: 10.7593, lng: 106.7046 }}
+          userLocation={
+            mapSelectedLocation
+              ? {
+                  lat: Number(mapSelectedLocation.latitude ?? mapSelectedLocation.Latitude),
+                  lng: Number(mapSelectedLocation.longitude ?? mapSelectedLocation.Longitude),
+                }
+              : null
+          }
           locations={locations}
           onSelectLocation={(loc) => setMapSelectedLocation(loc)}
         />
