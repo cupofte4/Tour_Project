@@ -29,19 +29,19 @@ function Login() {
 
     try {
       if (!username.trim()) {
-        setErrorMsg("Vui lòng nhập tên đăng nhập.");
+        setErrorMsg("Vui long nhap ten dang nhap.");
         setIsLoading(false);
         return;
       }
 
       if (!password.trim()) {
-        setErrorMsg("Vui lòng nhập mật khẩu.");
+        setErrorMsg("Vui long nhap mat khau.");
         setIsLoading(false);
         return;
       }
 
       if (password.length < 6) {
-        setErrorMsg("Mật khẩu phải có ít nhất 6 ký tự.");
+        setErrorMsg("Mat khau phai co it nhat 6 ky tu.");
         setIsLoading(false);
         return;
       }
@@ -49,14 +49,12 @@ function Login() {
       const user = await login(username, password);
 
       if (!user) {
-        setErrorMsg("Tên đăng nhập hoặc mật khẩu không chính xác.");
+        setErrorMsg("Ten dang nhap hoac mat khau khong chinh xac.");
         return;
       }
 
       const normalizedRole = (user.role || "").toLowerCase();
 
-      // Note: authService.login already saved token + user to localStorage
-      // Just save additional preferences if needed
       localStorage.setItem("username", username);
       localStorage.setItem("rememberMe", JSON.stringify(rememberMe));
 
@@ -68,7 +66,7 @@ function Login() {
         navigate("/", { replace: true });
       }
     } catch (error) {
-      setErrorMsg(error.message || "Có lỗi xảy ra. Vui lòng thử lại.");
+      setErrorMsg(error.message || "Co loi xay ra. Vui long thu lai.");
       console.error("Login error:", error);
     } finally {
       setIsLoading(false);
@@ -82,10 +80,11 @@ function Login() {
           <div className="visual-backdrop" />
           <div className="visual-copy">
             <p className="visual-eyebrow">NEW JOURNEY!</p>
-            <h1 className="visual-title">Khám phá thế giới, trọn vẹn từng khoảnh khắc.</h1>
+            <h1 className="visual-title">Kham pha the gioi, tron ven tung khoanh khac.</h1>
             <p className="visual-description">
-              Đăng nhập để lưu lại các điểm đến yêu thích, lên kế hoạch cho chuyến đi và nhận những ưu đãi du lịch dành riêng cho bạn.
-            </p>  
+              Dang nhap de luu lai cac diem den yeu thich, len ke hoach cho chuyen di va nhan
+              nhung uu dai du lich danh rieng cho ban.
+            </p>
           </div>
 
           <div className="map-illustration">
@@ -104,15 +103,15 @@ function Login() {
         <section className="login-form-panel">
           <div className="login-card">
             <div className="login-brand">
-              <span className="login-brand-mark">KHỞI ĐẦU CÙNG TRAVEL AUDIO GUIDE</span>
+              <span className="login-brand-mark">KHOI DAU CUNG TRAVEL AUDIO GUIDE</span>
             </div>
 
             <div className="login-header">
-              <h2 className="login-title">Kết nối tới Travel Audio Guide</h2>
+              <h2 className="login-title">Ket noi toi Travel Audio Guide</h2>
               <p className="login-subtitle">
-                Mở hành trình khám phá bằng những câu chuyện âm thanh tại mỗi điểm đến.
+                Mo hanh trinh kham pha bang nhung cau chuyen am thanh tai moi diem den.
               </p>
-            </div>  
+            </div>
 
             {successMsg && (
               <div className="login-alert login-alert-success">
@@ -130,7 +129,7 @@ function Login() {
 
             <form onSubmit={handleLogin} className="login-form">
               <div className="form-group">
-                <label htmlFor="username">Tên tài khoản</label>
+                <label htmlFor="username">Ten tai khoan</label>
                 <input
                   type="text"
                   id="username"
@@ -143,7 +142,7 @@ function Login() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="password">Mật khẩu</label>
+                <label htmlFor="password">Mat khau</label>
                 <input
                   type="password"
                   id="password"
@@ -163,11 +162,11 @@ function Login() {
                     checked={rememberMe}
                     onChange={(event) => setRememberMe(event.target.checked)}
                   />
-                  <span>Nhớ tài khoản</span>
+                  <span>Nho tai khoan</span>
                 </label>
 
                 <a href="#forgot" className="meta-link">
-                  Quên mật khẩu?
+                  Quen mat khau?
                 </a>
               </div>
 
@@ -175,13 +174,6 @@ function Login() {
                 {isLoading ? "Logging in..." : "Log in"}
               </button>
             </form>
-
-            <p className="login-footer">
-              Chưa có tài khoản?
-              <a href="/register" className="signup-link">
-                Đăng ký ngay
-              </a>
-            </p>
           </div>
         </section>
       </div>

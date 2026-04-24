@@ -27,7 +27,15 @@ namespace Tour_Project.Controllers
         [HttpGet]
         public IActionResult GetAll()
         {
-            return Ok(_context.Locations.ToList());
+            try
+            {
+                var data = _context.Locations.ToList();
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [HttpPost]

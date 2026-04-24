@@ -192,11 +192,11 @@ System Features:
 
 # 14. DEBUGGING
 
-"Fix code:
+""Fix code:
 
 [PASTE CODE HERE]
 
-Analyze the issue and provide the corrected code using C# (.NET 10) or React (Vite) depending on the context. Ensure layout fixes account for Leaflet map behaviors and Flexbox constraints."
+Analyze the issue and provide the corrected code using C# (.NET 10) or React (Vite) depending on the context. Ensure layout fixes account for Leaflet map behaviors and Flexbox constraints.
 
 ---
 

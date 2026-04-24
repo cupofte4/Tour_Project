@@ -8,10 +8,12 @@ namespace Tour_Project.Controllers
     public sealed class AnalyticsController : ControllerBase
     {
         private readonly IAnalyticsService _analytics;
+        private readonly IAudioPlayEventQueue _audioPlayEventQueue;
 
-        public AnalyticsController(IAnalyticsService analytics)
+        public AnalyticsController(IAnalyticsService analytics, IAudioPlayEventQueue audioPlayEventQueue)
         {
             _analytics = analytics;
+            _audioPlayEventQueue = audioPlayEventQueue;
         }
 
         [HttpPost("heartbeat")]
@@ -58,7 +60,14 @@ namespace Tour_Project.Controllers
             if (request.LocationId <= 0)
                 return BadRequest(new ValidationProblemDetails { Detail = "LocationId is required." });
 
-            await _analytics.RecordAudioPlayAsync(request, cancellationToken);
+            await _audioPlayEventQueue.EnqueueAsync(new AudioPlayEvent
+            {
+                DeviceId = request.DeviceId,
+                LocationId = request.LocationId,
+                AudioId = request.AudioId,
+                OccurredAtUtc = request.OccurredAtUtc
+            }, cancellationToken);
+
             return Accepted(new { accepted = true });
         }
 

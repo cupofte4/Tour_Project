@@ -7,6 +7,11 @@ import {
   recordVisit,
 } from "../services/tourService";
 import audioQueue from "../services/audioQueueService";
+import {
+  canTriggerPoi,
+  getPoiPriority,
+  selectBestPoi,
+} from "../services/poiSelectionService";
 import Navbar from "../components/Navbar";
 import TravelSidebar from "../components/TravelSidebar";
 import "../styles/app.css";
@@ -66,20 +71,19 @@ export default function TourDetail() {
 
       const candidates = pois
         .filter((poi) => !visitedIds.has(poi.id))
-        .filter((poi) => !cooldowns.current[poi.id] || now > cooldowns.current[poi.id])
+        .filter((poi) => canTriggerPoi(poi.id, cooldowns.current, COOLDOWN_MS, now))
         .map((poi) => ({
           ...poi,
           distance: haversine(pos.lat, pos.lng, poi.latitude, poi.longitude),
         }))
-        .filter((poi) => poi.distance <= 50)
-        .sort((a, b) => a.distance - b.distance);
+        .filter((poi) => poi.distance <= 50);
 
-      setNearestPOI(candidates[0] ?? null);
+      const nearest = selectBestPoi(candidates);
+      setNearestPOI(nearest ? { ...nearest, prio: getPoiPriority(nearest) } : null);
 
-      if (candidates.length === 0) return;
+      if (!nearest) return;
 
-      const nearest = candidates[0];
-      cooldowns.current[nearest.id] = now + COOLDOWN_MS;
+      cooldowns.current[nearest.id] = now;
       markVisited(nearest.id);
 
       const langMap = {

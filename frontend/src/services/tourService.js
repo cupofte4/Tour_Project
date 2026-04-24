@@ -47,6 +47,14 @@ export async function getAllToursAdmin() {
   }
 }
 
+export async function getTourManageById(id) {
+  try {
+    return await GET(`/tours/${id}/manage`);
+  } catch {
+    return null;
+  }
+}
+
 export async function updateTourStatus(id, isActive) {
   return await PATCH(`/tours/${id}/status`, { isActive: Boolean(isActive) });
 }

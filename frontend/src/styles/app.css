@@ -772,35 +772,92 @@ audio {
   }
 }
 
-.favorites-page {
-  display: grid;
-  gap: 18px;
+.page-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.92), transparent 48%),
+    linear-gradient(135deg, #f7fbff 0%, #eef6ff 55%, #f5f8fb 100%);
+  border: 1px solid #e2ebf3;
+  box-shadow: 0 10px 24px rgba(15, 39, 71, 0.06);
 }
 
+.page-hero-tour {
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.95), transparent 48%),
+    linear-gradient(135deg, #fff8ef 0%, #f6f7ff 55%, #eef7ff 100%);
+}
+
+.page-hero-favorites {
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.95), transparent 48%),
+    linear-gradient(135deg, #fff3f4 0%, #fffaf7 50%, #f3f8ff 100%);
+}
+
+.page-eyebrow {
+  margin: 0 0 10px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #7a889d;
+}
+
+.page-subtitle {
+  margin: 10px 0 0;
+  max-width: 680px;
+  color: #5c6c82;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.tour-list-grid,
+.favorites-page,
 .favorites-list {
   display: grid;
-  gap: 18px;
+  gap: 16px;
 }
 
+.tour-discovery-card,
 .favorite-card {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 120px 1fr;
   gap: 20px;
+  align-items: stretch;
+  padding: 20px;
   background: #fff;
   border: 1px solid #e5edf5;
-  border-radius: 18px;
-  padding: 18px;
-  box-shadow: 0 12px 28px rgba(15, 39, 71, 0.06);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
+.tour-discovery-card {
+  cursor: pointer;
+}
+
+.tour-discovery-card:hover,
+.favorite-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  border-color: #d8e4ef;
+}
+
+.tour-discovery-media,
 .favorite-card-media {
   width: 100%;
-  height: 180px;
-  border-radius: 14px;
+  min-height: 132px;
+  border-radius: 16px;
   overflow: hidden;
-  background: #eef4f8;
+  background: linear-gradient(135deg, #edf4fa 0%, #dfeaf5 100%);
 }
 
+.tour-discovery-image,
 .favorite-card-media img {
   width: 100%;
   height: 100%;
@@ -808,74 +865,194 @@ audio {
   display: block;
 }
 
+.tour-discovery-placeholder,
 .favorite-card-placeholder {
   width: 100%;
   height: 100%;
+  min-height: 132px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #90a4ae;
+  color: #8da0b3;
   font-size: 14px;
+  text-align: center;
+  padding: 16px;
 }
 
+.tour-discovery-content,
 .favorite-card-content {
   display: grid;
-  gap: 18px;
+  gap: 14px;
+  min-width: 0;
 }
 
+.tour-discovery-header,
 .favorite-card-top {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
+  justify-content: space-between;
   gap: 16px;
 }
 
+.tour-discovery-badge,
+.favorite-card-kicker {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #3e5f95;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.tour-discovery-meta {
+  color: #73839a;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tour-discovery-title,
 .favorite-card-title {
-  font-size: 24px;
+  margin: 0;
   color: #183153;
-  margin-bottom: 8px;
+  font-size: clamp(20px, 2vw, 24px);
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.tour-discovery-description,
+.favorite-card-description {
+  margin: 0;
+  color: #66758a;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.tour-discovery-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.tour-discovery-stat {
+  color: #45566f;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tour-discovery-link {
+  color: #1f6feb;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.favorite-card-main {
+  display: grid;
+  gap: 10px;
+}
+
+.favorite-card-actions {
+  display: grid;
+  justify-items: end;
+  align-content: start;
+  gap: 12px;
 }
 
 .favorite-card-rating {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #f3f5f8;
   color: #607086;
   font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-.favorite-card-description {
-  margin-top: 10px;
-  color: #495a70;
-  font-size: 14px;
-  line-height: 1.7;
+.favorite-card-rating.has-rating {
+  background: #fff5db;
+  color: #9a6700;
 }
 
 .favorite-card-meta {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+}
+
+.favorite-card-meta-row {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #f8fbfd;
+  border: 1px solid #e6eef5;
 }
 
 .favorite-card-label {
   display: inline-block;
-  margin-bottom: 6px;
-  font-size: 12px;
+  margin: 0;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #6b7a90;
+  letter-spacing: 0.1em;
+  color: #7c8ca1;
   font-weight: 700;
 }
 
 .favorite-card-meta p {
+  margin: 0;
   color: #23354f;
   line-height: 1.65;
 }
 
+.favorite-btn.active {
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #fff0f1;
+  color: #c63d4f;
+  border: 1px solid #ffd6db;
+  box-shadow: 0 4px 12px rgba(198, 61, 79, 0.12);
+}
+
+.favorite-btn.active:hover {
+  background: #ffe3e7;
+  color: #b53143;
+  transform: translateY(-1px);
+}
+
 .favorite-empty-state {
-  padding: 28px;
+  padding: 32px 24px;
   border-radius: 16px;
-  background: #fff;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbfd 100%);
   border: 1px dashed #cfdbe8;
   color: #6d7f96;
   text-align: center;
+  box-shadow: 0 4px 12px rgba(15, 39, 71, 0.04);
+}
+
+@media (max-width: 1024px) {
+  .page-hero {
+    padding: 18px 20px;
+  }
+
+  .tour-discovery-card,
+  .favorite-card {
+    grid-template-columns: 180px 1fr;
+  }
+
+  .tour-discovery-media,
+  .favorite-card-media {
+    min-height: 148px;
+  }
 }
 
 @media (max-width: 900px) {
@@ -961,14 +1138,21 @@ audio {
     align-items: flex-start;
   }
 
+  .page-hero {
+    padding: 18px;
+  }
+
+  .tour-discovery-card,
   .favorite-card {
     grid-template-columns: 1fr;
   }
 
+  .tour-discovery-media,
   .favorite-card-media {
     height: 220px;
   }
 
+  .tour-discovery-header,
   .favorite-card-top,
   .location-name-row {
     flex-direction: column;
@@ -977,6 +1161,50 @@ audio {
 
   .favorite-card-meta {
     grid-template-columns: 1fr;
+  }
+
+  .favorite-card-actions {
+    width: 100%;
+    justify-items: start;
+  }
+
+  .tour-discovery-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.myprofile-main-content { padding-left: 15px; }
+
+@media (max-width: 768px) {
+  .page-hero {
+    padding: 16px;
+    margin-bottom: 16px;
+    border-radius: 16px;
+  }
+
+  .myprofile-main-content { padding-left: 0; }
+
+  .page-subtitle {
+    font-size: 14px;
+  }
+
+  .tour-list-grid,
+  .favorites-page,
+  .favorites-list {
+    gap: 14px;
+  }
+
+  .tour-discovery-card,
+  .favorite-card {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .tour-discovery-media,
+  .favorite-card-media {
+    height: 200px;
+    min-height: 200px;
   }
 }
 
@@ -1062,6 +1290,21 @@ audio {
   .review-item-top {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .tour-discovery-card,
+  .favorite-card {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .tour-discovery-title,
+  .favorite-card-title {
+    font-size: 18px;
+  }
+
+  .favorite-card-meta-row {
+    padding: 12px 14px;
   }
 }
 

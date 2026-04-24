@@ -1,8 +1,5 @@
 const configuredApiOrigin = import.meta.env.VITE_API_ORIGIN?.trim();
-const browserOrigin =
-  typeof window !== "undefined" ? window.location.origin : "http://localhost:5093";
-
-const API_ORIGIN = (configuredApiOrigin || browserOrigin).replace(/\/+$/, "");
+const API_ORIGIN = (configuredApiOrigin || "http://localhost:5093").replace(/\/+$/, "");
 const API_URL = `${API_ORIGIN}/api`;
 import { getOrCreateDeviceId } from "./deviceId";
 
@@ -58,7 +55,8 @@ export async function GET(endpoint, options = {}) {
   });
   
   if (!response.ok) {
-    throw new Error(`GET ${endpoint} failed: ${response.statusText}`);
+    const message = await response.text().catch(() => response.statusText);
+    throw new Error(`GET ${endpoint} failed: ${response.status} ${message || response.statusText}`);
   }
   
   return response.json();
@@ -76,7 +74,8 @@ export async function POST(endpoint, body, options = {}) {
   });
 
   if (!response.ok) {
-    throw new Error(`POST ${endpoint} failed: ${response.statusText}`);
+    const message = await response.text().catch(() => response.statusText);
+    throw new Error(`POST ${endpoint} failed: ${response.status} ${message || response.statusText}`);
   }
 
   return response.json();
@@ -94,7 +93,8 @@ export async function PUT(endpoint, body, options = {}) {
   });
 
   if (!response.ok) {
-    throw new Error(`PUT ${endpoint} failed: ${response.statusText}`);
+    const message = await response.text().catch(() => response.statusText);
+    throw new Error(`PUT ${endpoint} failed: ${response.status} ${message || response.statusText}`);
   }
 
   return response.json();
@@ -111,7 +111,8 @@ export async function DELETE(endpoint, options = {}) {
   });
 
   if (!response.ok) {
-    throw new Error(`DELETE ${endpoint} failed: ${response.statusText}`);
+    const message = await response.text().catch(() => response.statusText);
+    throw new Error(`DELETE ${endpoint} failed: ${response.status} ${message || response.statusText}`);
   }
 
   return response.ok ? response.json().catch(() => ({})) : null;
@@ -129,7 +130,8 @@ export async function PATCH(endpoint, body, options = {}) {
   });
 
   if (!response.ok) {
-    throw new Error(`PATCH ${endpoint} failed: ${response.statusText}`);
+    const message = await response.text().catch(() => response.statusText);
+    throw new Error(`PATCH ${endpoint} failed: ${response.status} ${message || response.statusText}`);
   }
 
   return response.json();

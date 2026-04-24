@@ -5,6 +5,7 @@ using Tour_Project.Models;
 
 namespace Tour_Project.Controllers
 {
+    [Route("api/location-manager-assignments")]
     [Route("api/admin")]
     [ApiController]
     public class AdminAssignmentsController : ControllerBase
@@ -35,45 +36,96 @@ namespace Tour_Project.Controllers
             return Ok(managers);
         }
 
+        [HttpGet("")]
         [HttpGet("assignments")]
-        public IActionResult GetAssignments()
+        public async Task<IActionResult> GetAssignments()
         {
-            var assignments = _context.LocationManagerAssignments
-                .Include(item => item.Manager)
-                .Include(item => item.Location)
-                .OrderByDescending(item => item.Id)
-                .Select(item => new
+            Console.WriteLine("Assignments called");
+
+            try
+            {
+                var assignments = await _context.LocationManagerAssignments
+                    .AsNoTracking()
+                    .OrderByDescending(item => item.Id)
+                    .ToListAsync();
+
+                var managerIds = assignments
+                    .Select(item => item.ManagerId)
+                    .Distinct()
+                    .ToList();
+
+                var locationIds = assignments
+                    .Select(item => item.LocationId)
+                    .Distinct()
+                    .ToList();
+
+                var managers = await _context.AdminUsers
+                    .AsNoTracking()
+                    .Where(item => managerIds.Contains(item.Id))
+                    .ToDictionaryAsync(item => item.Id);
+
+                var locations = await _context.Locations
+                    .AsNoTracking()
+                    .Where(item => locationIds.Contains(item.Id))
+                    .ToDictionaryAsync(item => item.Id);
+
+                var result = assignments.Select(item => new
                 {
                     id = item.Id,
-                    managerId = item.AdminUserId,
-                    managerName = item.Manager != null ? item.Manager.FullName : string.Empty,
+                    managerId = item.ManagerId,
+                    managerName = managers.TryGetValue(item.ManagerId, out var manager) ? manager.FullName : string.Empty,
+                    username = managers.TryGetValue(item.ManagerId, out manager) ? manager.Username : string.Empty,
+                    role = managers.TryGetValue(item.ManagerId, out manager) ? Roles.Normalize(manager.Role) : string.Empty,
                     locationId = item.LocationId,
-                    locationName = item.Location != null ? item.Location.Name : string.Empty
-                })
-                .ToList();
+                    locationName = locations.TryGetValue(item.LocationId, out var location) ? location.Name : string.Empty
+                }).ToList();
 
-            return Ok(assignments);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [HttpGet("managers/{managerId}/locations")]
-        public IActionResult GetManagerLocations(int managerId)
+        public async Task<IActionResult> GetManagerLocations(int managerId)
         {
-            var assignments = _context.LocationManagerAssignments
-                .Where(item => item.AdminUserId == managerId)
-                .Include(item => item.Location)
-                .OrderBy(item => item.LocationId)
-                .Select(item => new
+            try
+            {
+                var assignments = await _context.LocationManagerAssignments
+                    .AsNoTracking()
+                    .Where(item => item.ManagerId == managerId)
+                    .OrderBy(item => item.LocationId)
+                    .ToListAsync();
+
+                var locationIds = assignments
+                    .Select(item => item.LocationId)
+                    .Distinct()
+                    .ToList();
+
+                var locations = await _context.Locations
+                    .AsNoTracking()
+                    .Where(item => locationIds.Contains(item.Id))
+                    .ToDictionaryAsync(item => item.Id);
+
+                var result = assignments.Select(item => new
                 {
                     id = item.Id,
-                    managerId = item.AdminUserId,
+                    managerId = item.ManagerId,
                     locationId = item.LocationId,
-                    location = item.Location
-                })
-                .ToList();
+                    location = locations.TryGetValue(item.LocationId, out var location) ? location : null
+                }).ToList();
 
-            return Ok(assignments);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
+        [HttpPost("")]
         [HttpPost("assignments")]
         public IActionResult CreateAssignment(CreateAssignmentRequest request)
         {
@@ -90,14 +142,14 @@ namespace Tour_Project.Controllers
                 return NotFound(new { message = "Location not found" });
 
             var exists = _context.LocationManagerAssignments.Any(item =>
-                item.AdminUserId == request.ManagerId && item.LocationId == request.LocationId);
+                item.ManagerId == request.ManagerId && item.LocationId == request.LocationId);
 
             if (exists)
                 return Ok(new { message = "Already assigned" });
 
             var assignment = new LocationManagerAssignment
             {
-                AdminUserId = request.ManagerId,
+                ManagerId = request.ManagerId,
                 LocationId = request.LocationId
             };
 
@@ -107,16 +159,17 @@ namespace Tour_Project.Controllers
             return Ok(new
             {
                 id = assignment.Id,
-                managerId = assignment.AdminUserId,
+                managerId = assignment.ManagerId,
                 locationId = assignment.LocationId
             });
         }
 
+        [HttpDelete("")]
         [HttpDelete("assignments")]
         public IActionResult DeleteAssignment([FromQuery] int managerId, [FromQuery] int locationId)
         {
             var assignment = _context.LocationManagerAssignments.FirstOrDefault(item =>
-                item.AdminUserId == managerId && item.LocationId == locationId);
+                item.ManagerId == managerId && item.LocationId == locationId);
 
             if (assignment == null)
                 return NotFound();
@@ -128,4 +181,3 @@ namespace Tour_Project.Controllers
         }
     }
 }
-

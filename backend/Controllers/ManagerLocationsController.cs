@@ -18,14 +18,14 @@ namespace Tour_Project.Controllers
         private bool IsLocationOwned(int managerId, int locationId)
         {
             return _context.LocationManagerAssignments.Any(item =>
-                item.AdminUserId == managerId && item.LocationId == locationId);
+                item.ManagerId == managerId && item.LocationId == locationId);
         }
 
         [HttpGet("locations")]
         public IActionResult GetMyLocations([FromQuery] int managerId)
         {
             var locations = _context.LocationManagerAssignments
-                .Where(item => item.AdminUserId == managerId)
+                .Where(item => item.ManagerId == managerId)
                 .Select(item => item.LocationId)
                 .ToList();
 
@@ -65,7 +65,7 @@ namespace Tour_Project.Controllers
 
             var assignment = new LocationManagerAssignment
             {
-                AdminUserId = managerId,
+                ManagerId = managerId,
                 LocationId = location.Id
             };
 

@@ -34,6 +34,9 @@ VALUES
 ('admin', 'admin123', 'Administrator', '0900000000', 'admin'),
 ('manager1', 'manager123', 'Business Manager', '0911000000', 'manager');
 
+UPDATE AdminUsers
+SET Role = LOWER(Role);
+
 -- =============================
 -- LOCATIONS
 -- =============================
@@ -53,12 +56,30 @@ CREATE TABLE Locations (
     TextEn LONGTEXT,
     TextZh LONGTEXT,
     TextDe LONGTEXT,
+    Prio INT NOT NULL DEFAULT 0,
     CreatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UpdatedAt DATETIME NULL,
 
     INDEX IX_Locations_Name (Name),
     INDEX IX_Locations_Coordinates (Latitude, Longitude)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Safe upgrade for existing databases that already have Locations data.
+SET @locations_has_prio = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'Locations'
+      AND COLUMN_NAME = 'Prio'
+);
+SET @add_locations_prio_sql = IF(
+    @locations_has_prio = 0,
+    'ALTER TABLE Locations ADD COLUMN Prio INT NOT NULL DEFAULT 0;',
+    'SELECT 1;'
+);
+PREPARE add_locations_prio_stmt FROM @add_locations_prio_sql;
+EXECUTE add_locations_prio_stmt;
+DEALLOCATE PREPARE add_locations_prio_stmt;
 
 -- =============================
 -- LOCATION STATS
@@ -256,6 +277,32 @@ VALUES
   '欢迎来到泰式炒冰淇淋摊。这里很适合作为永庆美食之旅的甜蜜收尾。冰淇淋在冰板上现做，铺平后卷成小卷，外观很吸引人。口味有芒果、草莓、巧克力、香草和抹茶，还可以加入水果、饼干和甜酱，清爽又有趣。',
   'Willkommen beim Thai Eisrollen Stand. Dies ist ein suesser Abschluss fur einen kulinarischen Abend auf der Vinh Khanh Strasse. Das Eis wird direkt auf einer kalten Platte zubereitet, ausgerollt und zu kleinen Rollen geformt. Es gibt Sorten wie Mango, Erdbeere, Schokolade, Vanille oder Gruentee, dazu frische Fruchte, Kekse und Sossen. Ein frisches Dessert, das besonders bei jungen Leuten und Familien beliebt ist.'
 );
+
+-- Seed priority for existing locations
+UPDATE Locations SET Prio = 10 WHERE Slug = 'oc-vinh-khanh';
+UPDATE Locations SET Prio = 10 WHERE Slug = 'pha-lau-vinh-khanh';
+UPDATE Locations SET Prio = 8 WHERE Slug = 'che-vinh-khanh';
+UPDATE Locations SET Prio = 8 WHERE Slug = 'hai-san-nuong-vinh-khanh';
+UPDATE Locations SET Prio = 6 WHERE Slug = 'banh-trang-nuong-q4';
+UPDATE Locations SET Prio = 6 WHERE Slug = 'sup-cua-vinh-khanh';
+UPDATE Locations SET Prio = 4 WHERE Slug = 'tra-sua-via-he';
+UPDATE Locations SET Prio = 4 WHERE Slug = 'xien-nuong-dem';
+UPDATE Locations SET Prio = 2 WHERE Slug = 'bun-thai-hai-san';
+UPDATE Locations SET Prio = 2 WHERE Slug = 'kem-cuon-thai';
+
+-- ===== BÊN TRÊN (5 POI) =====
+UPDATE Locations SET Latitude = 10.76181, Longitude = 106.70218 WHERE Id = 1;
+UPDATE Locations SET Latitude = 10.76171, Longitude = 106.70236 WHERE Id = 2;
+UPDATE Locations SET Latitude = 10.76161, Longitude = 106.70252 WHERE Id = 3;
+UPDATE Locations SET Latitude = 10.76151, Longitude = 106.70270 WHERE Id = 4;
+UPDATE Locations SET Latitude = 10.76141, Longitude = 106.70288 WHERE Id = 5;
+
+-- ===== BÊN DƯỚI (5 POI) =====
+UPDATE Locations SET Latitude = 10.76156, Longitude = 106.70223 WHERE Id = 6;
+UPDATE Locations SET Latitude = 10.76148, Longitude = 106.70236 WHERE Id = 7;
+UPDATE Locations SET Latitude = 10.76140, Longitude = 106.70249 WHERE Id = 8;
+UPDATE Locations SET Latitude = 10.76132, Longitude = 106.70262 WHERE Id = 9;
+UPDATE Locations SET Latitude = 10.76124, Longitude = 106.70275 WHERE Id = 10;
 
 SELECT * FROM AdminUsers;
 SELECT * FROM Locations;

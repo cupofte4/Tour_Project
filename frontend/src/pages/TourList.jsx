@@ -24,52 +24,59 @@ export default function TourList() {
         <TravelSidebar />
         <div className="myprofile-main-content">
           <div className="myprofile-content">
-            <h1 className="myprofile-title">Khám phá tour</h1>
+            <div className="page-hero page-hero-tour">
+              <div>
+                <p className="page-eyebrow">Danh sách tour</p>
+                <h1 className="myprofile-title">Khám phá tour</h1>
+                <p className="page-subtitle">
+                  Chọn hành trình phù hợp để bắt đầu trải nghiệm khám phá thành phố theo cách trực quan hơn.
+                </p>
+              </div>
+            </div>
 
             {loading ? (
               <div className="favorite-empty-state">Đang tải danh sách tour...</div>
             ) : tours.length === 0 ? (
               <div className="favorite-empty-state">Chưa có tour nào.</div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div className="tour-list-grid">
                 {tours.map((tour) => (
-                  <div
+                  <article
                     key={tour.id}
+                    className="tour-discovery-card"
                     onClick={() => navigate(`/tours/${tour.id}`)}
-                    style={{
-                      border: "1px solid #ddd",
-                      borderRadius: 12,
-                      padding: 16,
-                      cursor: "pointer",
-                      display: "flex",
-                      gap: 16,
-                      alignItems: "center",
-                      background: "#fff",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                    }}
                   >
-                    {tour.coverImage && (
-                      <img
-                        src={tour.coverImage}
-                        alt={tour.title}
-                        style={{
-                          width: 100,
-                          height: 70,
-                          objectFit: "cover",
-                          borderRadius: 8,
-                        }}
-                      />
-                    )}
-                    <div>
-                      <h3 style={{ margin: "0 0 4px" }}>{tour.title}</h3>
-                      <p style={{ margin: "0 0 6px", color: "#666", fontSize: 14 }}>
-                        {tour.description}
-                      </p>
-                      <span style={{ fontSize: 13, color: "#888" }}>
-                        ⏱ {tour.estimatedDurationMinutes} phút | 📍 {tour.locationCount} địa điểm
-                      </span>
+                    <div className="tour-discovery-media">
+                      {tour.coverImage ? (
+                        <img
+                          src={tour.coverImage}
+                          alt={tour.title}
+                          className="tour-discovery-image"
+                        />
+                      ) : (
+                        <div className="tour-discovery-placeholder">Chưa có ảnh bìa</div>
+                      )}
                     </div>
-                  </div>
+
+                    <div className="tour-discovery-content">
+                      <div className="tour-discovery-header">
+                        <span className="tour-discovery-badge">Tour nổi bật</span>
+                        <span className="tour-discovery-meta">
+                          ⏱ {tour.estimatedDurationMinutes} phút
+                        </span>
+                      </div>
+
+                      <h3 className="tour-discovery-title">{tour.title}</h3>
+                      <p className="tour-discovery-description">{tour.description}</p>
+
+                      <div className="tour-discovery-footer">
+                        <span className="tour-discovery-stat">
+                          📍 {tour.locationCount} địa điểm
+                        </span>
+                        <span className="tour-discovery-link">Xem chi tiết</span>
+                      </div>
+                    </div>
+                  </article>
                 ))}
               </div>
             )}

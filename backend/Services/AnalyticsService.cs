@@ -22,22 +22,51 @@ public sealed class AnalyticsService : IAnalyticsService
     }
 
     public async Task RecordAudioPlayAsync(AudioPlayRequest request, CancellationToken cancellationToken = default)
+        => await RecordAudioPlayBatchAsync(new[] { request }, cancellationToken);
+
+    public async Task RecordAudioPlayBatchAsync(IEnumerable<AudioPlayRequest> requests, CancellationToken cancellationToken = default)
     {
         await EnsureAnalyticsSchemaAsync(cancellationToken);
 
-        var deviceId = NormalizeDeviceId(request.DeviceId);
-        if (string.IsNullOrWhiteSpace(deviceId)) throw new ArgumentException("DeviceId is required.", nameof(request));
+        var normalizedRequests = (requests ?? Array.Empty<AudioPlayRequest>())
+            .Select(request => new
+            {
+                Request = request,
+                DeviceId = NormalizeDeviceId(request.DeviceId),
+                OccurredAtUtc = request.OccurredAtUtc ?? DateTimeOffset.UtcNow
+            })
+            .ToArray();
 
-        var entity = new AudioPlay
+        if (normalizedRequests.Length == 0)
         {
-            DeviceId = deviceId,
-            LocationId = request.LocationId,
-            AudioId = request.AudioId,
-            OccurredAtUtc = request.OccurredAtUtc ?? DateTimeOffset.UtcNow
-        };
+            return;
+        }
 
-        await _db.AudioPlays.AddAsync(entity, cancellationToken);
-        await AddEventAsync(deviceId, "audio_play", request.LocationId, string.Empty, entity.OccurredAtUtc, cancellationToken);
+        foreach (var item in normalizedRequests)
+        {
+            if (string.IsNullOrWhiteSpace(item.DeviceId))
+                throw new ArgumentException("DeviceId is required.", nameof(requests));
+
+            if (item.Request.LocationId <= 0)
+                throw new ArgumentException("LocationId is required.", nameof(requests));
+        }
+
+        var entities = normalizedRequests.Select(item => new AudioPlay
+        {
+            DeviceId = item.DeviceId,
+            LocationId = item.Request.LocationId,
+            AudioId = item.Request.AudioId,
+            OccurredAtUtc = item.OccurredAtUtc
+        }).ToArray();
+
+        await _db.AudioPlays.AddRangeAsync(entities, cancellationToken);
+
+        foreach (var entity in entities)
+        {
+            await AddEventAsync(entity.DeviceId, "audio_play", entity.LocationId, string.Empty, entity.OccurredAtUtc, cancellationToken);
+        }
+
+        await IncrementLocationAudioPlayStatsAsync(entities, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -265,6 +294,56 @@ public sealed class AnalyticsService : IAnalyticsService
             Path = path.Length > 1024 ? path[..1024] : path,
             CreatedAtUtc = createdAtUtc
         }, cancellationToken);
+    }
+
+    private async Task IncrementLocationAudioPlayStatsAsync(IEnumerable<AudioPlay> audioPlays, CancellationToken cancellationToken)
+    {
+        var groupedCounts = audioPlays
+            .GroupBy(item => new { item.LocationId, StatDate = item.OccurredAtUtc.UtcDateTime.Date })
+            .Select(group => new
+            {
+                group.Key.LocationId,
+                group.Key.StatDate,
+                Count = group.Count()
+            })
+            .ToArray();
+
+        if (groupedCounts.Length == 0)
+        {
+            return;
+        }
+
+        var locationIds = groupedCounts.Select(item => item.LocationId).Distinct().ToArray();
+        var statDates = groupedCounts.Select(item => item.StatDate).Distinct().ToArray();
+        var minDate = statDates.Min();
+        var maxDate = statDates.Max();
+
+        var existingStats = await _db.LocationStats
+            .Where(item => locationIds.Contains(item.LocationId) && item.StatDate >= minDate && item.StatDate <= maxDate)
+            .ToListAsync(cancellationToken);
+
+        foreach (var groupedCount in groupedCounts)
+        {
+            var stat = existingStats.FirstOrDefault(item =>
+                item.LocationId == groupedCount.LocationId &&
+                item.StatDate.Date == groupedCount.StatDate);
+
+            if (stat is null)
+            {
+                stat = new LocationStat
+                {
+                    LocationId = groupedCount.LocationId,
+                    StatDate = groupedCount.StatDate,
+                    ViewsCount = 0,
+                    AudioPlaysCount = 0
+                };
+
+                existingStats.Add(stat);
+                await _db.LocationStats.AddAsync(stat, cancellationToken);
+            }
+
+            stat.AudioPlaysCount += groupedCount.Count;
+        }
     }
 
     private async Task EnsureAnalyticsSchemaAsync(CancellationToken cancellationToken)

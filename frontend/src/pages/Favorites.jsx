@@ -80,7 +80,15 @@ function Favorites() {
         <TravelSidebar />
         <div className="myprofile-main-content">
           <div className="myprofile-content">
-            <h1 className="myprofile-title">Địa điểm yêu thích</h1>
+            <div className="page-hero page-hero-favorites">
+              <div>
+                <p className="page-eyebrow">Danh sách đã lưu</p>
+                <h1 className="myprofile-title">Địa điểm yêu thích</h1>
+                <p className="page-subtitle">
+                  Tổng hợp những nơi bạn muốn quay lại, với thông tin chính được trình bày rõ ràng và dễ quét nhanh.
+                </p>
+              </div>
+            </div>
 
             <div className="favorites-page">
               {isLoading ? (
@@ -129,34 +137,37 @@ function Favorites() {
 
                         <div className="favorite-card-content">
                           <div className="favorite-card-top">
-                            <div>
+                            <div className="favorite-card-main">
+                              <span className="favorite-card-kicker">Địa điểm đã lưu</span>
                               <h2 className="favorite-card-title">{location.name}</h2>
-                              <p className="favorite-card-rating">
-                                {averageRating
-                                  ? `⭐ ${averageRating}/5 · ${reviews.length} đánh giá`
-                                  : "Chưa có đánh giá"}
-                              </p>
                               <p className="favorite-card-description">
                                 {location.description || "Chưa có mô tả cho địa điểm này."}
                               </p>
                             </div>
 
-                            <button
-                              type="button"
-                              className="favorite-btn active"
-                              onClick={() => handleToggleFavorite(location.id)}
-                            >
-                              <span className="favorite-icon">♥</span>
-                              <span>Đã lưu</span>
-                            </button>
+                            <div className="favorite-card-actions">
+                              <p className={`favorite-card-rating ${averageRating ? "has-rating" : ""}`}>
+                                {averageRating
+                                  ? `★ ${averageRating}/5 · ${reviews.length} đánh giá`
+                                  : "Chưa có đánh giá"}
+                              </p>
+                              <button
+                                type="button"
+                                className="favorite-btn active"
+                                onClick={() => handleToggleFavorite(location.id)}
+                              >
+                                <span className="favorite-icon">♥</span>
+                                <span>Đã lưu</span>
+                              </button>
+                            </div>
                           </div>
 
                           <div className="favorite-card-meta">
-                            <div>
+                            <div className="favorite-card-meta-row">
                               <span className="favorite-card-label">Địa chỉ</span>
                               <p>{location.address || "Đang cập nhật"}</p>
                             </div>
-                            <div>
+                            <div className="favorite-card-meta-row">
                               <span className="favorite-card-label">Số điện thoại</span>
                               <p>{location.phone || "Đang cập nhật"}</p>
                             </div>

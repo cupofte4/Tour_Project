@@ -15,8 +15,7 @@ namespace Tour_Project.Models
         public int LocationId { get; set; }
         public Location? Location { get; set; }
 
-        public int Order { get; set; }
-        public int OrderIndex { get => Order; set => Order = value; }
+        public int OrderIndex { get; set; }
         public bool IsOptional { get; set; } = false;
     }
 }

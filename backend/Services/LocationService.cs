@@ -27,7 +27,8 @@ namespace backend.Services
                     Description = l.Description,
                     Latitude = l.Latitude,
                     Longitude = l.Longitude,
-                    Address = l.Address
+                    Address = l.Address,
+                    Prio = l.Prio
                 })
                 .ToListAsync();
         }
@@ -44,7 +45,8 @@ namespace backend.Services
                 Description = l.Description,
                 Latitude = l.Latitude,
                 Longitude = l.Longitude,
-                Address = l.Address
+                Address = l.Address,
+                Prio = l.Prio
             };
         }
 
@@ -65,7 +67,8 @@ namespace backend.Services
                 Description = l.Description,
                 Latitude = l.Latitude,
                 Longitude = l.Longitude,
-                Address = l.Address
+                Address = l.Address,
+                Prio = l.Prio
             };
         }
 
@@ -85,7 +88,8 @@ namespace backend.Services
                 Description = l.Description,
                 Latitude = l.Latitude,
                 Longitude = l.Longitude,
-                Address = l.Address
+                Address = l.Address,
+                Prio = l.Prio
             };
         }
 

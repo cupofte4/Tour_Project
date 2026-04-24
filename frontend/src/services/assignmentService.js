@@ -1,7 +1,7 @@
 import { GET, POST, DELETE } from "./api";
 
 export async function getAllAssignments() {
-  return await GET(`/admin/assignments?_=${Date.now()}`);
+  return await GET(`/location-manager-assignments?_=${Date.now()}`);
 }
 
 export async function getManagers() {
@@ -9,12 +9,12 @@ export async function getManagers() {
 }
 
 export async function assignLocationToManager(managerId, locationId) {
-  return await POST("/admin/assignments", { managerId, locationId });
+  return await POST("/location-manager-assignments", { managerId, locationId });
 }
 
 export async function unassignLocationFromManager(managerId, locationId) {
   return await DELETE(
-    `/admin/assignments?managerId=${managerId}&locationId=${locationId}`,
+    `/location-manager-assignments?managerId=${managerId}&locationId=${locationId}`,
   );
 }
 

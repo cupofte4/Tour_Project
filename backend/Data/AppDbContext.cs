@@ -59,6 +59,18 @@ namespace Tour_Project.Data
             modelBuilder.Entity<Location>()
                 .HasIndex(l => l.Name);
 
+            modelBuilder.Entity<LocationManagerAssignment>()
+                .HasOne(x => x.Manager)
+                .WithMany()
+                .HasForeignKey(x => x.ManagerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<LocationManagerAssignment>()
+                .HasOne(x => x.Location)
+                .WithMany()
+                .HasForeignKey(x => x.LocationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<AppUsageHeartbeat>()
                 .HasIndex(x => new { x.DeviceId, x.OccurredAtUtc });
 

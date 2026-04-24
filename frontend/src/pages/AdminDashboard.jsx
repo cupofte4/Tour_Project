@@ -16,7 +16,6 @@ import {
   LuTrash2,
   LuUpload,
   LuUsers,
-  LuUserCog,
   LuLink2,
   LuMap,
   LuMapPin,
@@ -35,7 +34,7 @@ import {
 } from "../services/locationService";
 import { speak, stop } from "../services/ttsService";
 import { uploadImages } from "../services/uploadService";
-import { getAllUsers, updateAdminUser } from "../services/userService";
+import { createAdminUser, getAllUsers, updateAdminUser, updateAdminUserRole } from "../services/userService";
 import {
   assignLocationToManager,
   getAllAssignments,
@@ -49,7 +48,6 @@ const DASHBOARD_TABS = [
   { key: "map", label: "Bản đồ", icon: LuMap },
   { key: "tours", label: "Tours", icon: LuRoute },
   { key: "users", label: "Người dùng", icon: LuUsers },
-  { key: "managers", label: "Managers", icon: LuUserCog },
   { key: "assignments", label: "Phân công", icon: LuLink2 },
   { key: "locations", label: "Địa điểm", icon: LuMapPinned },
 ];
@@ -75,7 +73,7 @@ const createEmptyUserForm = () => ({
   id: null,
   fullName: "",
   username: "",
-  role: "",
+  role: "manager",
   isLocked: false,
   password: "",
 });
@@ -114,7 +112,6 @@ function AdminDashboard() {
   const [activeMenu, setActiveMenu] = useState("overview");
 
   const [userSearch, setUserSearch] = useState("");
-  const [managerSearch, setManagerSearch] = useState("");
   const [locationSearch, setLocationSearch] = useState("");
 
   const [users, setUsers] = useState([]);
@@ -274,6 +271,7 @@ function AdminDashboard() {
   const resetUserForm = () => {
     setUserForm(createEmptyUserForm());
     setUserError("");
+    setUserNotice("");
   };
 
   const startEditingUser = (targetUser) => {
@@ -294,37 +292,83 @@ function AdminDashboard() {
     const { name, value, type, checked } = event.target;
     setUserForm((current) => ({
       ...current,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: type === "checkbox" ? checked : name === "role" ? value.toLowerCase() : value,
     }));
   };
 
   const handleUserSubmit = async (event) => {
     event.preventDefault();
-    if (!userForm.id) return;
 
     setIsSavingUser(true);
     setUserError("");
     setUserNotice("");
 
     try {
-      const updatedUser = await updateAdminUser(userForm.id, {
-        password: userForm.password.trim() || null,
-        role: userForm.role || null,
-        isLocked: userForm.isLocked,
-      });
+      if (userForm.id) {
+        const updatedUser = await updateAdminUser(userForm.id, {
+          password: userForm.password.trim() || null,
+          role: (userForm.role || "").toLowerCase() || null,
+          isLocked: userForm.isLocked,
+        });
 
-      setUsers((current) =>
-        current.map((item) =>
-          item.id === updatedUser.id ? updatedUser : item,
-        ),
-      );
-      setUserForm((current) => ({ ...current, password: "" }));
-      setUserNotice("Đã cập nhật tài khoản người dùng.");
+        setUsers((current) =>
+          current.map((item) =>
+            item.id === updatedUser.id ? updatedUser : item,
+          ),
+        );
+        setUserForm((current) => ({ ...current, password: "" }));
+        setUserNotice("Đã cập nhật tài khoản người dùng.");
+      } else {
+        if (!userForm.username.trim()) {
+          throw new Error("Vui lòng nhập username.");
+        }
+
+        if (!userForm.password.trim()) {
+          throw new Error("Vui lòng nhập mật khẩu.");
+        }
+
+        const createdUser = await createAdminUser({
+          fullName: userForm.fullName.trim() || userForm.username.trim(),
+          username: userForm.username.trim(),
+          password: userForm.password.trim(),
+          role: (userForm.role || "manager").toLowerCase(),
+        });
+
+        setUsers((current) => [createdUser, ...current]);
+        setUserNotice("Đã tạo tài khoản mới.");
+        setUserForm(createEmptyUserForm());
+      }
     } catch (error) {
       console.error("Failed to update user:", error);
       setUserError(error.message || "Không cập nhật được người dùng.");
     } finally {
       setIsSavingUser(false);
+    }
+  };
+
+  const handleRoleChange = async (targetUser, role) => {
+    setUserError("");
+    setUserNotice("");
+
+    try {
+      const updatedUser = await updateAdminUserRole(targetUser.id, role);
+      setUsers((current) =>
+        current.map((item) =>
+          item.id === updatedUser.id ? updatedUser : item,
+        ),
+      );
+
+      if (userForm.id === updatedUser.id) {
+        setUserForm((current) => ({
+          ...current,
+          role: (updatedUser.role || "manager").toLowerCase(),
+        }));
+      }
+
+      setUserNotice("Đã cập nhật role người dùng.");
+    } catch (error) {
+      console.error("Failed to update role:", error);
+      setUserError(error.message || "Không cập nhật được role.");
     }
   };
 
@@ -567,20 +611,6 @@ function AdminDashboard() {
     );
   }, [userSearch, users]);
 
-  const filteredManagers = useMemo(() => {
-    const keyword = managerSearch.trim().toLowerCase();
-    const managers = users.filter(
-      (item) => (item.role || "").toLowerCase() === "manager",
-    );
-
-    if (!keyword) return managers;
-    return managers.filter((item) =>
-      `${item.fullName || ""} ${item.username || ""}`
-        .toLowerCase()
-        .includes(keyword),
-    );
-  }, [managerSearch, users]);
-
   const filteredLocations = useMemo(() => {
     const keyword = locationSearch.trim().toLowerCase();
     if (!keyword) return locations;
@@ -695,7 +725,6 @@ function AdminDashboard() {
     : activeMenu === "map" ? "Bản đồ địa điểm"
     : activeMenu === "tours" ? "Tour management"
     : activeMenu === "users" ? "User management"
-    : activeMenu === "managers" ? "Manager management"
     : activeMenu === "assignments" ? "Location assignment"
     : "Location management";
 
@@ -703,27 +732,22 @@ function AdminDashboard() {
     activeMenu === "overview" ? "Follow usage metrics and destination coverage across the guide system."
     : activeMenu === "map" ? "Xem toàn bộ địa điểm trên bản đồ, click marker để xem chi tiết và chỉnh sửa."
     : activeMenu === "tours" ? "Tạo và quản lý các tour tham quan, gán POI và sắp xếp thứ tự."
-    : activeMenu === "users" ? "Review accounts, password resets, and locking status from one place."
-    : activeMenu === "managers" ? "Manage business accounts and grant manager role to selected users."
+    : activeMenu === "users" ? "Manage admin and manager accounts from one unified page."
     : activeMenu === "assignments" ? "Assign locations to managers for content ownership and operations."
     : "Create, edit, and publish destination data that the frontend can consume immediately.";
 
   const showSearch =
     activeMenu === "users" ||
-    activeMenu === "managers" ||
     activeMenu === "locations";
   const searchValue =
     activeMenu === "users" ? userSearch
-    : activeMenu === "managers" ? managerSearch
     : locationSearch;
   const searchPlaceholder =
     activeMenu === "users" ? "Tìm theo tên người dùng"
-    : activeMenu === "managers" ? "Tìm theo manager"
     : "Tìm theo tên địa điểm";
 
   const handleNavbarSearchChange = (value) => {
     if (activeMenu === "users") setUserSearch(value);
-    else if (activeMenu === "managers") setManagerSearch(value);
     else if (activeMenu === "locations") setLocationSearch(value);
   };
 
@@ -816,7 +840,7 @@ function AdminDashboard() {
             <h2 className="section-title">
               {userForm.id
                 ? "Chỉnh sửa người dùng"
-                : "Chọn người dùng để chỉnh sửa"}
+                : "Tạo tài khoản mới"}
             </h2>
           </div>
           <button
@@ -838,65 +862,72 @@ function AdminDashboard() {
           </div>
         )}
 
-        {userForm.id ? (
-          <form className="user-form" onSubmit={handleUserSubmit}>
+        <form className="user-form" onSubmit={handleUserSubmit}>
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="fullName">Họ và tên</label>
-                <input id="fullName" value={userForm.fullName} disabled />
+                <input
+                  id="fullName"
+                  name="fullName"
+                  value={userForm.fullName}
+                  onChange={handleUserFormChange}
+                  placeholder="Tên hiển thị"
+                />
               </div>
               <div className="form-group">
                 <label htmlFor="username">Username</label>
-                <input id="username" value={userForm.username} disabled />
+                <input
+                  id="username"
+                  name="username"
+                  value={userForm.username}
+                  onChange={handleUserFormChange}
+                  disabled={Boolean(userForm.id)}
+                  required
+                />
               </div>
             </div>
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="role">Role</label>
-                {(userForm.role || "").toLowerCase() === "admin" ? (
-                  <input
-                    id="role"
-                    value={(userForm.role || "admin").toUpperCase()}
-                    disabled
-                  />
-                ) : (
-                  <select
-                    id="role"
-                    name="role"
-                    value={(userForm.role || "user").toLowerCase()}
-                    onChange={handleUserFormChange}
-                  >
-                    <option value="user">USER</option>
-                    <option value="manager">MANAGER</option>
-                  </select>
-                )}
+                <select
+                  id="role"
+                  name="role"
+                  value={(userForm.role || "manager").toLowerCase()}
+                  onChange={handleUserFormChange}
+                >
+                  <option value="admin">ADMIN</option>
+                  <option value="manager">MANAGER</option>
+                </select>
               </div>
               <div className="form-group">
-                <label htmlFor="password">Mật khẩu mới</label>
+                <label htmlFor="password">{userForm.id ? "Mật khẩu mới" : "Mật khẩu"}</label>
                 <input
                   id="password"
                   name="password"
                   type="password"
                   value={userForm.password}
-                  placeholder="Để trống nếu không đổi mật khẩu"
+                  placeholder={userForm.id ? "Để trống nếu không đổi mật khẩu" : "Nhập mật khẩu"}
                   onChange={handleUserFormChange}
+                  required={!userForm.id}
                 />
               </div>
             </div>
-            <label className="admin-toggle">
-              <input
-                type="checkbox"
-                name="isLocked"
-                checked={userForm.isLocked}
-                onChange={handleUserFormChange}
-              />
-              <span className="admin-toggle-switch" />
-              <span className="admin-toggle-label">
-                {userForm.isLocked
-                  ? "Tài khoản đang bị khóa"
-                  : "Tài khoản đang hoạt động"}
-              </span>
-            </label>
+            {userForm.id ? (
+              <label className="admin-toggle">
+                <input
+                  type="checkbox"
+                  name="isLocked"
+                  checked={userForm.isLocked}
+                  onChange={handleUserFormChange}
+                />
+                <span className="admin-toggle-switch" />
+                <span className="admin-toggle-label">
+                  {userForm.isLocked
+                    ? "Tài khoản đang bị khóa"
+                    : "Tài khoản đang hoạt động"}
+                </span>
+              </label>
+            ) : null}
             <div className="location-form-actions">
               <button
                 type="submit"
@@ -905,10 +936,12 @@ function AdminDashboard() {
               >
                 {isSavingUser ? (
                   <LuLoaderCircle size={16} className="spin" />
-                ) : (
+                ) : userForm.id ? (
                   <LuSave size={16} />
+                ) : (
+                  <LuPlus size={16} />
                 )}
-                <span>Lưu tài khoản</span>
+                <span>{userForm.id ? "Lưu tài khoản" : "Tạo tài khoản"}</span>
               </button>
               <button
                 type="button"
@@ -919,18 +952,6 @@ function AdminDashboard() {
               </button>
             </div>
           </form>
-        ) : (
-          <div className="admin-empty-state compact-empty-state">
-            <div className="admin-empty-state-icon">
-              <LuUsers size={24} />
-            </div>
-            <h3>Chưa chọn người dùng</h3>
-            <p>
-              Chọn một người dùng ở bảng bên phải để đổi mật khẩu hoặc khóa, mở
-              khóa tài khoản.
-            </p>
-          </div>
-        )}
       </div>
       <div className="table-card shell-card">
         <div className="section-heading">
@@ -1017,6 +1038,20 @@ function AdminDashboard() {
                           )}
                           <span>{member.isLocked ? "Mở khóa" : "Khóa"}</span>
                         </button>
+                        <button
+                          type="button"
+                          className="action-btn action-btn-muted"
+                          onClick={() =>
+                            handleRoleChange(
+                              member,
+                              (member.role || "").toLowerCase() === "admin" ? "manager" : "admin",
+                            )
+                          }
+                        >
+                          <span>
+                            {(member.role || "").toLowerCase() === "admin" ? "Đổi thành manager" : "Đổi thành admin"}
+                          </span>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -1028,216 +1063,6 @@ function AdminDashboard() {
       </div>
     </section>
   );
-
-  const handlePromoteToManager = async (targetUser) => {
-    setUserError("");
-    setUserNotice("");
-
-    try {
-      const updatedUser = await updateAdminUser(targetUser.id, {
-        password: null,
-        role: "manager",
-        isLocked: !!targetUser.isLocked,
-      });
-
-      setUsers((current) =>
-        current.map((item) =>
-          item.id === updatedUser.id ? updatedUser : item,
-        ),
-      );
-      setUserNotice("Đã cấp quyền manager.");
-    } catch (error) {
-      console.error("Failed to promote manager:", error);
-      setUserError(error.message || "Không cấp quyền manager được.");
-    }
-  };
-
-  const handleDemoteToUser = async (targetUser) => {
-    setUserError("");
-    setUserNotice("");
-
-    try {
-      const updatedUser = await updateAdminUser(targetUser.id, {
-        password: null,
-        role: "user",
-        isLocked: !!targetUser.isLocked,
-      });
-
-      setUsers((current) =>
-        current.map((item) =>
-          item.id === updatedUser.id ? updatedUser : item,
-        ),
-      );
-      setUserNotice("Đã hạ role về user.");
-    } catch (error) {
-      console.error("Failed to demote manager:", error);
-      setUserError(error.message || "Không hạ role được.");
-    }
-  };
-
-  const renderManagersTab = () => {
-    const eligibleUsers = filteredManagers;
-
-
-    return (
-      <section className="admin-grid">
-        <div className="table-card shell-card">
-          <div className="section-heading">
-            <div>
-              <p className="section-eyebrow">Managers</p>
-              <h2 className="section-title">Danh sách managers</h2>
-            </div>
-            <button type="button" className="ghost-action" onClick={loadUsers}>
-              <LuRefreshCw size={16} />
-              <span>Tải lại</span>
-            </button>
-          </div>
-
-          {userError && (
-            <div className="admin-feedback admin-feedback-error">{userError}</div>
-          )}
-          {userNotice && (
-            <div className="admin-feedback admin-feedback-success">
-              {userNotice}
-            </div>
-          )}
-
-          {isLoadingUsers ? (
-            <div className="admin-empty-state">
-              <div className="admin-empty-state-icon">
-                <LuLoaderCircle size={26} className="spin" />
-              </div>
-              <h3>Đang tải managers</h3>
-              <p>Danh sách managers đang được đồng bộ từ backend.</p>
-            </div>
-          ) : filteredManagers.length === 0 ? (
-            <div className="admin-empty-state">
-              <div className="admin-empty-state-icon">
-                <LuFolderOpen size={26} />
-              </div>
-              <h3>Chưa có manager</h3>
-              <p>Cấp quyền manager cho một user để quản lý theo doanh nghiệp.</p>
-            </div>
-          ) : (
-            <table className="users-table">
-              <thead>
-                <tr>
-                  <th>STT</th>
-                  <th>Họ và tên</th>
-                  <th>Username</th>
-                  <th>Trạng thái</th>
-                  <th>Hành động</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredManagers.map((member, index) => {
-                  const status = getUserStatus(member);
-                  return (
-                    <tr key={member.id}>
-                      <td>{index + 1}</td>
-                      <td>
-                        <div className="table-user">
-                          <div className="table-user-avatar">
-                            {member.fullName?.charAt(0) || "M"}
-                          </div>
-                          <div className="table-user-copy">
-                            <strong>{member.fullName}</strong>
-                            <span>{member.username}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td>{member.username}</td>
-                      <td>
-                        <span className={`status-pill status-${status.key}`}>
-                          {status.label}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="table-actions">
-                          <button
-                            type="button"
-                            className="action-btn"
-                            onClick={() => startEditingUser(member)}
-                          >
-                            Sửa
-                          </button>
-                          <button
-                            type="button"
-                            className="action-btn action-btn-muted"
-                            onClick={() => handleDemoteToUser(member)}
-                          >
-                            Hạ role
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
-
-        <div className="table-card shell-card">
-          <div className="section-heading">
-            <div>
-              <p className="section-eyebrow">Promote</p>
-              <h2 className="section-title">Cấp quyền manager</h2>
-            </div>
-          </div>
-
-          {isLoadingUsers ? (
-            <div className="admin-empty-state">
-              <div className="admin-empty-state-icon">
-                <LuLoaderCircle size={26} className="spin" />
-              </div>
-              <h3>Đang tải users</h3>
-              <p>Danh sách users đang được đồng bộ từ backend.</p>
-            </div>
-          ) : eligibleUsers.length === 0 ? (
-            <div className="admin-empty-state">
-              <div className="admin-empty-state-icon">
-                <LuFolderOpen size={26} />
-              </div>
-              <h3>Không có user khả dụng</h3>
-              <p>Tạo user mới hoặc xóa bộ lọc tìm kiếm.</p>
-            </div>
-          ) : (
-            <table className="users-table">
-              <thead>
-                <tr>
-                  <th>STT</th>
-                  <th>Họ và tên</th>
-                  <th>Username</th>
-                  <th>Hành động</th>
-                </tr>
-              </thead>
-              <tbody>
-                {eligibleUsers.map((member, index) => (
-                  <tr key={member.id}>
-                    <td>{index + 1}</td>
-                    <td>{member.fullName}</td>
-                    <td>{member.username}</td>
-                    <td>
-                      <div className="table-actions">
-                        <button
-                          type="button"
-                          className="action-btn"
-                          onClick={() => handlePromoteToManager(member)}
-                        >
-                          Cấp quyền
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </section>
-    );
-  };
 
   const renderAssignmentsTab = () => {
     const managerId = selectedManagerId ? Number(selectedManagerId) : null;
@@ -1870,7 +1695,6 @@ function AdminDashboard() {
           {activeMenu === "map" && renderMapTab()}
           {activeMenu === "tours" && renderToursTab()}
           {activeMenu === "users" && renderUsersTab()}
-          {activeMenu === "managers" && renderManagersTab()}
           {activeMenu === "assignments" && renderAssignmentsTab()}
           {activeMenu === "locations" && renderLocationsTab()}
         </div>

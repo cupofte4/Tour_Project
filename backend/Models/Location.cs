@@ -26,6 +26,8 @@ namespace Tour_Project.Models
     public double Latitude { get; set; }
     public double Longitude { get; set; }
 
+    public int Prio { get; set; } = 0;  
+
     public string? TextVi { get; set; }
     public string? TextEn { get; set; }
     public string? TextZh { get; set; }

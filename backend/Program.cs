@@ -14,7 +14,11 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<LocationService>();
 builder.Services.AddScoped<backend.Services.ILocationService, backend.Services.LocationService>();
 builder.Services.AddScoped<JwtService>();
-builder.Services.AddScoped<VinhKhanhGuide.Application.Analytics.IAnalyticsService, VinhKhanhGuide.Infrastructure.Analytics.AnalyticsService>();
+builder.Services.AddScoped<VinhKhanhGuide.Infrastructure.Analytics.AnalyticsService>();
+builder.Services.AddScoped<VinhKhanhGuide.Application.Analytics.IAnalyticsService>(sp =>
+    sp.GetRequiredService<VinhKhanhGuide.Infrastructure.Analytics.AnalyticsService>());
+builder.Services.AddSingleton<VinhKhanhGuide.Application.Analytics.IAudioPlayEventQueue, VinhKhanhGuide.Infrastructure.Analytics.AudioPlayEventQueue>();
+builder.Services.AddHostedService<VinhKhanhGuide.Infrastructure.Analytics.AudioPlayEventWorker>();
 
 var jwtSecretKey =
     builder.Configuration["Jwt:SecretKey"]

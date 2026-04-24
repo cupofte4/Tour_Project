@@ -4,7 +4,6 @@ import useHeartbeat from "./hooks/useHeartbeat";
 import { isAuthenticated, getUserRole } from "./services/authService";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
-import Register from "./pages/Register";
 import AdminDashboard from "./pages/AdminDashboard";
 import ManagerDashboard from "./pages/ManagerDashboard";
 import AddLocation from "./pages/AddLocation";
@@ -15,7 +14,7 @@ import TourDetail from "./pages/TourDetail";
 
 /**
  * Route guard: requires login. Redirects unauthorized role to their dashboard.
- * Only admin and manager roles exist — no "user" role.
+ * Only admin and manager roles exist - no "user" role.
  */
 function ProtectedRoute({ element, requiredRole = null }) {
   if (!isAuthenticated()) {
@@ -34,7 +33,7 @@ function ProtectedRoute({ element, requiredRole = null }) {
 }
 
 /**
- * Route guard: redirect already-logged-in users away from login/register.
+ * Route guard: redirect already-logged-in users away from public auth pages.
  */
 function PublicRoute({ element }) {
   if (isAuthenticated()) {
@@ -59,14 +58,11 @@ function App() {
   const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-    // Check authentication on app load
-    // This ensures persisted auth state is recognized
     const authenticated = isAuthenticated();
     console.log("Auth check on app load:", authenticated);
     setAuthChecked(true);
   }, []);
 
-  // Prevent flickering by not rendering routes until auth is checked
   if (!authChecked) {
     return <div>Loading...</div>;
   }
@@ -80,16 +76,11 @@ function App() {
     >
       <PublicAnalyticsTracker />
       <Routes>
-        {/* Public routes */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<PublicRoute element={<Login />} />} />
-        <Route path="/register" element={<PublicRoute element={<Register />} />} />
 
-        {/* Protected user routes */}
-        {/* profile route removed intentionally (guest-only client) */}
         <Route path="/favorites" element={<Favorites />} />
 
-        {/* Protected admin routes */}
         <Route
           path="/admin"
           element={<ProtectedRoute element={<AdminDashboard />} requiredRole="admin" />}
@@ -107,7 +98,6 @@ function App() {
           element={<ProtectedRoute element={<EditLocation />} requiredRole="admin" />}
         />
 
-        {/* Protected manager routes */}
         <Route
           path="/manager"
           element={<ProtectedRoute element={<ManagerDashboard />} requiredRole="manager" />}
@@ -117,11 +107,9 @@ function App() {
           element={<ProtectedRoute element={<ManagerDashboard />} requiredRole="manager" />}
         />
 
-        {/* Tour routes */}
         <Route path="/tours" element={<TourList />} />
         <Route path="/tours/:id" element={<TourDetail />} />
 
-        {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

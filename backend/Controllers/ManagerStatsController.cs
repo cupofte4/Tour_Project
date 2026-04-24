@@ -18,7 +18,7 @@ namespace Tour_Project.Controllers
         public IActionResult GetLocationTotals([FromQuery] int managerId)
         {
             var locationIds = _context.LocationManagerAssignments
-                .Where(item => item.AdminUserId == managerId)
+                .Where(item => item.ManagerId == managerId)
                 .Select(item => item.LocationId)
                 .ToList();
 
@@ -60,7 +60,7 @@ namespace Tour_Project.Controllers
             if (days > 365) days = 365;
 
             var locationIds = _context.LocationManagerAssignments
-                .Where(item => item.AdminUserId == managerId)
+                .Where(item => item.ManagerId == managerId)
                 .Select(item => item.LocationId)
                 .ToList();
 

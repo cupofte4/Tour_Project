@@ -2855,19 +2855,19 @@
     ]
   },
   "packageFolders": {
-    "/Users/tranhau/.nuget/packages/": {}
+    "C:\\Users\\Tea\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/tranhau/Documents/Tour_Project/backend/backend.csproj",
+      "projectUniqueName": "E:\\CNTT_Code\\CSharp\\backend\\backend.csproj",
       "projectName": "backend",
-      "projectPath": "/Users/tranhau/Documents/Tour_Project/backend/backend.csproj",
-      "packagesPath": "/Users/tranhau/.nuget/packages/",
-      "outputPath": "/Users/tranhau/Documents/Tour_Project/backend/obj/",
+      "projectPath": "E:\\CNTT_Code\\CSharp\\backend\\backend.csproj",
+      "packagesPath": "C:\\Users\\Tea\\.nuget\\packages\\",
+      "outputPath": "E:\\CNTT_Code\\CSharp\\backend\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/Users/tranhau/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\Tea\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
@@ -2947,7 +2947,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/Users/tranhau/.dotnet/sdk/10.0.201/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.201/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.AspNetCore": "(,10.0.32767]",
           "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

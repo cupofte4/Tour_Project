@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 using Tour_Project.Data;
 using Tour_Project.Models;
 
@@ -69,6 +70,48 @@ namespace Tour_Project.Controllers
                     t.Id, t.Title, t.Description, t.CoverImage,
                     t.EstimatedDurationMinutes, t.IsActive, t.CreatedAt,
                     locationCount = t.TourLocations.Count
+                })
+                .FirstOrDefaultAsync();
+
+            return tour == null ? NotFound() : Ok(tour);
+        }
+
+        // GET /api/tours/{id}/manage
+        [HttpGet("{id}/manage")]
+        [Authorize(Roles = Roles.Admin)]
+        public async Task<IActionResult> GetManageById(int id)
+        {
+            var tour = await _context.Tours
+                .Where(t => t.Id == id)
+                .Select(t => new
+                {
+                    tourId = t.Id,
+                    name = t.Title,
+                    description = t.Description,
+                    coverImage = t.CoverImage,
+                    estimatedDurationMinutes = t.EstimatedDurationMinutes,
+                    isActive = t.IsActive,
+                    locations = t.TourLocations
+                        .OrderBy(tl => tl.OrderIndex)
+                        .Select(tl => new
+                        {
+                            tl.Id,
+                            tl.LocationId,
+                            tl.OrderIndex,
+                            tl.IsOptional,
+                            location = new
+                            {
+                                tl.Location!.Id,
+                                tl.Location.Name,
+                                tl.Location.Description,
+                                tl.Location.Image,
+                                tl.Location.Latitude,
+                                tl.Location.Longitude,
+                                tl.Location.Address,
+                                tl.Location.Phone
+                            }
+                        })
+                        .ToList()
                 })
                 .FirstOrDefaultAsync();
 
@@ -161,12 +204,21 @@ namespace Tour_Project.Controllers
         // DELETE /api/tours/{id}
         [HttpDelete("{id}")]
         [Authorize(Roles = Roles.Admin)]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteTour(int id)
         {
             var tour = await _context.Tours.FindAsync(id);
             if (tour == null) return NotFound();
 
-            tour.IsActive = false;
+            var tourLocations = await _context.TourLocations
+                .Where(tl => tl.TourId == id)
+                .ToListAsync();
+
+            if (tourLocations.Count > 0)
+            {
+                _context.TourLocations.RemoveRange(tourLocations);
+            }
+
+            _context.Tours.Remove(tour);
             await _context.SaveChangesAsync();
             return Ok();
         }
@@ -174,8 +226,14 @@ namespace Tour_Project.Controllers
         // POST /api/tours/{id}/locations  — gán POI vào tour
         [HttpPost("{id}/locations")]
         [Authorize(Roles = Roles.Admin)]
-        public async Task<IActionResult> AssignLocation(int id, AssignLocationRequest request)
+        public async Task<IActionResult> AddLocationToTour(int id, [FromBody] JsonElement requestBody)
         {
+            var request = ParseAssignLocationRequest(requestBody);
+            if (request == null || request.LocationId <= 0)
+            {
+                return BadRequest(new { message = "LocationId is required" });
+            }
+
             var tourExists = await _context.Tours.AnyAsync(t => t.Id == id);
             if (!tourExists) return NotFound(new { message = "Tour not found" });
 
@@ -186,11 +244,15 @@ namespace Tour_Project.Controllers
                 .AnyAsync(tl => tl.TourId == id && tl.LocationId == request.LocationId);
             if (duplicate) return BadRequest(new { message = "Location already in tour" });
 
+            var maxOrder = await _context.TourLocations
+                .Where(tl => tl.TourId == id)
+                .MaxAsync(tl => (int?)tl.OrderIndex) ?? 0;
+
             var tl = new TourLocation
             {
                 TourId = id,
                 LocationId = request.LocationId,
-                OrderIndex = request.OrderIndex,
+                OrderIndex = maxOrder + 1,
                 IsOptional = request.IsOptional
             };
             _context.TourLocations.Add(tl);
@@ -229,6 +291,36 @@ namespace Tour_Project.Controllers
 
             await _context.SaveChangesAsync();
             return Ok();
+        }
+
+        private static AssignLocationRequest? ParseAssignLocationRequest(JsonElement requestBody)
+        {
+            if (requestBody.ValueKind == JsonValueKind.Number && requestBody.TryGetInt32(out var locationId))
+            {
+                return new AssignLocationRequest
+                {
+                    LocationId = locationId,
+                    OrderIndex = 0,
+                    IsOptional = false
+                };
+            }
+
+            if (requestBody.ValueKind == JsonValueKind.Object)
+            {
+                try
+                {
+                    return requestBody.Deserialize<AssignLocationRequest>(new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+
+            return null;
         }
     }
 

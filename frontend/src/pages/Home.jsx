@@ -5,6 +5,12 @@ import { LANGUAGES } from "../services/ttsService";
 import { trackLocationView } from "../services/analyticsService";
 import API_URL from "../services/api";
 import audioQueue from "../services/audioQueueService";
+import { getAllLocations } from "../services/locationService";
+import {
+  canTriggerPoi,
+  DEFAULT_POI_COOLDOWN_MS,
+  selectBestPoi,
+} from "../services/poiSelectionService";
 import LocationCard from "../components/LocationCard";
 import MapView from "../components/MapView";
 import AudioPlayer from "../components/AudioPlayer";
@@ -16,8 +22,23 @@ const GPS_MODES = {
   REAL: "real",
   DEMO: "demo",
 };
-const DEMO_ANIMATION_STEPS = 24;
-const DEMO_ANIMATION_INTERVAL_MS = 45;
+const DEMO_MIN_ANIMATION_DURATION_MS = 1200;
+const DEMO_MAX_ANIMATION_DURATION_MS = 6000;
+const DEMO_SPEED_METERS_PER_SECOND = 18;
+const DEFAULT_USER_LOCATION = {
+  lat: 10.76193,
+  lng: 106.70205,
+};
+const ROAD_WALK_DIRECTION = {
+  lat: -0.000005,
+  lng: 0.000007,
+};
+const ROAD_WALK_FRAME_BASE_MS = 700;
+const ROAD_WALK_RANDOM_OFFSET = 0.000002;
+
+function easeDemoProgress(t) {
+  return t * t * (3 - 2 * t);
+}
 
 function haversineDistance(lat1, lng1, lat2, lng2) {
   const toRad = (value) => (value * Math.PI) / 180;
@@ -115,14 +136,13 @@ function Home() {
   const [tours, setTours] = useState([]);
   const [selectedTourId, setSelectedTourId] = useState("");
   const [tourLoading, setTourLoading] = useState(false);
-  const [userLocation, setUserLocation] = useState({
-    lat: 10.7590,
-    lng: 106.7043,
-  });
+  const [userLocation, setUserLocation] = useState(DEFAULT_USER_LOCATION);
   const [lang, setLang] = useState("vi-VN");
   const [done, setDone] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
   const [paused, setPaused] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isTracking, setIsTracking] = useState(false);
   const [isTourStarted, setIsTourStarted] = useState(false);
   const [gpsStatus, setGpsStatus] = useState("demo"); // demo, loading, active, denied, error
   const [gpsMode, setGpsMode] = useState(GPS_MODES.DEMO);
@@ -134,19 +154,20 @@ function Home() {
   const visitedRef = useRef(new Set());
   const pausedRef = useRef(false);
   const watchIdRef = useRef(null);
-  const demoAnimationTimerRef = useRef(null);
+  const demoAnimationFrameRef = useRef(null);
+  const isMovingDemoRef = useRef(false);
   const locationsRef = useRef([]);
   const currentLocationRef = useRef(userLocation);
   const loadLocationsRequestRef = useRef(0);
   
-  // Geofence debounce: Only check geofence every 5 seconds
+  // Geofence debounce: check often enough to avoid skipping nearby POIs
   const lastGeofenceCheckRef = useRef(0);
-  const GEOFENCE_CHECK_INTERVAL = 5000; // 5 seconds
+  const GEOFENCE_CHECK_INTERVAL = 250;
   
   // Cooldown: Wait 30 seconds before playing audio for same POI again
   const poiCooldownMapRef = useRef(new Map()); // Map<poiId, lastPlayTime>
-  const COOLDOWN_DURATION = 30000; // 30 seconds
-  const GEOFENCE_RADIUS = 50; // 50 meters
+  const COOLDOWN_DURATION = DEFAULT_POI_COOLDOWN_MS; // 30 seconds
+  const GEOFENCE_RADIUS = 15;
 
   const [lightbox, setLightbox] = useState(null);
   const lastTrackedLocationRef = useRef(null);
@@ -169,8 +190,9 @@ function Home() {
         if (requestId !== loadLocationsRequestRef.current) return;
         setLocations(normalizeTourLocationRecords(tourLocs));
       } else {
+        const allLocations = await getAllLocations();
         if (requestId !== loadLocationsRequestRef.current) return;
-        setLocations([]);
+        setLocations(Array.isArray(allLocations) ? allLocations : []);
       }
     } catch {
       if (requestId !== loadLocationsRequestRef.current) return;
@@ -207,14 +229,9 @@ function Home() {
     setLocation(selectedLocation);
     if (gpsMode === GPS_MODES.DEMO && locationsRef.current.length > 0) {
       const selectedIndex = locationsRef.current.findIndex((item) => item.id === selectedLocation.id);
-      const nextDemoLocation = createLocationAtPoi(selectedLocation);
 
       if (selectedIndex >= 0) {
         setDemoPoiIndex(selectedIndex);
-      }
-      if (nextDemoLocation) {
-        currentLocationRef.current = nextDemoLocation;
-        setUserLocation(nextDemoLocation);
       }
     }
   };
@@ -236,9 +253,9 @@ function Home() {
   };
 
   const clearDemoAnimation = () => {
-    if (demoAnimationTimerRef.current !== null) {
-      window.clearTimeout(demoAnimationTimerRef.current);
-      demoAnimationTimerRef.current = null;
+    if (demoAnimationFrameRef.current !== null) {
+      window.cancelAnimationFrame(demoAnimationFrameRef.current);
+      demoAnimationFrameRef.current = null;
     }
   };
 
@@ -272,10 +289,8 @@ function Home() {
     setGpsMode(GPS_MODES.DEMO);
     setGpsError(message);
     setIsMovingDemo(false);
-
-    if (locationsRef.current.length > 0) {
-      setDemoPositionToPoi(findDemoStartIndex(), { selectPoi: Boolean(location?.id) });
-    }
+    currentLocationRef.current = DEFAULT_USER_LOCATION;
+    setUserLocation(DEFAULT_USER_LOCATION);
   };
 
   const triggerPoiArrival = (poi) => {
@@ -283,7 +298,7 @@ function Home() {
 
     setLocation(poi);
 
-    if (visitedRef.current.has(poi.id) || isInCooldown(poi.id)) {
+    if (visitedRef.current.has(poi.id) || !canTrigger(poi.id)) {
       return;
     }
 
@@ -312,13 +327,32 @@ function Home() {
     setIsMovingDemo(true);
     setMovementError("");
 
-    let step = 0;
-    const tick = () => {
-      step += 1;
-      const progress = Math.min(step / DEMO_ANIMATION_STEPS, 1);
+    const distance = haversineDistance(
+      startLocation.lat,
+      startLocation.lng,
+      targetLocation.lat,
+      targetLocation.lng,
+    );
+    const durationMs = Math.min(
+      DEMO_MAX_ANIMATION_DURATION_MS,
+      Math.max(
+        DEMO_MIN_ANIMATION_DURATION_MS,
+        (distance / DEMO_SPEED_METERS_PER_SECOND) * 1000,
+      ),
+    );
+
+    let startTime = null;
+    const tick = (timestamp) => {
+      if (startTime === null) {
+        startTime = timestamp;
+      }
+
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / durationMs, 1);
+      const easedProgress = easeDemoProgress(progress);
       const nextLocation = {
-        lat: startLocation.lat + (targetLocation.lat - startLocation.lat) * progress,
-        lng: startLocation.lng + (targetLocation.lng - startLocation.lng) * progress,
+        lat: startLocation.lat + (targetLocation.lat - startLocation.lat) * easedProgress,
+        lng: startLocation.lng + (targetLocation.lng - startLocation.lng) * easedProgress,
         accuracy: targetLocation.accuracy,
         isDemo: true,
       };
@@ -327,19 +361,18 @@ function Home() {
       setUserLocation(nextLocation);
 
       if (progress < 1) {
-        demoAnimationTimerRef.current = window.setTimeout(tick, DEMO_ANIMATION_INTERVAL_MS);
+        demoAnimationFrameRef.current = window.requestAnimationFrame(tick);
         return;
       }
 
-      demoAnimationTimerRef.current = null;
+      demoAnimationFrameRef.current = null;
       currentLocationRef.current = targetLocation;
-      setUserLocation(targetLocation);
       setDemoPoiIndex(targetIndex);
       setIsMovingDemo(false);
       triggerPoiArrival(targetPoi);
     };
 
-    tick();
+    demoAnimationFrameRef.current = window.requestAnimationFrame(tick);
   };
 
   const moveDemoToNextPoi = () => {
@@ -358,6 +391,62 @@ function Home() {
     animateDemoToPoi(nextIndex);
   };
 
+  const run = () => {
+    if (isMovingDemoRef.current || isRunning) return;
+
+    clearDemoAnimation();
+    pausedRef.current = false;
+    setPaused(false);
+    setMovementError("");
+    setDone(false);
+    setIsRunning(true);
+    setIsTourStarted(true);
+    setGpsMode(GPS_MODES.DEMO);
+    setGpsStatus("demo");
+    setIsMovingDemo(true);
+    currentLocationRef.current = DEFAULT_USER_LOCATION;
+    setUserLocation(DEFAULT_USER_LOCATION);
+
+    let previousTimestamp = null;
+    const move = (timestamp) => {
+      if (previousTimestamp === null) {
+        previousTimestamp = timestamp;
+      }
+
+      if (pausedRef.current) {
+        previousTimestamp = timestamp;
+        demoAnimationFrameRef.current = window.requestAnimationFrame(move);
+        return;
+      }
+
+      const deltaMs = Math.min(timestamp - previousTimestamp, 32);
+      previousTimestamp = timestamp;
+      const frameScale = deltaMs / ROAD_WALK_FRAME_BASE_MS;
+
+      setUserLocation((prev) => {
+        const safePrev =
+          Number.isFinite(prev?.lat) && Number.isFinite(prev?.lng)
+            ? prev
+            : DEFAULT_USER_LOCATION;
+        const latOffset = (Math.random() - 0.5) * ROAD_WALK_RANDOM_OFFSET * frameScale;
+        const lngOffset = (Math.random() - 0.5) * ROAD_WALK_RANDOM_OFFSET * frameScale;
+        const nextLocation = {
+          ...safePrev,
+          lat: safePrev.lat + ROAD_WALK_DIRECTION.lat * frameScale + latOffset,
+          lng: safePrev.lng + ROAD_WALK_DIRECTION.lng * frameScale + lngOffset,
+          isDemo: true,
+        };
+
+        currentLocationRef.current = nextLocation;
+        return nextLocation;
+      });
+
+      demoAnimationFrameRef.current = window.requestAnimationFrame(move);
+    };
+
+    demoAnimationFrameRef.current = window.requestAnimationFrame(move);
+  };
+
   useEffect(() => {
     if (!location?.id) return;
     if (lastTrackedLocationRef.current === location.id) return;
@@ -374,16 +463,34 @@ function Home() {
     currentLocationRef.current = userLocation;
   }, [userLocation]);
 
+  useEffect(() => {
+    isMovingDemoRef.current = isMovingDemo;
+  }, [isMovingDemo]);
+
+  useEffect(() => {
+    console.log("locations:", locations);
+  }, [locations]);
+
+  useEffect(() => {
+    console.log("userLocation:", userLocation);
+  }, [userLocation]);
+
+  useEffect(() => {
+    console.log("selectedTour:", selectedTourId);
+  }, [selectedTourId]);
+
+  useEffect(() => {
+    console.log("isTracking:", isTracking);
+  }, [isTracking]);
+
   /**
    * Check if POI is in cooldown (recently played)
    * Returns true if cooldown is active, false if OK to play
    */
-  const isInCooldown = (poiId) => {
-    const lastPlayTime = poiCooldownMapRef.current.get(poiId);
-    if (!lastPlayTime) return false;
-    
-    return Date.now() - lastPlayTime < COOLDOWN_DURATION;
-  };
+  const canTrigger = (poiId) =>
+    canTriggerPoi(poiId, poiCooldownMapRef.current, COOLDOWN_DURATION);
+
+  const isInCooldown = (poiId) => !canTrigger(poiId);
 
   /**
    * Mark POI as just played, starts cooldown timer
@@ -411,8 +518,10 @@ function Home() {
    */
   useEffect(() => {
     if (!isAuthenticated) return;
+    if (!isTracking) return;
 
     if (!liveGeolocationAvailable) {
+      setIsTracking(false);
       enableDemoLocation(getGeolocationUnavailableMessage());
       return;
     }
@@ -421,28 +530,42 @@ function Home() {
     setGpsError(null);
 
     const successCallback = (position) => {
-      const { latitude, longitude, accuracy } = position.coords;
+      const latitude = Number(position?.coords?.latitude);
+      const longitude = Number(position?.coords?.longitude);
+      const accuracy = Number(position?.coords?.accuracy);
+
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        console.warn("Ignoring invalid GPS coordinates:", position?.coords);
+        return;
+      }
+
       const nextRealLocation = {
         lat: latitude,
         lng: longitude,
-        accuracy: Math.round(accuracy),
+        accuracy: Number.isFinite(accuracy) ? Math.round(accuracy) : undefined,
       };
-      
-      clearDemoAnimation();
-      currentLocationRef.current = nextRealLocation;
-      setUserLocation(nextRealLocation);
-      
+
       setGpsStatus("active");
       setGpsMode(GPS_MODES.REAL);
-      setIsMovingDemo(false);
       setGpsError(null);
-      setMovementError("");
-      
+
+      if (!isMovingDemoRef.current) {
+        currentLocationRef.current = nextRealLocation;
+        setUserLocation(nextRealLocation);
+        setMovementError("");
+      }
+
       console.log(`📍 GPS Updated: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} (±${Math.round(accuracy)}m)`);
     };
 
     const errorCallback = (error) => {
       console.error("GPS Error:", error);
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+        watchIdRef.current = null;
+      }
+      setIsTracking(false);
       const requiresSecureOrigin =
         typeof window !== "undefined" &&
         !window.isSecureContext &&
@@ -491,20 +614,17 @@ function Home() {
         console.log("🛑 GPS Watch stopped");
       }
     };
-  }, [isAuthenticated, liveGeolocationAvailable]);
+  }, [isAuthenticated, isTracking, liveGeolocationAvailable]);
 
   useEffect(() => {
-    if (gpsMode !== GPS_MODES.DEMO || locations.length === 0) return;
+    if (gpsMode !== GPS_MODES.DEMO) return;
     if (isMovingDemo) return;
 
-    const startIndex = Math.min(findDemoStartIndex(), locations.length - 1);
-    const startDemoLocation = createLocationAtPoi(locations[startIndex]);
-    if (!startDemoLocation) return;
-
-    currentLocationRef.current = startDemoLocation;
-    setDemoPoiIndex(startIndex);
-    setUserLocation(startDemoLocation);
-  }, [gpsMode, isMovingDemo, locations]);
+    if (!Number.isFinite(userLocation?.lat) || !Number.isFinite(userLocation?.lng)) {
+      currentLocationRef.current = DEFAULT_USER_LOCATION;
+      setUserLocation(DEFAULT_USER_LOCATION);
+    }
+  }, [gpsMode, isMovingDemo, userLocation]);
 
   useEffect(() => {
     langRef.current = lang;
@@ -525,12 +645,13 @@ function Home() {
     lastTrackedLocationRef.current = null;
     setPaused(false);
     setDone(false);
+    setIsRunning(false);
+    setIsTracking(false);
     setIsTourStarted(false);
     setIsMovingDemo(false);
     setDemoPoiIndex(0);
     setMovementError("");
     setLocation(null);
-    setLocations([]);
     audioQueue.stop();
   }, [selectedTourId]);
 
@@ -558,16 +679,11 @@ function Home() {
       return;
     }
 
-    if (gpsMode !== GPS_MODES.REAL) {
+    if (locations.length === 0) {
       return;
     }
 
-    if (!selectedTourId || locations.length === 0) {
-      setMovementError("Hãy chọn một tour trước khi bắt đầu di chuyển.");
-      return;
-    }
-
-    if (!canUseRealGps) {
+    if (gpsMode === GPS_MODES.REAL && !canUseRealGps) {
       setMovementError(gpsError || "Vị trí chưa sẵn sàng. Hãy cấp quyền vị trí rồi thử lại.");
       return;
     }
@@ -596,15 +712,13 @@ function Home() {
       })
       .filter((item) => Number.isFinite(item.lat) && Number.isFinite(item.lng))
       .filter((item) => !visitedRef.current.has(item.id))
-      .filter((item) => !isInCooldown(item.id))
-      .filter((item) => item.distance <= GEOFENCE_RADIUS)
-      .sort((a, b) => a.distance - b.distance);
+      .filter((item) => canTrigger(item.id))
+      .filter((item) => item.distance <= GEOFENCE_RADIUS);
 
-    if (candidates.length === 0) {
+    const poi = selectBestPoi(candidates);
+    if (!poi) {
       return;
     }
-
-    const poi = candidates[0];
     visitedRef.current.add(poi.id);
     markPoiAsPlayed(poi.id);
     setLocation(poi);
@@ -619,7 +733,6 @@ function Home() {
     isAuthenticated,
     isTourStarted,
     locations,
-    selectedTourId,
     userLocation.lat,
     userLocation.lng,
     canUseRealGps,
@@ -634,6 +747,19 @@ function Home() {
     }
   }, [location, locations]);
 
+  const handleMovementToggle = () => {
+    if (!isRunning) {
+      setIsRunning(true);
+      setPaused(false);
+      pausedRef.current = false;
+      run();
+      return;
+    }
+
+    pausedRef.current = !pausedRef.current;
+    setPaused((prev) => !prev);
+  };
+
   return (
     <div>
       {isAuthenticated ? (
@@ -644,7 +770,6 @@ function Home() {
             <div className="left-col">
               <div className="map">
                 <MapView
-                  key={selectedTourId || "no-tour"}
                   userLocation={userLocation}
                   locations={locations}
                   onSelectLocation={handleMapLocationSelect}
@@ -712,46 +837,19 @@ function Home() {
                   <>
                     <span style={{ marginRight: 8 }}>🗺️</span>
                     {gpsMode === GPS_MODES.DEMO
-                      ? locations.length > 0
-                        ? "Demo Mode: vị trí đang đặt tại POI đầu tiên của tour. Bấm Di chuyển để phát điểm hiện tại."
-                        : "Demo Mode: hãy chọn tour có POI để bắt đầu di chuyển."
+                      ? "Demo Mode: bắt đầu từ vị trí hiện tại và đi bộ dọc theo tuyến đường mô phỏng."
                       : liveGeolocationAvailable
                       ? "Click vào point trên bản đồ để xem thông tin và đánh giá. Để nghe audio tự động, hãy chọn tour rồi bắt đầu di chuyển."
                       : "HTTP không hỗ trợ theo dõi vị trí trực tiếp. Hãy chọn một POI trên bản đồ rồi bấm Di chuyển để mở chỉ đường."}
                     <button
                       className="btn-start-tour"
-                      onClick={() => {
-                        if (!selectedTourId) {
-                          setMovementError("Hãy chọn một tour trước khi bắt đầu di chuyển.");
-                          return;
-                        }
-
-                        if (gpsMode === GPS_MODES.DEMO) {
-                          moveDemoToNextPoi();
-                          return;
-                        }
-
-                        if (!liveGeolocationAvailable) {
-                          openSelectedLocationDirections();
-                          return;
-                        }
-
-                        if (!canUseTourLocation) {
-                          setMovementError(gpsError || "Vị trí chưa sẵn sàng. Hãy cấp quyền vị trí rồi thử lại.");
-                          return;
-                        }
-
-                        setMovementError("");
-                        setIsTourStarted(true);
-                      }}
-                      disabled={
-                        !selectedTourId ||
-                        locations.length === 0 ||
-                        (gpsMode === GPS_MODES.REAL ? !canUseRealGps : !canUseDemoGps) ||
-                        isMovingDemo
-                      }
+                      onClick={handleMovementToggle}
                     >
-                      ▶ Di chuyển
+                      {isRunning
+                        ? paused
+                          ? "▶ Tiếp tục"
+                          : "⏸ Tạm dừng"
+                        : "▶ Di chuyển"}
                     </button>
                   </>
                 ) : done ? (
@@ -762,14 +860,17 @@ function Home() {
                   <>
                     <span className={isMovingDemo ? "pulse-dot" : ""} />
                     {isMovingDemo
-                      ? "Demo Mode: đang di chuyển tới POI kế tiếp..."
-                      : `Demo Mode: đang ở POI ${Math.min(demoPoiIndex + 1, locations.length)}/${locations.length}`}
+                      ? "Demo Mode: đang đi bộ dọc theo tuyến đường..."
+                      : "Demo Mode: đã sẵn sàng tiếp tục di chuyển."}
                     <button
                       className="btn-start-tour"
-                      onClick={moveDemoToNextPoi}
-                      disabled={isMovingDemo || locations.length === 0}
+                      onClick={handleMovementToggle}
                     >
-                      ▶ Di chuyển
+                      {isRunning
+                        ? paused
+                          ? "▶ Tiếp tục"
+                          : "⏸ Tạm dừng"
+                        : "▶ Di chuyển"}
                     </button>
                   </>
                 ) : (
