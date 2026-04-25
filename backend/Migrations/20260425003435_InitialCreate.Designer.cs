@@ -12,7 +12,7 @@ using Tour_Project.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260424180523_InitialCreate")]
+    [Migration("20260425003435_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -230,6 +230,9 @@ namespace backend.Migrations
                     b.Property<string>("Phone")
                         .HasColumnType("longtext");
 
+                    b.Property<int>("Prio")
+                        .HasColumnType("int");
+
                     b.Property<string>("ReviewsJson")
                         .HasColumnType("longtext");
 
@@ -295,17 +298,17 @@ namespace backend.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AdminUserId")
+                    b.Property<int>("LocationId")
                         .HasColumnType("int");
 
-                    b.Property<int>("LocationId")
+                    b.Property<int>("ManagerId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AdminUserId");
-
                     b.HasIndex("LocationId");
+
+                    b.HasIndex("ManagerId");
 
                     b.ToTable("LocationManagerAssignments");
                 });
@@ -413,9 +416,6 @@ namespace backend.Migrations
                     b.Property<int>("LocationId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Order")
-                        .HasColumnType("int");
-
                     b.Property<int>("OrderIndex")
                         .HasColumnType("int");
 
@@ -506,15 +506,15 @@ namespace backend.Migrations
 
             modelBuilder.Entity("Tour_Project.Models.LocationManagerAssignment", b =>
                 {
-                    b.HasOne("Tour_Project.Models.AdminUser", "Manager")
-                        .WithMany()
-                        .HasForeignKey("AdminUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Tour_Project.Models.Location", "Location")
                         .WithMany()
                         .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Tour_Project.Models.AdminUser", "Manager")
+                        .WithMany()
+                        .HasForeignKey("ManagerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

@@ -7,11 +7,14 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace backend.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdateModels : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AlterDatabase()
+                .Annotation("MySql:CharSet", "utf8mb4");
+
             migrationBuilder.CreateTable(
                 name: "AdminUsers",
                 columns: table => new
@@ -157,6 +160,7 @@ namespace backend.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Latitude = table.Column<double>(type: "double", nullable: false),
                     Longitude = table.Column<double>(type: "double", nullable: false),
+                    Prio = table.Column<int>(type: "int", nullable: false),
                     TextVi = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     TextEn = table.Column<string>(type: "longtext", nullable: true)
@@ -221,15 +225,15 @@ namespace backend.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    AdminUserId = table.Column<int>(type: "int", nullable: false),
+                    ManagerId = table.Column<int>(type: "int", nullable: false),
                     LocationId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_LocationManagerAssignments", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_LocationManagerAssignments_AdminUsers_AdminUserId",
-                        column: x => x.AdminUserId,
+                        name: "FK_LocationManagerAssignments_AdminUsers_ManagerId",
+                        column: x => x.ManagerId,
                         principalTable: "AdminUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -273,7 +277,6 @@ namespace backend.Migrations
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     TourId = table.Column<int>(type: "int", nullable: false),
                     LocationId = table.Column<int>(type: "int", nullable: false),
-                    Order = table.Column<int>(type: "int", nullable: false),
                     OrderIndex = table.Column<int>(type: "int", nullable: false),
                     IsOptional = table.Column<bool>(type: "tinyint(1)", nullable: false)
                 },
@@ -377,14 +380,14 @@ namespace backend.Migrations
                 column: "IsFavorited");
 
             migrationBuilder.CreateIndex(
-                name: "IX_LocationManagerAssignments_AdminUserId",
-                table: "LocationManagerAssignments",
-                column: "AdminUserId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_LocationManagerAssignments_LocationId",
                 table: "LocationManagerAssignments",
                 column: "LocationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LocationManagerAssignments_ManagerId",
+                table: "LocationManagerAssignments",
+                column: "ManagerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Locations_Name",
