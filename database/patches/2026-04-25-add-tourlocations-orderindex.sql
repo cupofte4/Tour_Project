@@ -1,2 +1,0 @@
-ALTER TABLE TourLocations
-ADD COLUMN OrderIndex INT NOT NULL DEFAULT 0;

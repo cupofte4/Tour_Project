@@ -57,7 +57,8 @@ namespace backend.Services
                 Description = req.Description,
                 Latitude = req.Latitude,
                 Longitude = req.Longitude,
-                Address = req.Address
+                Address = req.Address,
+                Prio = req.Prio ?? 0
             };
             _db.Locations.Add(l);
             await _db.SaveChangesAsync();
@@ -81,6 +82,7 @@ namespace backend.Services
             if (req.Latitude.HasValue) l.Latitude = req.Latitude.Value;
             if (req.Longitude.HasValue) l.Longitude = req.Longitude.Value;
             l.Address = req.Address ?? l.Address;
+            if (req.Prio.HasValue) l.Prio = req.Prio.Value;
             await _db.SaveChangesAsync();
             return new LocationDto {
                 Id = l.Id,

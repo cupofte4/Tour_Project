@@ -713,7 +713,7 @@
             <li><a href="#auth">Auth/RBAC</a></li>
             <li><a href="#localization">Đa ngôn ngữ</a></li>
             <li><a href="#offline">Offline/PWA</a></li>
-            <li><a href="#maps">Google Maps</a></li>
+            <li><a href="#maps">Leaflet Map</a></li>
             <li><a href="#admin">Admin CMS</a></li>
             <li><a href="#patterns">Patterns</a></li>
         </ul>
@@ -726,7 +726,7 @@
         <div class="badges">
             <span class="badge">FastAPI + MySQL</span>
             <span class="badge">ReactJS + PWA</span>
-            <span class="badge">Google Maps</span>
+            <span class="badge">Leaflet Map</span>
             <span class="badge">GPS Geofence 50m</span>
             <span class="badge">VI/EN/ZH/DE</span>
             <span class="badge">Offline-First</span>
@@ -783,7 +783,7 @@
         </div>
 
         <p style="margin-bottom:1rem;color:var(--text-secondary);">Backend chia thành 6 module hoạt động độc lập theo
-            kiểu REST API, giao tiếp qua MySQL. Frontend ReactJS hiển thị bản đồ Google Maps, theo dõi GPS và tự động phát audio khi người dùng cách địa điểm <strong>&lt; 50m</strong>.</p>
+            kiểu REST API, giao tiếp qua MySQL. Frontend ReactJS hiển thị bản đồ Leaflet Map, theo dõi GPS và tự động phát audio khi người dùng cách địa điểm <strong>&lt; 50m</strong>.</p>
 
         <div class="arch-grid">
             <div class="arch-module">
@@ -1367,11 +1367,11 @@
             <div class="icon" style="background:#e8f5e9;color:#1b5e20;">🗺️</div>
             <div>
                 <div class="section-num">Chapter 10</div>
-                <h2>Map System — Google Maps</h2>
+                <h2>Map System — Leaflet Map</h2>
             </div>
         </div>
 
-        <p style="margin-bottom:1.5rem;color:var(--text-secondary);">Frontend sử dụng <strong>Google Maps</strong> để hiển thị vị trí người dùng, marker địa điểm, và dẫn hướng cơ bản. Khi offline, hệ thống vẫn giữ được danh sách/chi tiết/audio đã cache; bản đồ có thể hiển thị ở chế độ hạn chế.</p>
+        <p style="margin-bottom:1.5rem;color:var(--text-secondary);">Frontend sử dụng <strong>Leaflet Map</strong> để hiển thị vị trí người dùng, Leaflet marker địa điểm, và dẫn hướng cơ bản. Khi offline, hệ thống vẫn giữ được danh sách/chi tiết/audio đã cache; bản đồ có thể hiển thị ở chế độ hạn chế.</p>
 
         <h3>Chuỗi Liên Kết 4 Tầng (End-to-End)</h3>
         <div class="table-wrap">
@@ -1386,13 +1386,13 @@
                 <tbody>
                     <tr>
                         <td>1. Map Initialization</td>
-                        <td>Google Maps JS API + API Key</td>
+                        <td>Leaflet.js + OpenStreetMap Tiles</td>
                         <td>Khởi tạo bản đồ, style cơ bản, và các control (zoom, my-location).</td>
                     </tr>
                     <tr>
                         <td>2. Data Layer</td>
                         <td><code>GET /api/locations</code>, <code>/nearby</code></td>
-                        <td>Lấy danh sách địa điểm, marker data, và chi tiết theo ngôn ngữ.</td>
+                        <td>Lấy danh sách địa điểm, Leaflet marker data, và chi tiết theo ngôn ngữ.</td>
                     </tr>
                     <tr>
                         <td>3. Location Tracking</td>
@@ -1412,7 +1412,7 @@
         <div class="card-grid">
             <div class="card">
                 <h3>🌐 Online (Default)</h3>
-                <p>Google Maps đầy đủ: vị trí người dùng, marker, tìm kiếm cơ bản và chỉ đường (tùy phạm vi).</p>
+                <p>Leaflet Map đầy đủ: vị trí người dùng, Leaflet marker, tìm kiếm cơ bản và chỉ đường (tùy phạm vi).</p>
             </div>
             <div class="card">
                 <h3>📴 Offline (Limited)</h3>
@@ -1437,7 +1437,7 @@
                 <tbody>
                     <tr>
                         <td><code>GET /api/locations/nearby</code></td>
-                        <td>Trả về danh sách địa điểm gần vị trí hiện tại để hiển thị marker</td>
+                        <td>Trả về danh sách địa điểm gần vị trí hiện tại để hiển thị Leaflet marker</td>
                         <td>short cache</td>
                     </tr>
                     <tr>
@@ -1460,7 +1460,7 @@
         </div>
 
         <div class="highlight">
-            <strong>Security:</strong> Bảo vệ API key Google Maps (chỉ dùng trên frontend domain đã whitelist). Backend kiểm tra input <code>lat/lng</code>, giới hạn rate, và không lộ thông tin nhạy cảm trong response.
+            <strong>Security:</strong> Cấu hình nguồn tile Leaflet/OpenStreetMap phù hợp với frontend domain. Backend kiểm tra input <code>lat/lng</code>, giới hạn rate, và không lộ thông tin nhạy cảm trong response.
         </div>
     </section>
 
@@ -1746,7 +1746,7 @@ sequenceDiagram
     participant U as User/Browser
     participant SW as Service Worker
     participant FE as React Frontend
-    participant MAP as Google Maps
+    participant MAP as Leaflet Map
     participant GE as GeofenceEngine
     participant AP as FastAPI Backend
     participant DB as MySQL
@@ -1813,7 +1813,7 @@ sequenceDiagram
                 <ul>
                     <li><strong>ReactJS</strong> — UI framework</li>
                     <li><strong>Vite</strong> — build tool</li>
-                    <li><strong>Google Maps JavaScript API</strong> — bản đồ, marker, info window</li>
+                    <li><strong>Leaflet.js + OpenStreetMap Tiles</strong> — bản đồ, Leaflet marker, popup</li>
                     <li><strong>Geolocation API</strong> — GPS tracking</li>
                     <li><strong>Haversine</strong> — tính khoảng cách để trigger geofence 50m</li>
                     <li><strong>Workbox</strong> — Service Worker toolkit</li>
@@ -1837,7 +1837,7 @@ sequenceDiagram
 
     <footer>
         <p><strong>Ứng Dụng Thuyết Minh Du Lịch Theo GPS</strong></p>
-        <p>Full-stack: FastAPI + MySQL + ReactJS (PWA) + Google Maps + Auto Audio (Geofence 50m)</p>
+        <p>Full-stack: FastAPI + MySQL + ReactJS (PWA) + Leaflet Map + Auto Audio (Geofence 50m)</p>
         <p style="margin-top:.5rem;">Compiled from system architecture • Audited against source code</p>
     </footer>
 
@@ -1898,7 +1898,7 @@ sequenceDiagram
                 { key: 'offline-pwa', label: '📴 Offline Architecture' }
             ],
             maps: [
-                { key: 'map-pack', label: '🗺️ Google Maps Flow' }
+                { key: 'map-pack', label: '🗺️ Leaflet Map Flow' }
             ],
             admin: [
                 { key: 'admin-owner', label: '🎛️ Admin CMS Flow' },
@@ -1912,9 +1912,9 @@ sequenceDiagram
             'architecture': {
                 title: 'Kiến trúc tổng quan hệ thống',
                 mermaid: `graph TB
-    subgraph Frontend["Frontend — ReactJS (PWA) + Google Maps"]
+    subgraph Frontend["Frontend — ReactJS (PWA) + Leaflet Map"]
         APP["App\\nRouter + State"]
-        MAPUI["Map Screen\\nGoogle Maps + Markers"]
+        MAPUI["Map Screen\\nLeaflet Map + Markers"]
         LIST["Locations List/Detail\\nLanguage select"]
         ADMINUI["Admin CMS\\nLocations/Audio/Users"]
     end
@@ -2250,20 +2250,20 @@ sequenceDiagram
     STORE --> FALLBACK`
             },
             'map-pack': {
-                title: 'Google Maps Initialization Flow',
+                title: 'Leaflet Map Initialization Flow',
                 mermaid: `sequenceDiagram
     participant FE as React Frontend
-    participant GM as Google Maps JS API
+    participant GM as Leaflet.js + OpenStreetMap
     participant API as FastAPI
     participant DB as MySQL
 
-    FE->>GM: Load script with API key
-    GM-->>FE: Maps library ready
+    FE->>GM: Load Leaflet tiles
+    GM-->>FE: Leaflet library ready
     FE->>API: GET /api/locations/nearby?lat=..&lng=..&radius=1500
     API->>DB: Query nearby locations
     DB-->>API: rows
-    API-->>FE: markers[]
-    FE->>GM: Render markers + info windows`
+    API-->>FE: leafletMarkers[]
+    FE->>GM: Render Leaflet markers + popups`
             },
             'admin-owner': {
                 title: 'Admin CMS Publishing Flow',
@@ -2310,7 +2310,7 @@ sequenceDiagram
     SW_REG --> LANG["Chọn ngôn ngữ (VI/EN/ZH/DE)"]
     LANG --> LOAD_IDB["Load cached Locations (IndexedDB)"]
     LANG --> FETCH_API["Fetch Locations (FastAPI + MySQL)"]
-    LOAD_IDB --> RENDER["Render UI + markers (Google Maps)"]
+    LOAD_IDB --> RENDER["Render UI + Leaflet markers"]
     FETCH_API --> SAVE_IDB["Save to IndexedDB + cache audio/images"]
     SAVE_IDB --> RENDER
 

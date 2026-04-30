@@ -26,8 +26,8 @@ const DEMO_MIN_ANIMATION_DURATION_MS = 1200;
 const DEMO_MAX_ANIMATION_DURATION_MS = 6000;
 const DEMO_SPEED_METERS_PER_SECOND = 18;
 const DEFAULT_USER_LOCATION = {
-  lat: 10.76193,
-  lng: 106.70205,
+  lat: 10.76188,
+  lng: 106.70200,
 };
 const ROAD_WALK_DIRECTION = {
   lat: -0.000005,
@@ -113,6 +113,7 @@ function normalizeTourLocationRecords(records) {
         reviewsJson: source.reviewsJson ?? source.ReviewsJson ?? "[]",
         latitude: Number(source.latitude ?? source.Latitude),
         longitude: Number(source.longitude ?? source.Longitude),
+        prio: Number(source.prio ?? source.Prio ?? 0),
         textVi: source.textVi ?? source.TextVi ?? "",
         textEn: source.textEn ?? source.TextEn ?? "",
         textZh: source.textZh ?? source.TextZh ?? "",
@@ -166,6 +167,7 @@ function Home() {
   
   // Cooldown: Wait 30 seconds before playing audio for same POI again
   const poiCooldownMapRef = useRef(new Map()); // Map<poiId, lastPlayTime>
+  const lastSelectedPoiIdRef = useRef(null);
   const COOLDOWN_DURATION = DEFAULT_POI_COOLDOWN_MS; // 30 seconds
   const GEOFENCE_RADIUS = 15;
 
@@ -296,9 +298,10 @@ function Home() {
   const triggerPoiArrival = (poi) => {
     if (!poi?.id) return;
 
+    lastSelectedPoiIdRef.current = poi.id;
     setLocation(poi);
 
-    if (visitedRef.current.has(poi.id) || !canTrigger(poi.id)) {
+    if (!canTrigger(poi.id)) {
       return;
     }
 
@@ -640,6 +643,7 @@ function Home() {
     pausedRef.current = false;
     visitedRef.current = new Set();
     poiCooldownMapRef.current = new Map();
+    lastSelectedPoiIdRef.current = null;
     lastGeofenceCheckRef.current = 0;
     clearDemoAnimation();
     lastTrackedLocationRef.current = null;
@@ -711,14 +715,14 @@ function Home() {
         };
       })
       .filter((item) => Number.isFinite(item.lat) && Number.isFinite(item.lng))
-      .filter((item) => !visitedRef.current.has(item.id))
       .filter((item) => canTrigger(item.id))
       .filter((item) => item.distance <= GEOFENCE_RADIUS);
 
-    const poi = selectBestPoi(candidates);
+    const poi = selectBestPoi(candidates, lastSelectedPoiIdRef.current);
     if (!poi) {
       return;
     }
+    lastSelectedPoiIdRef.current = poi.id;
     visitedRef.current.add(poi.id);
     markPoiAsPlayed(poi.id);
     setLocation(poi);

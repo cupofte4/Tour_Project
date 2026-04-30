@@ -5,6 +5,16 @@ export function getPoiPriority(poi) {
   return Number.isFinite(value) ? value : 0;
 }
 
+export function getPoiId(poi) {
+  const value = Number(poi?.id ?? poi?.Id);
+  return Number.isFinite(value) ? value : Number.POSITIVE_INFINITY;
+}
+
+export function getPoiDistance(poi) {
+  const value = Number(poi?.distance);
+  return Number.isFinite(value) ? value : Number.POSITIVE_INFINITY;
+}
+
 export function getPoiLastPlayed(lastPlayedLookup, poiId) {
   if (lastPlayedLookup instanceof Map) {
     return lastPlayedLookup.get(poiId);
@@ -22,7 +32,7 @@ export function canTriggerPoi(poiId, lastPlayedLookup, cooldownMs = DEFAULT_POI_
   return now - lastPlayedAt >= cooldownMs;
 }
 
-export function selectBestPoi(candidates) {
+export function selectBestPoi(candidates, lastSelectedId = null) {
   if (!Array.isArray(candidates) || candidates.length === 0) {
     return null;
   }
@@ -33,6 +43,23 @@ export function selectBestPoi(candidates) {
       return priorityDiff;
     }
 
-    return (a.distance ?? Number.POSITIVE_INFINITY) - (b.distance ?? Number.POSITIVE_INFINITY);
+    const distanceDiff = getPoiDistance(a) - getPoiDistance(b);
+    if (distanceDiff !== 0) {
+      return distanceDiff;
+    }
+
+    const aId = getPoiId(a);
+    const bId = getPoiId(b);
+
+    if (lastSelectedId != null) {
+      const aMatchesLastSelected = aId === Number(lastSelectedId);
+      const bMatchesLastSelected = bId === Number(lastSelectedId);
+
+      if (aMatchesLastSelected !== bMatchesLastSelected) {
+        return aMatchesLastSelected ? -1 : 1;
+      }
+    }
+
+    return aId - bId;
   })[0];
 }
