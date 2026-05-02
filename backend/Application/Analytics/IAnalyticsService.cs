@@ -22,6 +22,7 @@ public sealed class AnalyticsSummaryDto
     public long TotalFavoritesSaved { get; init; }
     public long TotalVisitorsToday { get; init; }
     public long TotalVisitors { get; init; }
+    public IReadOnlyList<VisitorActivityDto> RecentVisitors { get; init; } = Array.Empty<VisitorActivityDto>();
 }
 
 public sealed class DailyMetricsDto
@@ -29,4 +30,15 @@ public sealed class DailyMetricsDto
     public DateTime Date { get; init; }
     public long AudioPlays { get; init; }
     public long Favorites { get; init; }
+}
+
+public sealed class VisitorActivityDto
+{
+    public long Id { get; init; }
+    public string DeviceId { get; init; } = string.Empty;
+    public DateTimeOffset FirstSeenAtUtc { get; init; }
+    public DateTimeOffset LastSeenAtUtc { get; init; }
+    public string LastPath { get; init; } = string.Empty;
+    public string LastUserAgent { get; init; } = string.Empty;
+    public bool IsActive { get; init; }
 }

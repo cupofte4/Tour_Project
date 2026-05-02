@@ -706,6 +706,7 @@
         <div class="logo">🍜 Food Tour Audio Guide</div>
         <ul class="nav-links">
             <li><a href="#overview">Tổng quan</a></li>
+            <li><a href="#usecases">Use Case</a></li>
             <li><a href="#startup">Khởi động</a></li>
             <li><a href="#geofence">GPS/Geofence</a></li>
             <li><a href="#content">Địa điểm</a></li>
@@ -724,8 +725,9 @@
         <h1>Hệ Thống Du Lịch Ẩm Thực Quận 4</h1>
         <p class="subtitle">Khi người dùng đi vào vùng lân cận một địa điểm (geofence), hệ thống tự động phát audio thuyết minh theo ngôn ngữ đã chọn. Hỗ trợ bản đồ, đa ngôn ngữ, offline (PWA) và quản trị nội dung.</p>
         <div class="badges">
-            <span class="badge">FastAPI + MySQL</span>
+            <span class="badge">ASP.NET Core Web API + MySQL</span>
             <span class="badge">ReactJS + PWA</span>
+            <span class="badge">Swagger/OpenAPI</span>
             <span class="badge">Google Maps</span>
             <span class="badge">GPS Geofence 50m</span>
             <span class="badge">VI/EN/ZH/DE</span>
@@ -782,8 +784,7 @@
             </div>
         </div>
 
-        <p style="margin-bottom:1rem;color:var(--text-secondary);">Backend chia thành 6 module hoạt động độc lập theo
-            kiểu REST API, giao tiếp qua MySQL. Frontend ReactJS hiển thị bản đồ Google Maps, theo dõi GPS và tự động phát audio khi người dùng cách địa điểm <strong>&lt; 50m</strong>.</p>
+        <p style="margin-bottom:1rem;color:var(--text-secondary);">Backend là <strong>ASP.NET Core Web API</strong> dùng Swagger/OpenAPI để kiểm thử tài liệu API, giao tiếp với MySQL qua EF Core. Frontend ReactJS hiển thị bản đồ Google Maps, theo dõi GPS và tự động phát audio khi người dùng cách địa điểm <strong>&lt; 50m</strong>.</p>
 
         <div class="arch-grid">
             <div class="arch-module">
@@ -845,14 +846,14 @@
                         <td>Dữ liệu địa điểm: tên, mô tả, ảnh, địa chỉ, đánh giá (json), lat/lng, text VI/EN/ZH/DE</td>
                     </tr>
                     <tr>
-                        <td><code>Users</code></td>
+                        <td><code>AdminUsers</code></td>
                         <td>auth</td>
-                        <td>Tài khoản: username, password hash, role (user/admin), khóa tài khoản, hồ sơ</td>
+                        <td>Tài khoản quản trị: username, password hash, role (admin/manager), khóa tài khoản, hồ sơ</td>
                     </tr>
                     <tr>
-                        <td><code>Favorites</code></td>
+                        <td><code>LocationFavoriteStates</code></td>
                         <td>favorites</td>
-                        <td>Bảng liên kết user-location (yêu thích), phục vụ đồng bộ và lọc nhanh</td>
+                        <td>Trạng thái yêu thích theo <code>DeviceId</code> và <code>LocationId</code>, phục vụ khách không cần đăng nhập</td>
                     </tr>
                     <tr>
                         <td><code>LocationAudios</code></td>
@@ -860,12 +861,179 @@
                         <td>Audio theo (location_id, lang): url/path, duration, checksum, trạng thái sẵn sàng</td>
                     </tr>
                     <tr>
-                        <td><code>PlayHistory</code></td>
-                        <td>localization</td>
-                        <td>Lưu lịch sử phát: user_id, location_id, lang, timestamp để gợi ý và theo dõi trải nghiệm</td>
+                        <td><code>VisitorDevices</code>, <code>AnalyticsEvents</code>, <code>AppUsageHeartbeats</code></td>
+                        <td>analytics</td>
+                        <td>Theo dõi thiết bị khách, lượt truy cập, heartbeat, audio play và favorite để hiển thị trên Admin Dashboard</td>
                     </tr>
                 </tbody>
             </table>
+        </div>
+    </section>
+
+    <!-- USE CASES & ACTIVITY -->
+    <section id="usecases">
+        <div class="section-header">
+            <div class="icon" style="background:#e0f2f1;color:#00695c;">🧩</div>
+            <div>
+                <div class="section-num">Chapter 00B</div>
+                <h2>Use Case & Activity Flow</h2>
+            </div>
+        </div>
+
+        <p style="margin-bottom:1.5rem;color:var(--text-secondary);">Phần này tổng hợp từ <code>diagram/UseCase.xml</code> và <code>diagram/ActDiagram.xml</code>, chuyển thành mô tả phù hợp với hệ thống hiện tại: frontend React, backend ASP.NET Core Web API, Swagger/OpenAPI và MySQL.</p>
+
+        <h3>Actor & Use Case Scope</h3>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Actor</th>
+                        <th>Use cases chính</th>
+                        <th>Ghi chú triển khai</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Visitor</strong></td>
+                        <td>Xem bản đồ, duyệt tour, xem chi tiết địa điểm, phát audio, auto-play bằng geofence, scan QR, favorite địa điểm</td>
+                        <td>Không cần tài khoản; định danh bằng <code>DeviceId</code> trong localStorage và gửi analytics qua <code>/api/analytics/*</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Manager</strong></td>
+                        <td>Quản lý địa điểm được phân công, upload ảnh/audio, xem thống kê</td>
+                        <td>Đăng nhập bằng JWT; truy cập phạm vi <code>/manager/*</code> và API manager tương ứng</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Admin</strong></td>
+                        <td>Quản lý người dùng, địa điểm, tour, phân công manager, xem analytics</td>
+                        <td>Đăng nhập role admin; xem dashboard analytics qua <code>GET /api/admin/analytics/summary</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mermaid-container">
+            <pre class="mermaid">
+graph LR
+    Visitor["Visitor"]
+    Manager["Manager"]
+    Admin["Admin"]
+
+    subgraph System["Tourism Guide System"]
+        ViewMap(("View Map"))
+        BrowseTours(("Browse Tours"))
+        ViewDetail(("View Location Detail"))
+        PlayAudio(("Play Audio"))
+        AutoPlay(("Auto Play Audio<br/>Geofence"))
+        ScanQR(("Scan QR"))
+        Favorite(("Favorite Location"))
+
+        ManageAssigned(("Manage Assigned Locations"))
+        UploadMedia(("Upload Audio/Image"))
+        ManagerStats(("View Statistics"))
+
+        ManageUsers(("Manage Users"))
+        ManageLocations(("Manage Locations"))
+        ManageTours(("Manage Tours"))
+        AssignManagers(("Assign Managers"))
+        ViewAnalytics(("View Analytics"))
+        CreateLocation(("Create Location"))
+        EditLocation(("Edit Location"))
+        DeleteLocation(("Delete Location"))
+    end
+
+    Visitor --> ViewMap
+    Visitor --> BrowseTours
+    Visitor --> ViewDetail
+    Visitor --> Favorite
+    ViewDetail -. include .-> PlayAudio
+    ScanQR -. include .-> PlayAudio
+    AutoPlay -. extend .-> PlayAudio
+
+    Manager --> ManageAssigned
+    Manager --> UploadMedia
+    Manager --> ManagerStats
+
+    Admin --> ManageUsers
+    Admin --> ManageLocations
+    Admin --> ManageTours
+    Admin --> AssignManagers
+    Admin --> ViewAnalytics
+    ManageLocations -. include .-> CreateLocation
+    ManageLocations -. include .-> EditLocation
+    ManageLocations -. include .-> DeleteLocation
+    </pre>
+        </div>
+
+        <h3 style="margin-top:1.5rem;">Visitor Activity Flow</h3>
+        <p style="margin-bottom:1rem;color:var(--text-secondary);">Activity diagram mô tả luồng public app: người dùng mở web, React tải dữ liệu tour/location từ API C#, render bản đồ, bật GPS tracking, tự phát audio khi gần POI và ghi analytics/favorite về backend.</p>
+
+        <div class="timeline">
+            <div class="timeline-item">
+                <h4>1. Open Web App</h4>
+                <p>Visitor mở ứng dụng; React khởi tạo app shell, load tours/locations và lấy/cấp <code>DeviceId</code>.</p>
+            </div>
+            <div class="timeline-item">
+                <h4>2. Load Data From API</h4>
+                <p>Frontend gọi API lấy tours/locations; backend ASP.NET Core query MySQL và trả dữ liệu cho map/detail view.</p>
+            </div>
+            <div class="timeline-item">
+                <h4>3. Render Map + Start GPS</h4>
+                <p>React render Google Maps + POIs, sau đó dùng Geolocation API để theo dõi vị trí hiện tại.</p>
+            </div>
+            <div class="timeline-item">
+                <h4>4. Near POI Decision</h4>
+                <p>Nếu khoảng cách tới POI dưới ngưỡng geofence, frontend phát audio; nếu chưa gần, tiếp tục tracking theo chu kỳ.</p>
+            </div>
+            <div class="timeline-item">
+                <h4>5. Analytics & Favorite</h4>
+                <p>Audio play, view, heartbeat và favorite được gửi về <code>/api/analytics/*</code>; backend lưu vào MySQL để Admin Dashboard tổng hợp.</p>
+            </div>
+        </div>
+
+        <div class="mermaid-container">
+            <pre class="mermaid">
+flowchart TB
+    subgraph User["User"]
+        Start((Start))
+        Open["Open Web App"]
+        FavoriteClick["User Click Favorite"]
+        EndUser((Close App))
+    end
+
+    subgraph Frontend["Frontend React"]
+        Load["Load App + Tours"]
+        CallApi["Call API: Get Tours/Locations"]
+        Render["Render Map + POIs"]
+        StartGps["Start GPS Tracking"]
+        CurrentLocation["Get Current Location"]
+        Near{"Near POI?"}
+        Play["Play Audio"]
+        TrackEvent["Track Analytics Event"]
+        SendFavorite["Send Favorite Event"]
+        Continue["Continue Tracking"]
+        Stop{"Stop?"}
+        EndGps((GPS Stop))
+    end
+
+    subgraph Backend["Backend .NET API"]
+        Query["Query DB<br/>Tours + Locations"]
+        ReturnData["Return Data"]
+        SaveAnalytics["Save Analytics<br/>Play, View, Favorite"]
+    end
+
+    Start --> Open --> Load --> CallApi --> Query --> ReturnData --> Render --> StartGps --> CurrentLocation --> Near
+    Near -- Yes --> Play --> TrackEvent --> SaveAnalytics --> Stop
+    Near -- No --> Continue --> Stop
+    FavoriteClick --> SendFavorite --> SaveAnalytics
+    Stop -- Continue --> CurrentLocation
+    Stop -- Close App --> EndUser
+    Stop -- GPS Stop --> EndGps
+    </pre>
+        </div>
+
+        <div class="highlight">
+            <strong>Mapping với repo:</strong> Visitor flow dùng <code>frontend/src/services/analyticsService.js</code>, <code>deviceId.js</code>, <code>backend/Controllers/AnalyticsController.cs</code> và <code>backend/Services/AnalyticsService.cs</code>. Admin/manager flow dùng JWT + role guard và các dashboard React hiện có.
         </div>
     </section>
 
@@ -888,20 +1056,20 @@
             </div>
             <div class="timeline-item">
                 <h4>Tầng 2 — Database Connection</h4>
-                <p>Kết nối MySQL qua SQLAlchemy engine. Thực hiện ping/health-check và cấu hình connection pool.</p>
+                <p>Kết nối MySQL qua EF Core + Pomelo MySQL provider. Thực hiện health-check, cấu hình connection string và DbContext lifetime.</p>
             </div>
             <div class="timeline-item">
                 <h4>Tầng 3 — Migration + Seeding</h4>
-                <p>Chạy migration (Alembic) để đồng bộ schema. Tạo tài khoản admin mặc định (nếu chưa có) và dữ liệu mẫu Locations cho demo.</p>
+                <p>Chạy EF Core migrations để đồng bộ schema. Tạo tài khoản admin mặc định (nếu chưa có) và dữ liệu mẫu Locations cho demo.</p>
             </div>
             <div class="timeline-item">
                 <h4>Tầng 4 — Indexing</h4>
-                <p>Tạo index cho truy vấn gần vị trí: composite index cho <code>(Latitude, Longitude)</code>, index cho <code>Favorites(user_id)</code>,
-                    và index tìm kiếm <code>Locations(Name)</code>. (Tối ưu: bounding box trước, rồi Haversine ở app layer.)</p>
+                <p>Tạo index cho truy vấn gần vị trí: composite index cho <code>(Latitude, Longitude)</code>, index cho <code>LocationFavoriteStates(DeviceId, LocationId)</code>,
+                    index cho <code>VisitorDevices(LastSeenAtUtc)</code> và index tìm kiếm <code>Locations(Name)</code>.</p>
             </div>
             <div class="timeline-item">
                 <h4>Gắn Routers → Server Ready</h4>
-                <p>auth, locations, favorites, audio, admin — prefix <code>/api</code>. Bật CORS cho frontend domain và bật OpenAPI docs cho môi trường dev.</p>
+                <p>auth, locations, analytics, tours, uploads, admin/manager — prefix <code>/api</code>. Bật CORS cho frontend domain và bật Swagger UI tại <code>/swagger</code> để kiểm thử API C#.</p>
             </div>
         </div>
 
@@ -1147,7 +1315,7 @@
                     <li><code>POST /api/auth/register</code>, <code>POST /api/auth/login</code></li>
                     <li><code>access_token</code>: JWT (ví dụ 30 phút) để gọi API</li>
                     <li><code>refresh_token</code> (tùy chọn): kéo dài phiên đăng nhập (ví dụ 7 ngày)</li>
-                    <li>Mật khẩu được hash bằng <code>bcrypt</code>; không lưu plain text</li>
+                    <li>Mật khẩu được hash trong backend C#; không lưu plain text</li>
                 </ul>
             </div>
             <div class="card">
@@ -1157,7 +1325,7 @@
                     <li>User: xem bản đồ, xem địa điểm, nghe audio, quản lý yêu thích</li>
                     <li>Manager: quản lý các địa điểm được gán (CRUD nội dung), quản lý thuyết minh (TextVi/En/Zh/De), xem thống kê theo thời gian</li>
                     <li>Admin: CRUD Locations, quản lý Users/Managers, phân công địa điểm cho manager</li>
-                    <li>API guard: <code>require_role("admin")</code> cho <code>/api/admin/*</code>, <code>require_role("manager")</code> cho <code>/api/manager/*</code></li>
+                    <li>API guard bằng <code>[Authorize(Roles = "...")]</code> cho admin/manager endpoints</li>
                 </ul>
             </div>
         </div>
@@ -1446,12 +1614,12 @@
                         <td>revalidate</td>
                     </tr>
                     <tr>
-                        <td><code>GET /api/favorites</code></td>
-                        <td>Danh sách địa điểm yêu thích của user</td>
+                        <td><code>POST /api/analytics/favorite-clicks</code></td>
+                        <td>Ghi nhận hành vi favorite/unfavorite theo <code>DeviceId</code></td>
                         <td>no-store</td>
                     </tr>
                     <tr>
-                        <td><code>POST /api/admin/locations</code></td>
+                        <td><code>POST /api/locations</code></td>
                         <td>Admin tạo/cập nhật địa điểm (kèm upload audio ở endpoint riêng)</td>
                         <td>no-store</td>
                     </tr>
@@ -1489,7 +1657,7 @@
             <div class="card">
                 <h3>👤 User Management</h3>
                 <ul>
-                    <li>Danh sách Users, xem trạng thái và role (user/manager/admin)</li>
+                    <li>Danh sách AdminUsers, xem trạng thái và role (admin/manager)</li>
                     <li>Khóa/mở khóa tài khoản: <code>IsLocked</code></li>
                     <li>Reset mật khẩu (theo quy trình nội bộ) và log thao tác quản trị</li>
                     <li>Quản lý manager: cấp/thu role manager, kiểm soát truy cập theo doanh nghiệp</li>
@@ -1502,6 +1670,15 @@
                     <li>Cho phép 1 manager quản lý nhiều địa điểm; tránh trùng phân công bằng unique key</li>
                     <li>Tra cứu nhanh: manager → danh sách địa điểm đã gán / địa điểm khả dụng</li>
                     <li>Mục tiêu: tách quyền “quản trị hệ thống” (admin) và “quản trị nội dung theo doanh nghiệp” (manager)</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>📊 Device Analytics Tracking</h3>
+                <ul>
+                    <li>React tạo <code>DeviceId</code> trong localStorage và gửi kèm heartbeat/event cho khách truy cập</li>
+                    <li>Admin routes không gửi heartbeat để tránh tự làm nhiễu số liệu dashboard</li>
+                    <li>ASP.NET Core API lưu <code>VisitorDevices</code>, <code>AnalyticsEvents</code>, <code>AppUsageHeartbeats</code>, <code>AudioPlays</code>, <code>LocationFavoriteStates</code></li>
+                    <li>Admin Dashboard gọi <code>GET /api/admin/analytics/summary</code> định kỳ để xem thiết bị đang hoạt động, lượt nghe audio, favorite và danh sách khách gần đây</li>
                 </ul>
             </div>
             <div class="card">
@@ -1526,6 +1703,51 @@
             <span class="flow-step success">Publish</span>
             <span class="flow-arrow">→</span>
             <span class="flow-step">User app sync → ready</span>
+        </div>
+
+        <h3 style="margin-top:1.5rem;">Admin Device Tracking Sequence</h3>
+        <p style="margin-bottom:1rem;color:var(--text-secondary);">Cơ chế tracking dùng cho khách truy cập web: frontend React gửi heartbeat và sự kiện hành vi về Swagger API C#, backend tổng hợp theo <code>DeviceId</code>, còn Admin Dashboard chỉ đọc báo cáo đã tổng hợp.</p>
+        <div class="mermaid-container">
+            <pre class="mermaid">
+sequenceDiagram
+    participant Guest as Guest Browser
+    participant FE as React App
+    participant DID as deviceId.js
+    participant API as ASP.NET Core Web API
+    participant SVC as AnalyticsService
+    participant DB as MySQL
+    participant Admin as Admin Dashboard
+    participant Swagger as Swagger UI
+
+    Guest->>FE: Open public route
+    FE->>DID: getOrCreateDeviceId()
+    DID-->>FE: travel_device_id
+    Note over FE: PublicAnalyticsTracker enabled<br/>when path is not /admin
+
+    loop Page view + heartbeat interval
+        FE->>API: POST /api/analytics/heartbeat<br/>{deviceId,path,platform,eventType}
+        API->>SVC: RecordHeartbeatAsync()
+        SVC->>DB: UPSERT VisitorDevices<br/>INSERT AppUsageHeartbeats<br/>INSERT AnalyticsEvents
+        DB-->>SVC: OK
+        API-->>FE: 202 Accepted
+    end
+
+    alt User plays audio or toggles favorite
+        FE->>API: POST /api/analytics/audio-plays<br/>or /favorite-clicks
+        API->>SVC: RecordAudioPlayAsync()<br/>RecordFavoriteClickAsync()
+        SVC->>DB: INSERT metric rows<br/>UPDATE favorite state
+        API-->>FE: 202 Accepted
+    end
+
+    Admin->>API: GET /api/admin/analytics/summary<br/>Authorization: Bearer admin JWT
+    API->>SVC: GetSummaryAsync()
+    SVC->>DB: Count active devices,<br/>audio plays, favorites,<br/>recent VisitorDevices
+    DB-->>SVC: Aggregated metrics
+    API-->>Admin: currentActiveDevices,<br/>totalAudioPlays, recentVisitors
+
+    Swagger->>API: Test same endpoints in /swagger
+    API-->>Swagger: OpenAPI response examples
+    </pre>
         </div>
     </section>
 
@@ -1597,7 +1819,7 @@
                     </tr>
                     <tr>
                         <td><strong>Simple RBAC</strong></td>
-                        <td>Role-based guards: user/admin cho các route /api/admin/*</td>
+                        <td>Role-based guards: admin/manager cho các route quản trị và dashboard</td>
                         <td>OWASP access control guidance</td>
                     </tr>
                 </tbody>
@@ -1748,7 +1970,7 @@ sequenceDiagram
     participant FE as React Frontend
     participant MAP as Google Maps
     participant GE as GeofenceEngine
-    participant AP as FastAPI Backend
+    participant AP as ASP.NET Core API
     participant DB as MySQL
     participant AU as Audio Player
 
@@ -1776,8 +1998,8 @@ sequenceDiagram
     else Fallback TTS
         AU->>U: window.speechSynthesis (offline safe)
     end
-    AU-->>AP: POST /api/history (location_id, lang, timestamp)
-    AP->>DB: Insert PlayHistory
+    AU-->>AP: POST /api/analytics/audio-plays (locationId, deviceId)
+    AP->>DB: Insert AudioPlays + AnalyticsEvents
     AP-->>AU: 200 OK
     AU-->>FE: onFinished → close popup
     </pre>
@@ -1798,13 +2020,13 @@ sequenceDiagram
             <div class="card">
                 <h3>Backend</h3>
                 <ul>
-                    <li><strong>FastAPI</strong> — async Python web framework</li>
-                    <li><strong>SQLAlchemy</strong> — ORM + repository layer</li>
-                    <li><strong>Alembic</strong> — database migrations</li>
-                    <li><strong>MySQL</strong> — relational database (Users, Locations, Favorites)</li>
+                    <li><strong>ASP.NET Core Web API</strong> — backend REST API C#</li>
+                    <li><strong>Swagger/OpenAPI</strong> — tài liệu và kiểm thử API tại <code>/swagger</code></li>
+                    <li><strong>EF Core + Pomelo</strong> — ORM + MySQL provider</li>
+                    <li><strong>EF Core Migrations</strong> — database migrations</li>
+                    <li><strong>MySQL</strong> — relational database (AdminUsers, Locations, Analytics, Favorites theo DeviceId)</li>
                     <li><strong>JWT</strong> — authentication tokens</li>
-                    <li><strong>bcrypt</strong> — password hashing</li>
-                    <li><strong>Pydantic</strong> — request/response schemas</li>
+                    <li><strong>ASP.NET Core Authorization</strong> — role-based guards cho admin/manager</li>
                     <li><strong>Optional:</strong> TTS provider (server-side) để sinh audio khi thiếu file upload</li>
                 </ul>
             </div>
@@ -1824,7 +2046,7 @@ sequenceDiagram
             <div class="card">
                 <h3>Zero-Cost Core</h3>
                 <ul>                    
-                    <li>✅ FastAPI: open-source backend framework</li>
+                    <li>✅ ASP.NET Core Web API: open-source backend framework</li>
                     <li>✅ React + Vite: free frontend (PWA)</li>
                     <li>✅ MySQL: free local / self-hosted database</li>
                     <li>✅ Workbox: service worker toolkit (offline support)</li>
@@ -1837,7 +2059,7 @@ sequenceDiagram
 
     <footer>
         <p><strong>Ứng Dụng Thuyết Minh Du Lịch Theo GPS</strong></p>
-        <p>Full-stack: FastAPI + MySQL + ReactJS (PWA) + Google Maps + Auto Audio (Geofence 50m)</p>
+        <p>Full-stack: ASP.NET Core Web API + Swagger/OpenAPI + MySQL + ReactJS (PWA) + Google Maps + Auto Audio (Geofence 50m)</p>
         <p style="margin-top:.5rem;">Compiled from system architecture • Audited against source code</p>
     </footer>
 
@@ -1874,6 +2096,10 @@ sequenceDiagram
                 { key: 'architecture', label: '🏗️ Kiến trúc hệ thống' },
                 { key: 'routing', label: '🔀 Frontend Routing' }
             ],
+            usecases: [
+                { key: 'use-case-scope', label: '🧩 Use Case Scope' },
+                { key: 'visitor-activity', label: '🚶 Visitor Activity Flow' }
+            ],
             startup: [
                 { key: 'backend-startup', label: '⚙️ Backend Startup' },
                 { key: 'frontend-startup', label: '🖥️ Frontend Startup' }
@@ -1902,6 +2128,7 @@ sequenceDiagram
             ],
             admin: [
                 { key: 'admin-owner', label: '🎛️ Admin CMS Flow' },
+                { key: 'admin-device-tracking', label: '📊 Device Tracking' },
                 { key: 'ai-advisor', label: '🤖 AI Assist (Optional)' }
             ],
             'full-flow': [
@@ -1919,15 +2146,16 @@ sequenceDiagram
         ADMINUI["Admin CMS\\nLocations/Audio/Users"]
     end
 
-    subgraph Backend["Backend — FastAPI"]
+    subgraph Backend["Backend — ASP.NET Core Web API + Swagger"]
         AUTH["/api/auth\\nRegister/Login"]
         LOCS["/api/locations\\nList/Nearby/Detail"]
-        FAV["/api/favorites\\nUser favorites"]
-        ADMIN_BE["/api/admin\\nCRUD + Upload"]
+        ANALYTICS["/api/analytics\\nHeartbeat/Event/Audio/Favorite"]
+        ADMIN_BE["/api/admin\\nAnalytics/Assignments"]
+        SWAGGER["/swagger\\nOpenAPI UI"]
     end
 
     subgraph Data["Data Layer"]
-        MYSQL[("MySQL\\nUsers/Locations/Favorites")]
+        MYSQL[("MySQL\\nAdminUsers/Locations/Analytics")]
         IDB[("IndexedDB\\nTourGuideDB")]
         SW["Service Worker\\nWorkbox"]
         CACHE[("Cache API\\nAudio/Images")]
@@ -1939,11 +2167,12 @@ sequenceDiagram
     MAPUI -->|"GET /api/locations/nearby"| LOCS
     LIST -->|"GET /api/locations"| LOCS
     APP -->|"POST /api/auth/login"| AUTH
-    APP -->|"GET/POST /api/favorites"| FAV
-    ADMINUI -->|"CRUD /api/admin/*"| ADMIN_BE
+    APP -->|"POST /api/analytics/*"| ANALYTICS
+    ADMINUI -->|"GET /api/admin/analytics/summary"| ADMIN_BE
+    ADMINUI --> SWAGGER
     AUTH --> MYSQL
     LOCS --> MYSQL
-    FAV --> MYSQL
+    ANALYTICS --> MYSQL
     ADMIN_BE --> MYSQL
     APP --> IDB
     APP --> SW
@@ -1970,50 +2199,140 @@ sequenceDiagram
     style LOGIN fill:#9E9E9E,color:white
     `
             },
+            'use-case-scope': {
+                title: 'Use Case Scope — Visitor / Manager / Admin',
+                mermaid: `graph LR
+    Visitor["Visitor"]
+    Manager["Manager"]
+    Admin["Admin"]
+
+    subgraph System["Tourism Guide System"]
+        ViewMap(("View Map"))
+        BrowseTours(("Browse Tours"))
+        ViewDetail(("View Location Detail"))
+        PlayAudio(("Play Audio"))
+        AutoPlay(("Auto Play Audio<br/>Geofence"))
+        ScanQR(("Scan QR"))
+        Favorite(("Favorite Location"))
+
+        ManageAssigned(("Manage Assigned Locations"))
+        UploadMedia(("Upload Audio/Image"))
+        ManagerStats(("View Statistics"))
+
+        ManageUsers(("Manage Users"))
+        ManageLocations(("Manage Locations"))
+        ManageTours(("Manage Tours"))
+        AssignManagers(("Assign Managers"))
+        ViewAnalytics(("View Analytics"))
+        CreateLocation(("Create Location"))
+        EditLocation(("Edit Location"))
+        DeleteLocation(("Delete Location"))
+    end
+
+    Visitor --> ViewMap
+    Visitor --> BrowseTours
+    Visitor --> ViewDetail
+    Visitor --> Favorite
+    ViewDetail -. include .-> PlayAudio
+    ScanQR -. include .-> PlayAudio
+    AutoPlay -. extend .-> PlayAudio
+
+    Manager --> ManageAssigned
+    Manager --> UploadMedia
+    Manager --> ManagerStats
+
+    Admin --> ManageUsers
+    Admin --> ManageLocations
+    Admin --> ManageTours
+    Admin --> AssignManagers
+    Admin --> ViewAnalytics
+    ManageLocations -. include .-> CreateLocation
+    ManageLocations -. include .-> EditLocation
+    ManageLocations -. include .-> DeleteLocation`
+            },
+            'visitor-activity': {
+                title: 'Visitor Activity Flow — React + .NET API',
+                mermaid: `flowchart TB
+    subgraph User["User"]
+        Start((Start))
+        Open["Open Web App"]
+        FavoriteClick["User Click Favorite"]
+        EndUser((Close App))
+    end
+
+    subgraph Frontend["Frontend React"]
+        Load["Load App + Tours"]
+        CallApi["Call API: Get Tours/Locations"]
+        Render["Render Map + POIs"]
+        StartGps["Start GPS Tracking"]
+        CurrentLocation["Get Current Location"]
+        Near{"Near POI?"}
+        Play["Play Audio"]
+        TrackEvent["Track Analytics Event"]
+        SendFavorite["Send Favorite Event"]
+        Continue["Continue Tracking"]
+        Stop{"Stop?"}
+        EndGps((GPS Stop))
+    end
+
+    subgraph Backend["Backend .NET API"]
+        Query["Query DB<br/>Tours + Locations"]
+        ReturnData["Return Data"]
+        SaveAnalytics["Save Analytics<br/>Play, View, Favorite"]
+    end
+
+    Start --> Open --> Load --> CallApi --> Query --> ReturnData --> Render --> StartGps --> CurrentLocation --> Near
+    Near -- Yes --> Play --> TrackEvent --> SaveAnalytics --> Stop
+    Near -- No --> Continue --> Stop
+    FavoriteClick --> SendFavorite --> SaveAnalytics
+    Stop -- Continue --> CurrentLocation
+    Stop -- Close App --> EndUser
+    Stop -- GPS Stop --> EndGps`
+            },
             'backend-startup': {
                 title: 'Backend Startup Sequence',
                 mermaid: `sequenceDiagram
     participant OS as Server OS
-    participant MAIN as main.py
-    participant CFG as config.py
-    participant DB as database.py
-    participant MIG as Alembic
+    participant MAIN as Program.cs
+    participant CFG as appsettings/env
+    participant DB as AppDbContext
+    participant MIG as EF Core Migrations
     participant AUTH as AuthService
     participant LOCS as LocationsService
 
-    OS->>MAIN: uvicorn app.main:app --port 8000
+    OS->>MAIN: dotnet run / container start
     activate MAIN
-    MAIN->>MAIN: lifespan() start
+    MAIN->>MAIN: Configure services + middleware
 
     rect rgb(255, 230, 230)
         Note over MAIN,CFG: Security Validation (non-dev only)
-        MAIN->>CFG: Check JWT_SECRET
+        MAIN->>CFG: Check JWT settings
         MAIN->>CFG: Check DB connection variables
         Note over MAIN: Refuse startup if secrets missing
     end
 
     rect rgb(230, 255, 230)
         Note over MAIN,DB: Database Connection
-        MAIN->>DB: connect_db()
-        DB->>DB: create_engine(MYSQL_URL)
+        MAIN->>DB: UseMySql(connectionString)
+        DB->>DB: Configure Pomelo provider
         DB-->>MAIN: MySQL connected
     end
 
     rect rgb(230, 230, 255)
         Note over MAIN,MIG: Migrations + Seed
-        MAIN->>MIG: alembic upgrade head
-        MAIN->>AUTH: ensure_admin_account()
+        MAIN->>MIG: db.Database.Migrate()
+        MAIN->>AUTH: seed default admin
         Note over AUTH: Create default admin<br/>if not exists
         MAIN->>LOCS: seed_sample_locations() (optional)
     end
 
     rect rgb(255, 255, 230)
         Note over MAIN,DB: Ensure Indexes
-        Note over DB: Index for Favorites(user_id)<br/>Index for Locations(name)<br/>Query optimization for nearby
+        Note over DB: Index for VisitorDevices(LastSeenAtUtc)<br/>Index for AnalyticsEvents(DeviceId,CreatedAtUtc)<br/>Index for Locations(name)
     end
 
-    MAIN->>MAIN: Mount routers (/api/auth, /api/locations, /api/favorites, /api/admin)
-    Note over MAIN: Server ready on port 8000
+    MAIN->>MAIN: Map controllers + Swagger UI (/swagger)
+    Note over MAIN: Server ready with OpenAPI docs
     deactivate MAIN`
             },
             'frontend-startup': {
@@ -2028,7 +2347,7 @@ sequenceDiagram
     participant GEO as Geolocation API
     participant STORE as locationsStore
     participant API as api.js
-    participant BACKEND as FastAPI API
+    participant BACKEND as ASP.NET Core API
     participant IDB as IndexedDB (TourGuideDB)
     participant SW as Service Worker
 
@@ -2078,7 +2397,7 @@ sequenceDiagram
     participant STORE as locationsStore
     participant GEO as GeofenceEngine<br/>debounce + cooldown
     participant SW as Service Worker<br/>CacheFirst (audio)
-    participant API as FastAPI Backend
+    participant API as ASP.NET Core API
     participant AU as Audio Player
 
     GPS->>GPS: watchPosition()
@@ -2101,7 +2420,7 @@ sequenceDiagram
         AU->>AU: speechSynthesis.speak(text)
     end
 
-    AU->>API: POST /api/history
+    AU->>API: POST /api/analytics/audio-plays
     API-->>AU: 200 OK`
             },
             'poi-content': {
@@ -2122,7 +2441,7 @@ sequenceDiagram
     subgraph DB["MySQL Tables"]
         T_LOC[("Locations\\nname,address,lat,lng\\ntext_vi/en/zh/de")]
         T_AUD[("LocationAudios\\nlocation_id,lang,url")]
-        T_FAV[("Favorites\\nuser_id,location_id")]
+        T_FAV[("LocationFavoriteStates\\ndevice_id,location_id")]
     end
 
     L_LIST --> S_LOC --> T_LOC
@@ -2140,7 +2459,7 @@ sequenceDiagram
         UP_AUD["Upload audio per lang"]
     end
 
-    subgraph Backend["FastAPI"]
+    subgraph Backend["ASP.NET Core Web API"]
         META["Save metadata\\nLocationAudios"]
         SIGN["Return audio URL\\n(versioned)"]
     end
@@ -2165,7 +2484,7 @@ sequenceDiagram
     participant Client as Web App
     participant API as /api/auth
     participant SVC as AuthService
-    participant DB as MySQL (Users)
+    participant DB as MySQL (AdminUsers)
     participant JWT as JWT Library
 
     rect rgb(230, 245, 255)
@@ -2174,7 +2493,7 @@ sequenceDiagram
         API->>SVC: authenticate()
         SVC->>DB: SELECT user WHERE username
         DB-->>SVC: {hash, role, is_locked}
-        SVC->>SVC: verify bcrypt + IsLocked check
+        SVC->>SVC: verify password hash + IsLocked check
         SVC->>JWT: sign access_token<br/>{sub, role}<br/>expire: 30 min
         JWT-->>SVC: token
         SVC-->>Client: {access_token, role}
@@ -2182,7 +2501,7 @@ sequenceDiagram
 
     rect rgb(255, 245, 230)
         Note over Client,JWT: ADMIN GUARD
-        Client->>API: GET /api/admin/locations<br/>Authorization: Bearer token
+        Client->>API: GET /api/admin/analytics/summary<br/>Authorization: Bearer token
         API->>JWT: verify token
         JWT-->>API: {sub, role}
         API-->>Client: 200 OK (role=admin) / 403 (otherwise)
@@ -2191,20 +2510,22 @@ sequenceDiagram
             'permissions': {
                 title: 'RBAC Permission Matrix',
                 mermaid: `graph TB
-    subgraph Roles["Users.Role"]
+    subgraph Roles["AdminUsers.Role + Public Guest"]
         ADMIN_R["admin\\n/admin/*"]
-        USER_R["user\\npublic app"]
+        MANAGER_R["manager\\n/manager/*"]
+        GUEST_R["guest device\\npublic app"]
     end
 
     subgraph Domains["API Domains"]
         AUTH["/api/auth\\nregister/login"]
         LOCS["/api/locations\\nlist/nearby/detail"]
-        FAV["/api/favorites\\nadd/remove/list"]
-        ADM["/api/admin\\nCRUD + uploads"]
+        AN["/api/analytics\\nheartbeat/event/favorite"]
+        ADM["/api/admin\\nanalytics + assignments"]
     end
 
-    ADMIN_R --- AUTH & LOCS & FAV & ADM
-    USER_R --- AUTH & LOCS & FAV`
+    ADMIN_R --- AUTH & LOCS & AN & ADM
+    MANAGER_R --- AUTH & LOCS
+    GUEST_R --- LOCS & AN`
             },
             'localization': {
                 title: 'Localization (VI/EN/ZH/DE) + Fallback',
@@ -2212,7 +2533,7 @@ sequenceDiagram
     participant User as User
     participant FE as React Frontend
     participant SW as Service Worker/IDB
-    participant API as FastAPI
+    participant API as ASP.NET Core API
     participant DB as MySQL
 
     User->>FE: Select language (vi/en/zh/de)
@@ -2254,7 +2575,7 @@ sequenceDiagram
                 mermaid: `sequenceDiagram
     participant FE as React Frontend
     participant GM as Google Maps JS API
-    participant API as FastAPI
+    participant API as ASP.NET Core API
     participant DB as MySQL
 
     FE->>GM: Load script with API key
@@ -2271,7 +2592,7 @@ sequenceDiagram
     participant Admin as Admin
     participant FE as Admin CMS
     participant AUTH as /api/auth
-    participant API as /api/admin
+    participant API as Swagger API C#
     participant DB as MySQL
 
     Admin->>FE: Login
@@ -2279,14 +2600,54 @@ sequenceDiagram
     AUTH-->>FE: access_token (role=admin)
 
     Admin->>FE: Create/Update Location + texts
-    FE->>API: POST /api/admin/locations
+    FE->>API: POST /api/locations
     API->>DB: INSERT/UPDATE Locations
     DB-->>API: OK
 
     Admin->>FE: Upload audio (vi/en/zh/de)
-    FE->>API: POST /api/admin/locations/{id}/audio
-    API->>DB: UPSERT LocationAudios
+    FE->>API: POST /api/upload/image
+    API->>DB: Save file path / media metadata
     API-->>FE: OK`
+            },
+            'admin-device-tracking': {
+                title: 'Admin Dashboard — Device Tracking Sequence',
+                mermaid: `sequenceDiagram
+    participant Guest as Guest Browser
+    participant FE as React App
+    participant DID as deviceId.js
+    participant API as ASP.NET Core Web API
+    participant SVC as AnalyticsService
+    participant DB as MySQL
+    participant Admin as Admin Dashboard
+    participant Swagger as Swagger UI
+
+    Guest->>FE: Open public route
+    FE->>DID: getOrCreateDeviceId()
+    DID-->>FE: travel_device_id
+    Note over FE: Heartbeat enabled only outside /admin
+
+    loop Page view + interval heartbeat
+        FE->>API: POST /api/analytics/heartbeat<br/>{deviceId,path,platform,eventType}
+        API->>SVC: RecordHeartbeatAsync()
+        SVC->>DB: UPSERT VisitorDevices<br/>INSERT AppUsageHeartbeats<br/>INSERT AnalyticsEvents
+        API-->>FE: 202 Accepted
+    end
+
+    alt Audio/favorite interaction
+        FE->>API: POST /api/analytics/audio-plays<br/>or /favorite-clicks
+        API->>SVC: Record metric
+        SVC->>DB: INSERT AudioPlays/FavoriteClicks<br/>UPDATE LocationFavoriteStates
+        API-->>FE: 202 Accepted
+    end
+
+    Admin->>API: GET /api/admin/analytics/summary<br/>Bearer admin JWT
+    API->>SVC: GetSummaryAsync()
+    SVC->>DB: Aggregate active devices,<br/>totals, recent visitors
+    DB-->>SVC: AnalyticsSummaryDto data
+    API-->>Admin: currentActiveDevices,<br/>totalAudioPlays,<br/>totalFavoritesSaved,<br/>recentVisitors
+
+    Swagger->>API: Manual test at /swagger
+    API-->>Swagger: OpenAPI JSON + responses`
             },
             'ai-advisor': {
                 title: 'AI Assist (Optional) — Content Drafting',
@@ -2309,7 +2670,7 @@ sequenceDiagram
     START["User mở app"] --> SW_REG["SW register + precache app shell"]
     SW_REG --> LANG["Chọn ngôn ngữ (VI/EN/ZH/DE)"]
     LANG --> LOAD_IDB["Load cached Locations (IndexedDB)"]
-    LANG --> FETCH_API["Fetch Locations (FastAPI + MySQL)"]
+    LANG --> FETCH_API["Fetch Locations (ASP.NET Core API + MySQL)"]
     LOAD_IDB --> RENDER["Render UI + markers (Google Maps)"]
     FETCH_API --> SAVE_IDB["Save to IndexedDB + cache audio/images"]
     SAVE_IDB --> RENDER
@@ -2318,7 +2679,7 @@ sequenceDiagram
     GPS --> CHECK["Haversine distance → ENTER when < 50m (debounce)"]
     CHECK --> PLAY["Auto-play audio (cache first)"]
     PLAY --> FALLBACK["Fallback: speechSynthesis if no audio"]
-    PLAY --> HISTORY["POST /api/history (PlayHistory)"]
+    PLAY --> HISTORY["POST /api/analytics/audio-plays"]
 
     style START fill:#4CAF50,color:white
     style PLAY fill:#2196F3,color:white
@@ -2528,4 +2889,3 @@ sequenceDiagram
 </body>
 
 </html>
-

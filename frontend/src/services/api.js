@@ -2,7 +2,7 @@ const configuredApiOrigin = import.meta.env.VITE_API_ORIGIN?.trim();
 const browserOrigin =
   typeof window !== "undefined" ? window.location.origin : "http://localhost:5093";
 
-const API_ORIGIN = (configuredApiOrigin || browserOrigin).replace(/\/+$/, "");
+export const API_ORIGIN = (configuredApiOrigin || browserOrigin).replace(/\/+$/, "");
 const API_URL = `${API_ORIGIN}/api`;
 import { getOrCreateDeviceId } from "./deviceId";
 
@@ -153,5 +153,4 @@ export async function checkGeofence(lat, lng, options = {}) {
   return response.json().catch(() => null);
 }
 
-export { API_ORIGIN };
 export default API_URL;
