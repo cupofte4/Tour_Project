@@ -1,5 +1,5 @@
 const configuredApiOrigin = import.meta.env.VITE_API_ORIGIN?.trim();
-const API_ORIGIN = (configuredApiOrigin || "http://localhost:5093").replace(/\/+$/, "");
+const API_ORIGIN = (configuredApiOrigin || window.location.origin).replace(/\/+$/, "");
 const API_URL = `${API_ORIGIN}/api`;
 import { getOrCreateDeviceId } from "./deviceId";
 

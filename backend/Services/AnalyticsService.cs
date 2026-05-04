@@ -199,13 +199,28 @@ public sealed class AnalyticsService : IAnalyticsService
         var visitors = await _db.VisitorDevices.AsNoTracking()
             .LongCountAsync(cancellationToken);
 
+        var recentVisitors = await _db.VisitorDevices.AsNoTracking()
+            .OrderByDescending(x => x.LastSeenAtUtc)
+            .Select(x => new VisitorActivityDto
+            {
+                Id = x.Id,
+                DeviceId = x.DeviceId,
+                FirstSeenAtUtc = x.FirstSeenAtUtc,
+                LastSeenAtUtc = x.LastSeenAtUtc,
+                LastPath = x.LastPath,
+                LastUserAgent = x.LastUserAgent,
+                IsActive = x.LastSeenAtUtc >= activeSince
+            })
+            .ToListAsync(cancellationToken);
+
         return new AnalyticsSummaryDto
         {
             CurrentActiveDevices = (int)activeCount,
             TotalAudioPlays = audioPlays,
             TotalFavoritesSaved = favorites,
             TotalVisitorsToday = visitors,
-            TotalVisitors = visitors
+            TotalVisitors = visitors,
+            RecentVisitors = recentVisitors
         };
     }
 

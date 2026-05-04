@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
@@ -47,6 +48,13 @@ builder.Services
         };
     });
 builder.Services.AddAuthorization();
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
@@ -107,6 +115,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+app.UseForwardedHeaders();
 app.UseCors("AllowAll");
 app.UseStaticFiles();
 

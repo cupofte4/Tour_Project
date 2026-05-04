@@ -103,6 +103,35 @@ const getUserStatus = (user) =>
     ? { key: "locked", label: "Đã khóa" }
     : { key: "active", label: "Đang hoạt động" };
 
+const formatActivityDate = (value) => {
+  if (!value) return "Chưa có dữ liệu";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Chưa có dữ liệu";
+
+  return date.toLocaleString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const getDeviceLabel = (deviceId) => {
+  if (!deviceId) return "Khách truy cập";
+  return `Thiết bị ${deviceId.slice(0, 8)}`;
+};
+
+const getUserAgentLabel = (userAgent) => {
+  if (!userAgent) return "Trình duyệt chưa rõ";
+  if (userAgent.includes("Edg/")) return "Microsoft Edge";
+  if (userAgent.includes("Chrome/")) return "Google Chrome";
+  if (userAgent.includes("Firefox/")) return "Firefox";
+  if (userAgent.includes("Safari/")) return "Safari";
+  return "Trình duyệt web";
+};
+
 function AdminDashboard() {
   const navigate = useNavigate();
   const galleryInputRef = useRef(null);
@@ -195,6 +224,7 @@ function AdminDashboard() {
         totalAudioPlays: 0,
         totalFavoritesSaved: 0,
         totalVisitors: 0,
+        recentVisitors: [],
       });
     } catch (error) {
       console.error("Failed to load analytics summary:", error);
@@ -204,6 +234,7 @@ function AdminDashboard() {
         totalAudioPlays: 0,
         totalFavoritesSaved: 0,
         totalVisitors: 0,
+        recentVisitors: [],
       });
     } finally {
       setIsLoadingAnalytics(false);
@@ -650,6 +681,10 @@ function AdminDashboard() {
     },
   ];
 
+  const visitorActivity = Array.isArray(analytics?.recentVisitors)
+    ? analytics.recentVisitors
+    : [];
+
   const renderToursTab = () => <AdminToursPanel />;
 
   const renderMapTab = () => (
@@ -761,30 +796,29 @@ function AdminDashboard() {
         <button
           type="button"
           className="ghost-action"
-          onClick={() => setActiveMenu("users")}
+          onClick={loadAnalytics}
         >
-          <span>Xem chi tiết</span>
-          <LuArrowUpRight size={16} />
+          <LuRefreshCw size={16} />
+          <span>Làm mới</span>
         </button>
       </div>
 
-      {isLoadingUsers ? (
+      {isLoadingAnalytics ? (
         <div className="admin-empty-state">
           <div className="admin-empty-state-icon">
             <LuLoaderCircle size={26} className="spin" />
           </div>
-          <h3>Đang tải người dùng</h3>
-          <p>Danh sách tài khoản đang được đồng bộ từ backend.</p>
+          <h3>Đang tải lịch sử truy cập</h3>
+          <p>Dữ liệu truy cập đang được đồng bộ từ backend.</p>
         </div>
-      ) : users.length === 0 ? (
+      ) : visitorActivity.length === 0 ? (
         <div className="admin-empty-state">
           <div className="admin-empty-state-icon">
             <LuFolderOpen size={26} />
           </div>
-          <h3>Chưa có người dùng nào</h3>
+          <h3>Chưa có lịch sử truy cập</h3>
           <p>
-            Dữ liệu người dùng đang trống. Tài khoản sẽ xuất hiện tại đây sau
-            khi đăng ký.
+            Khách truy cập sẽ xuất hiện tại đây sau khi mở các trang public.
           </p>
         </div>
       ) : (
@@ -792,31 +826,36 @@ function AdminDashboard() {
           <thead>
             <tr>
               <th>STT</th>
-              <th>Họ và tên</th>
-              <th>Username</th>
-              <th>Role</th>
+              <th>Thiết bị</th>
+              <th>Trang truy cập</th>
+              <th>Lần đầu</th>
+              <th>Lần cuối</th>
               <th>Trạng thái</th>
             </tr>
           </thead>
           <tbody>
-            {users.map((member, index) => {
-              const status = getUserStatus(member);
+            {visitorActivity.map((visitor, index) => {
+              const status = visitor.isActive
+                ? { key: "active", label: "Đang online" }
+                : { key: "pending", label: "Đã rời" };
+
               return (
-                <tr key={member.id}>
+                <tr key={visitor.id || visitor.deviceId}>
                   <td>{index + 1}</td>
                   <td>
                     <div className="table-user">
                       <div className="table-user-avatar">
-                        {member.fullName?.charAt(0) || "U"}
+                        {index + 1}
                       </div>
                       <div className="table-user-copy">
-                        <strong>{member.fullName}</strong>
-                        <span>{member.username}</span>
+                        <strong>{getDeviceLabel(visitor.deviceId)}</strong>
+                        <span>{getUserAgentLabel(visitor.lastUserAgent)}</span>
                       </div>
                     </div>
                   </td>
-                  <td>{member.username}</td>
-                  <td>{(member.role || "manager").toUpperCase()}</td>
+                  <td className="activity-path-cell">{visitor.lastPath || "/"}</td>
+                  <td>{formatActivityDate(visitor.firstSeenAtUtc)}</td>
+                  <td>{formatActivityDate(visitor.lastSeenAtUtc)}</td>
                   <td>
                     <span className={`status-pill status-${status.key}`}>
                       {status.label}

@@ -142,6 +142,11 @@ a {
   letter-spacing: 0.04em;
 }
 
+.activity-path-cell {
+  max-width: 280px;
+  overflow-wrap: anywhere;
+}
+
 .sidebar-section {
   display: flex;
   flex-direction: column;

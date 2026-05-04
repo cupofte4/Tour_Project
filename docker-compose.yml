@@ -1,7 +1,7 @@
 services:
   mysql:
     image: mysql:8.0
-    container_name: mysql-tourdb
+    container_name: tour-mysql
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: "1111"
@@ -10,6 +10,33 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-  
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p1111"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  backend:
+    image: tranhau030205/tour-backend:latest
+    container_name: tour-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "Server=mysql;Port=3306;Database=tourdb;User=root;Password=1111;AllowPublicKeyRetrieval=True;SslMode=None;"
+
+  frontend:
+    image: tranhau030205/tour-frontend:latest
+    container_name: tour-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "127.0.0.1:8080:80"
+
 volumes:
   mysql_data:
