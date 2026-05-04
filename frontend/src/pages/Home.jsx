@@ -113,7 +113,7 @@ function normalizeTourLocationRecords(records) {
         reviewsJson: source.reviewsJson ?? source.ReviewsJson ?? "[]",
         latitude: Number(source.latitude ?? source.Latitude),
         longitude: Number(source.longitude ?? source.Longitude),
-        prio: Number(source.prio ?? source.Prio ?? 0),
+        prio: source.prio ?? source.Prio ?? "Silver",
         textVi: source.textVi ?? source.TextVi ?? "",
         textEn: source.textEn ?? source.TextEn ?? "",
         textZh: source.textZh ?? source.TextZh ?? "",

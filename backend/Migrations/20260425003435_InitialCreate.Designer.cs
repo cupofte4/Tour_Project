@@ -230,8 +230,11 @@ namespace backend.Migrations
                     b.Property<string>("Phone")
                         .HasColumnType("longtext");
 
-                    b.Property<int>("Prio")
-                        .HasColumnType("int");
+                    b.Property<string>("Prio")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasDefaultValue("Silver");
 
                     b.Property<string>("ReviewsJson")
                         .HasColumnType("longtext");

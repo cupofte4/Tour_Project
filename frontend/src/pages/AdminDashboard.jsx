@@ -63,6 +63,7 @@ const createEmptyLocationForm = () => ({
   reviewsJson: "[]",
   latitude: "",
   longitude: "",
+  prio: "Silver",
   textVi: "",
   textEn: "",
   textZh: "",
@@ -468,6 +469,7 @@ function AdminDashboard() {
       reviewsJson: location.reviewsJson || "[]",
       latitude: location.latitude ?? "",
       longitude: location.longitude ?? "",
+      prio: location.prio ?? location.Prio ?? "Silver",
       textVi: location.textVi || "",
       textEn: location.textEn || "",
       textZh: location.textZh || "",
@@ -580,6 +582,7 @@ function AdminDashboard() {
       reviewsJson: locationForm.reviewsJson || "[]",
       latitude,
       longitude,
+      prio: locationForm.prio,
       textVi: locationForm.textVi.trim(),
       textEn: locationForm.textEn.trim(),
       textZh: locationForm.textZh.trim(),
@@ -1522,6 +1525,22 @@ function AdminDashboard() {
                 value={locationForm.longitude}
                 onChange={handleLocationInputChange}
               />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="prio">Priority</label>
+              <select
+                id="prio"
+                name="prio"
+                value={locationForm.prio}
+                onChange={handleLocationInputChange}
+              >
+                <option value="Premium">Premium</option>
+                <option value="Gold">Gold</option>
+                <option value="Silver">Silver</option>
+              </select>
             </div>
           </div>
 

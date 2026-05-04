@@ -1,8 +1,14 @@
 export const DEFAULT_POI_COOLDOWN_MS = 30000;
 
+export const prioRank = {
+  Premium: 3,
+  Gold: 2,
+  Silver: 1,
+};
+
 export function getPoiPriority(poi) {
-  const value = Number(poi?.prio ?? poi?.Prio ?? 0);
-  return Number.isFinite(value) ? value : 0;
+  const value = poi?.prio ?? poi?.Prio ?? "Silver";
+  return prioRank[value] ?? 0;
 }
 
 export function getPoiId(poi) {

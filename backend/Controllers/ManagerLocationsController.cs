@@ -56,9 +56,15 @@ namespace Tour_Project.Controllers
                 return BadRequest(new { message = "Invalid location payload" });
             }
 
+            if (!LocationPriority.IsValid(location.Prio))
+            {
+                return BadRequest(new { message = "Prio must be one of: Premium, Gold, Silver." });
+            }
+
             location.ReviewsJson = string.IsNullOrWhiteSpace(location.ReviewsJson)
                 ? "[]"
                 : location.ReviewsJson;
+            location.Prio = LocationPriority.NormalizeOrDefault(location.Prio);
 
             _context.Locations.Add(location);
             _context.SaveChanges();
@@ -84,6 +90,11 @@ namespace Tour_Project.Controllers
             var location = _context.Locations.Find(id);
             if (location == null) return NotFound();
 
+            if (!LocationPriority.IsValid(updated.Prio))
+            {
+                return BadRequest(new { message = "Prio must be one of: Premium, Gold, Silver." });
+            }
+
             location.Name = updated.Name;
             location.Description = updated.Description;
             location.Image = updated.Image;
@@ -97,6 +108,7 @@ namespace Tour_Project.Controllers
             location.TextEn = updated.TextEn;
             location.TextZh = updated.TextZh;
             location.TextDe = updated.TextDe;
+            location.Prio = updated.Prio;
 
             _context.SaveChanges();
             return Ok(location);

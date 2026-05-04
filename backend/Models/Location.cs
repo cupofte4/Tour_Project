@@ -26,7 +26,8 @@ namespace Tour_Project.Models
     public double Latitude { get; set; }
     public double Longitude { get; set; }
 
-    public int Prio { get; set; } = 0;  
+    [Required, MaxLength(20)]
+    public string Prio { get; set; } = LocationPriority.DefaultPrio;
 
     public string? TextVi { get; set; }
     public string? TextEn { get; set; }

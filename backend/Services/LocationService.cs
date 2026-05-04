@@ -52,13 +52,18 @@ namespace backend.Services
 
         public async Task<LocationDto> CreateAsync(CreateLocationRequest req)
         {
+            if (req.Prio is not null && !LocationPriority.IsValid(req.Prio))
+            {
+                throw new ArgumentException("Prio must be one of: Premium, Gold, Silver.", nameof(req.Prio));
+            }
+
             var l = new Location {
                 Name = req.Name,
                 Description = req.Description,
                 Latitude = req.Latitude,
                 Longitude = req.Longitude,
                 Address = req.Address,
-                Prio = req.Prio ?? 0
+                Prio = LocationPriority.NormalizeOrDefault(req.Prio)
             };
             _db.Locations.Add(l);
             await _db.SaveChangesAsync();
@@ -82,7 +87,15 @@ namespace backend.Services
             if (req.Latitude.HasValue) l.Latitude = req.Latitude.Value;
             if (req.Longitude.HasValue) l.Longitude = req.Longitude.Value;
             l.Address = req.Address ?? l.Address;
-            if (req.Prio.HasValue) l.Prio = req.Prio.Value;
+            if (req.Prio is not null)
+            {
+                if (!LocationPriority.IsValid(req.Prio))
+                {
+                    throw new ArgumentException("Prio must be one of: Premium, Gold, Silver.", nameof(req.Prio));
+                }
+
+                l.Prio = req.Prio;
+            }
             await _db.SaveChangesAsync();
             return new LocationDto {
                 Id = l.Id,

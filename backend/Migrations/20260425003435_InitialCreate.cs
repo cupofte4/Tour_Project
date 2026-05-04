@@ -160,7 +160,8 @@ namespace backend.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Latitude = table.Column<double>(type: "double", nullable: false),
                     Longitude = table.Column<double>(type: "double", nullable: false),
-                    Prio = table.Column<int>(type: "int", nullable: false),
+                    Prio = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false, defaultValue: "Silver")
+                        .Annotation("MySql:CharSet", "utf8mb4"),
                     TextVi = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     TextEn = table.Column<string>(type: "longtext", nullable: true)

@@ -17,6 +17,7 @@ function AddLocation() {
     reviewsJson: "[]",
     latitude: "",
     longitude: "",
+    prio: "Silver",
     textVi: "",
     textEn: "",
     textZh: "",
@@ -48,6 +49,7 @@ function AddLocation() {
       ...location,
       latitude: Number(location.latitude),
       longitude: Number(location.longitude),
+      prio: location.prio,
       images: location.images || "[]",
       reviewsJson: location.reviewsJson || "[]",
     });
@@ -120,6 +122,17 @@ function AddLocation() {
                 setLocation({ ...location, longitude: e.target.value })
               }
             />
+
+            <select
+              value={location.prio}
+              onChange={(e) =>
+                setLocation({ ...location, prio: e.target.value })
+              }
+            >
+              <option value="Premium">Premium</option>
+              <option value="Gold">Gold</option>
+              <option value="Silver">Silver</option>
+            </select>
 
             <button onClick={handleSubmit}>Add Location</button>
           </div>

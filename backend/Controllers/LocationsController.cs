@@ -103,7 +103,13 @@ namespace Tour_Project.Controllers
         [HttpPost]
         public IActionResult Create(Location location)
         {
+            if (!LocationPriority.IsValid(location.Prio))
+            {
+                return BadRequest("Prio must be one of: Premium, Gold, Silver.");
+            }
+
             location.ReviewsJson ??= "[]";
+            location.Prio = LocationPriority.NormalizeOrDefault(location.Prio);
             _context.Locations.Add(location);
             _context.SaveChanges();
             return Ok(location);
@@ -144,6 +150,11 @@ namespace Tour_Project.Controllers
         {
             var location = _context.Locations.Find(id);
             if (location == null) return NotFound();
+
+            if (!LocationPriority.IsValid(updated.Prio))
+            {
+                return BadRequest("Prio must be one of: Premium, Gold, Silver.");
+            }
 
             location.Name = updated.Name;
             location.Description = updated.Description;

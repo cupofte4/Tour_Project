@@ -7,6 +7,6 @@ namespace backend.Application.Location
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
         public string? Address { get; set; }
-        public int? Prio { get; set; }
+        public string? Prio { get; set; }
     }
 }

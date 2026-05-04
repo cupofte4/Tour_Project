@@ -59,6 +59,11 @@ namespace Tour_Project.Data
             modelBuilder.Entity<Location>()
                 .HasIndex(l => l.Name);
 
+            modelBuilder.Entity<Location>()
+                .Property(l => l.Prio)
+                .HasMaxLength(20)
+                .HasDefaultValue(LocationPriority.DefaultPrio);
+
             modelBuilder.Entity<LocationManagerAssignment>()
                 .HasOne(x => x.Manager)
                 .WithMany()

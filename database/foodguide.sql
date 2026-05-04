@@ -56,10 +56,11 @@ CREATE TABLE Locations (
     TextEn LONGTEXT,
     TextZh LONGTEXT,
     TextDe LONGTEXT,
-    Prio INT NOT NULL DEFAULT 0,
+    Prio VARCHAR(20) NOT NULL DEFAULT 'Silver',
     CreatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UpdatedAt DATETIME NULL,
 
+    CONSTRAINT CK_Locations_Prio CHECK (Prio IN ('Premium', 'Gold', 'Silver')),
     INDEX IX_Locations_Name (Name),
     INDEX IX_Locations_Coordinates (Latitude, Longitude)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -74,12 +75,23 @@ SET @locations_has_prio = (
 );
 SET @add_locations_prio_sql = IF(
     @locations_has_prio = 0,
-    'ALTER TABLE Locations ADD COLUMN Prio INT NOT NULL DEFAULT 0;',
+    'ALTER TABLE Locations ADD COLUMN Prio VARCHAR(20) NOT NULL DEFAULT ''Silver'';',
     'SELECT 1;'
 );
 PREPARE add_locations_prio_stmt FROM @add_locations_prio_sql;
 EXECUTE add_locations_prio_stmt;
 DEALLOCATE PREPARE add_locations_prio_stmt;
+
+ALTER TABLE Locations
+    MODIFY COLUMN Prio VARCHAR(20) NOT NULL DEFAULT 'Silver';
+
+UPDATE Locations
+SET Prio = CASE
+    WHEN Prio IN ('Premium', '10') THEN 'Premium'
+    WHEN Prio IN ('Gold', '8', '6') THEN 'Gold'
+    WHEN Prio IN ('Silver', '4', '2', '0') THEN 'Silver'
+    ELSE 'Silver'
+END;
 
 -- =============================
 -- LOCATION STATS
@@ -279,16 +291,16 @@ VALUES
 );
 
 -- Seed priority for existing locations
-UPDATE Locations SET Prio = 10 WHERE Slug = 'oc-vinh-khanh';
-UPDATE Locations SET Prio = 10 WHERE Slug = 'pha-lau-vinh-khanh';
-UPDATE Locations SET Prio = 8 WHERE Slug = 'che-vinh-khanh';
-UPDATE Locations SET Prio = 8 WHERE Slug = 'hai-san-nuong-vinh-khanh';
-UPDATE Locations SET Prio = 6 WHERE Slug = 'banh-trang-nuong-q4';
-UPDATE Locations SET Prio = 6 WHERE Slug = 'sup-cua-vinh-khanh';
-UPDATE Locations SET Prio = 4 WHERE Slug = 'tra-sua-via-he';
-UPDATE Locations SET Prio = 4 WHERE Slug = 'xien-nuong-dem';
-UPDATE Locations SET Prio = 2 WHERE Slug = 'bun-thai-hai-san';
-UPDATE Locations SET Prio = 2 WHERE Slug = 'kem-cuon-thai';
+UPDATE Locations SET Prio = 'Premium' WHERE Slug = 'oc-vinh-khanh';
+UPDATE Locations SET Prio = 'Premium' WHERE Slug = 'pha-lau-vinh-khanh';
+UPDATE Locations SET Prio = 'Gold' WHERE Slug = 'che-vinh-khanh';
+UPDATE Locations SET Prio = 'Gold' WHERE Slug = 'hai-san-nuong-vinh-khanh';
+UPDATE Locations SET Prio = 'Gold' WHERE Slug = 'banh-trang-nuong-q4';
+UPDATE Locations SET Prio = 'Gold' WHERE Slug = 'sup-cua-vinh-khanh';
+UPDATE Locations SET Prio = 'Silver' WHERE Slug = 'tra-sua-via-he';
+UPDATE Locations SET Prio = 'Silver' WHERE Slug = 'xien-nuong-dem';
+UPDATE Locations SET Prio = 'Silver' WHERE Slug = 'bun-thai-hai-san';
+UPDATE Locations SET Prio = 'Silver' WHERE Slug = 'kem-cuon-thai';
 
 -- ===== BÊN TRÊN (5 POI) =====
 UPDATE Locations SET Latitude = 10.76181, Longitude = 106.70218 WHERE Id = 1;
