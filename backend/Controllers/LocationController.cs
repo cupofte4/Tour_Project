@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
+using System.Security.Claims;
 using Tour_Project.Data;
 using Tour_Project.Models;
 using Tour_Project.Services;
@@ -41,6 +42,11 @@ namespace Tour_Project.Controllers
         [HttpPost]
         public IActionResult Create(Location location)
         {
+            if (User.FindFirstValue(ClaimTypes.Role) == Roles.Manager)
+            {
+                location.Prio = LocationPriority.DefaultPrio;
+            }
+
             if (!LocationPriority.IsValid(location.Prio))
             {
                 return BadRequest("Prio must be one of: Premium, Gold, Silver.");
@@ -91,6 +97,11 @@ namespace Tour_Project.Controllers
         {
             var location = _context.Locations.Find(id);
             if (location == null) return NotFound();
+
+            if (User.FindFirstValue(ClaimTypes.Role) == Roles.Manager)
+            {
+                updated.Prio = location.Prio;
+            }
 
             if (!LocationPriority.IsValid(updated.Prio))
             {

@@ -29,10 +29,11 @@ CREATE TABLE AdminUsers (
     LastLoginAt DATETIME NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT INTO AdminUsers (Username, PasswordHash, FullName, Phone, Role)
-VALUES 
-('admin', 'admin123', 'Administrator', '0900000000', 'admin'),
-('manager1', 'manager123', 'Business Manager', '0911000000', 'manager');
+INSERT INTO AdminUsers
+(Username, PasswordHash, FullName, Phone, Role, IsLocked)
+VALUES
+('admin', 'admin123', 'Administrator', '0900000000', 'admin', 0),
+('manager1', 'manager123', 'Business Manager', '0911000000', 'manager', 0);
 
 UPDATE AdminUsers
 SET Role = LOWER(Role);

@@ -594,16 +594,12 @@ function ManagerDashboard() {
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="prio">Priority</label>
-              <select
+              <input
                 id="prio"
                 name="prio"
                 value={locationForm.prio}
-                onChange={handleLocationInputChange}
-              >
-                <option value="Premium">Premium</option>
-                <option value="Gold">Gold</option>
-                <option value="Silver">Silver</option>
-              </select>
+                readOnly
+              />
             </div>
           </div>
 

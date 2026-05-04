@@ -31,7 +31,7 @@ namespace Tour_Project.Controllers
                         id = u.Id,
                         fullName = u.FullName,
                         username = u.Username,
-                        role = Roles.Normalize(u.Role),
+                        role = u.Role,
                         isLocked = u.IsLocked
                     })
                     .ToList();
@@ -51,7 +51,7 @@ namespace Tour_Project.Controllers
             {
                 var username = (request.Username ?? string.Empty).Trim();
                 var password = request.Password ?? string.Empty;
-                var role = Roles.Normalize(request.Role);
+                var role = request.Role;
 
                 if (string.IsNullOrWhiteSpace(username))
                     return BadRequest(new { message = "Username is required" });
@@ -84,7 +84,7 @@ namespace Tour_Project.Controllers
                     id = user.Id,
                     fullName = user.FullName,
                     username = user.Username,
-                    role = Roles.Normalize(user.Role),
+                    role = user.Role,
                     isLocked = user.IsLocked
                 });
             }
@@ -104,7 +104,7 @@ namespace Tour_Project.Controllers
                     user.IsLocked = request.IsLocked.Value;
 
                 if (!string.IsNullOrWhiteSpace(request.Role))
-                    user.Role = Roles.Normalize(request.Role);
+                    user.Role = request.Role;
 
             if (!string.IsNullOrWhiteSpace(request.Password))
                 user.PasswordHash = request.Password; // NOTE: password hashing is out of scope here
@@ -116,7 +116,7 @@ namespace Tour_Project.Controllers
                 id = user.Id,
                 fullName = user.FullName,
                 username = user.Username,
-                role = Roles.Normalize(user.Role),
+                role = user.Role,
                 isLocked = user.IsLocked
             });
         }
@@ -129,7 +129,7 @@ namespace Tour_Project.Controllers
                 var user = _context.AdminUsers.Find(id);
                 if (user == null) return NotFound(new { message = "User not found" });
 
-                var role = Roles.Normalize(request.Role);
+                var role = request.Role;
                 if (!Roles.IsValid(role))
                     return BadRequest(new { message = "Role is invalid" });
 
@@ -141,7 +141,7 @@ namespace Tour_Project.Controllers
                     id = user.Id,
                     fullName = user.FullName,
                     username = user.Username,
-                    role = Roles.Normalize(user.Role),
+                    role = user.Role,
                     isLocked = user.IsLocked
                 });
             }

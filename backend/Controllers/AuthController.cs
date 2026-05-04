@@ -30,7 +30,7 @@ namespace Tour_Project.Controllers
             if (u.IsLocked)
                 return Unauthorized(new { message = "Account is locked" });
 
-            var token = _jwtService.GenerateToken(u.Id, u.Username, Roles.Normalize(u.Role));
+            var token = _jwtService.GenerateToken(u.Id, u.Username, u.Role);
 
             return Ok(new
             {
@@ -41,7 +41,7 @@ namespace Tour_Project.Controllers
                     fullName = u.FullName,
                     username = u.Username,
                     phone = u.Phone,
-                    role = Roles.Normalize(u.Role),
+                    role = u.Role,
                     isLocked = u.IsLocked
                 }
             });

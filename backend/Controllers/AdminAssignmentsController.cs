@@ -21,14 +21,14 @@ namespace Tour_Project.Controllers
         public IActionResult GetManagers()
         {
             var managers = _context.AdminUsers
-                .Where(user => Roles.Normalize(user.Role) == Roles.Manager)
+                .Where(user => user.Role == "manager")
                 .OrderByDescending(user => user.Id)
                 .Select(user => new
                 {
                     id = user.Id,
                     fullName = user.FullName,
                     username = user.Username,
-                    role = Roles.Normalize(user.Role),
+                    role = user.Role,
                     isLocked = user.IsLocked
                 })
                 .ToList();
@@ -75,7 +75,7 @@ namespace Tour_Project.Controllers
                     managerId = item.ManagerId,
                     managerName = managers.TryGetValue(item.ManagerId, out var manager) ? manager.FullName : string.Empty,
                     username = managers.TryGetValue(item.ManagerId, out manager) ? manager.Username : string.Empty,
-                    role = managers.TryGetValue(item.ManagerId, out manager) ? Roles.Normalize(manager.Role) : string.Empty,
+                    role = managers.TryGetValue(item.ManagerId, out manager) ? manager.Role : string.Empty,
                     locationId = item.LocationId,
                     locationName = locations.TryGetValue(item.LocationId, out var location) ? location.Name : string.Empty
                 }).ToList();
@@ -133,7 +133,7 @@ namespace Tour_Project.Controllers
             if (manager == null)
                 return NotFound(new { message = "Manager not found" });
 
-            var managerRole = Roles.Normalize(manager.Role);
+            var managerRole = manager.Role;
             if (managerRole != Roles.Manager)
                 return BadRequest(new { message = "User is not a manager" });
 

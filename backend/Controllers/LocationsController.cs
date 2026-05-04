@@ -55,7 +55,7 @@ namespace Tour_Project.Controllers
         {
             try
             {
-                var role = Roles.Normalize(User.FindFirstValue(ClaimTypes.Role));
+                var role = User.FindFirstValue(ClaimTypes.Role);
                 var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 List<Location> data;
@@ -103,6 +103,11 @@ namespace Tour_Project.Controllers
         [HttpPost]
         public IActionResult Create(Location location)
         {
+            if (User.FindFirstValue(ClaimTypes.Role) == Roles.Manager)
+            {
+                location.Prio = LocationPriority.DefaultPrio;
+            }
+
             if (!LocationPriority.IsValid(location.Prio))
             {
                 return BadRequest("Prio must be one of: Premium, Gold, Silver.");
@@ -150,6 +155,11 @@ namespace Tour_Project.Controllers
         {
             var location = _context.Locations.Find(id);
             if (location == null) return NotFound();
+
+            if (User.FindFirstValue(ClaimTypes.Role) == Roles.Manager)
+            {
+                updated.Prio = location.Prio;
+            }
 
             if (!LocationPriority.IsValid(updated.Prio))
             {
