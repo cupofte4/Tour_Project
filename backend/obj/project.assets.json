@@ -2855,24 +2855,26 @@
     ]
   },
   "packageFolders": {
-    "/Users/tranhau/.nuget/packages/": {}
+    "C:\\Users\\Tran Nhu\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/tranhau/Documents/Tour_Project/backend/backend.csproj",
+      "projectUniqueName": "D:\\Code_CSharp\\Tour_Project\\backend\\backend.csproj",
       "projectName": "backend",
-      "projectPath": "/Users/tranhau/Documents/Tour_Project/backend/backend.csproj",
-      "packagesPath": "/Users/tranhau/.nuget/packages/",
-      "outputPath": "/Users/tranhau/Documents/Tour_Project/backend/obj/",
+      "projectPath": "D:\\Code_CSharp\\Tour_Project\\backend\\backend.csproj",
+      "packagesPath": "C:\\Users\\Tran Nhu\\.nuget\\packages\\",
+      "outputPath": "D:\\Code_CSharp\\Tour_Project\\backend\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/Users/tranhau/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\Tran Nhu\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -2947,7 +2949,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/Users/tranhau/.dotnet/sdk/10.0.201/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.201/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.AspNetCore": "(,10.0.32767]",
           "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

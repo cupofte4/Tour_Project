@@ -706,6 +706,7 @@
         <div class="logo">🍜 Food Tour Audio Guide</div>
         <ul class="nav-links">
             <li><a href="#overview">Tổng quan</a></li>
+            <li><a href="#usecases">Use Case</a></li>
             <li><a href="#startup">Khởi động</a></li>
             <li><a href="#geofence">GPS/Geofence</a></li>
             <li><a href="#content">Địa điểm</a></li>
@@ -713,7 +714,7 @@
             <li><a href="#auth">Auth/RBAC</a></li>
             <li><a href="#localization">Đa ngôn ngữ</a></li>
             <li><a href="#offline">Offline/PWA</a></li>
-            <li><a href="#maps">Leaflet Map</a></li>
+            <li><a href="#maps">Google Maps</a></li>
             <li><a href="#admin">Admin CMS</a></li>
             <li><a href="#patterns">Patterns</a></li>
         </ul>
@@ -722,11 +723,13 @@
     <!-- HERO -->
     <div class="hero">
         <h1>Hệ Thống Du Lịch Ẩm Thực Quận 4</h1>
-        <p class="subtitle">Khi người dùng đi vào vùng lân cận một địa điểm (geofence), hệ thống tự động phát audio thuyết minh theo ngôn ngữ đã chọn. Hỗ trợ bản đồ, đa ngôn ngữ, offline (PWA) và quản trị nội dung.</p>
+        <p class="subtitle">Khi người dùng đi vào vùng lân cận một địa điểm (geofence), hệ thống tự động phát audio
+            thuyết minh theo ngôn ngữ đã chọn. Hỗ trợ bản đồ, đa ngôn ngữ, offline (PWA) và quản trị nội dung.</p>
         <div class="badges">
-            <span class="badge">FastAPI + MySQL</span>
+            <span class="badge">ASP.NET Core Web API + MySQL</span>
             <span class="badge">ReactJS + PWA</span>
-            <span class="badge">Leaflet Map</span>
+            <span class="badge">Swagger/OpenAPI</span>
+            <span class="badge">Google Maps</span>
             <span class="badge">GPS Geofence 50m</span>
             <span class="badge">VI/EN/ZH/DE</span>
             <span class="badge">Offline-First</span>
@@ -782,8 +785,9 @@
             </div>
         </div>
 
-        <p style="margin-bottom:1rem;color:var(--text-secondary);">Backend chia thành 6 module hoạt động độc lập theo
-            kiểu REST API, giao tiếp qua MySQL. Frontend ReactJS hiển thị bản đồ Leaflet Map, theo dõi GPS và tự động phát audio khi người dùng cách địa điểm <strong>&lt; 50m</strong>.</p>
+        <p style="margin-bottom:1rem;color:var(--text-secondary);">Backend là <strong>ASP.NET Core Web API</strong> dùng
+            Swagger/OpenAPI để kiểm thử tài liệu API, giao tiếp với MySQL qua EF Core. Frontend ReactJS hiển thị bản đồ
+            Google Maps, theo dõi GPS và tự động phát audio khi người dùng cách địa điểm <strong>&lt; 50m</strong>.</p>
 
         <div class="arch-grid">
             <div class="arch-module">
@@ -845,14 +849,16 @@
                         <td>Dữ liệu địa điểm: tên, mô tả, ảnh, địa chỉ, đánh giá (json), lat/lng, text VI/EN/ZH/DE</td>
                     </tr>
                     <tr>
-                        <td><code>Users</code></td>
+                        <td><code>AdminUsers</code></td>
                         <td>auth</td>
-                        <td>Tài khoản: username, password hash, role (user/admin), khóa tài khoản, hồ sơ</td>
+                        <td>Tài khoản quản trị: username, password hash, role (admin/manager), khóa tài khoản, hồ sơ
+                        </td>
                     </tr>
                     <tr>
-                        <td><code>Favorites</code></td>
+                        <td><code>LocationFavoriteStates</code></td>
                         <td>favorites</td>
-                        <td>Bảng liên kết user-location (yêu thích), phục vụ đồng bộ và lọc nhanh</td>
+                        <td>Trạng thái yêu thích theo <code>DeviceId</code> và <code>LocationId</code>, phục vụ khách
+                            không cần đăng nhập</td>
                     </tr>
                     <tr>
                         <td><code>LocationAudios</code></td>
@@ -860,12 +866,195 @@
                         <td>Audio theo (location_id, lang): url/path, duration, checksum, trạng thái sẵn sàng</td>
                     </tr>
                     <tr>
-                        <td><code>PlayHistory</code></td>
-                        <td>localization</td>
-                        <td>Lưu lịch sử phát: user_id, location_id, lang, timestamp để gợi ý và theo dõi trải nghiệm</td>
+                        <td><code>VisitorDevices</code>, <code>AnalyticsEvents</code>, <code>AppUsageHeartbeats</code>
+                        </td>
+                        <td>analytics</td>
+                        <td>Theo dõi thiết bị khách, lượt truy cập, heartbeat, audio play và favorite để hiển thị trên
+                            Admin Dashboard</td>
                     </tr>
                 </tbody>
             </table>
+        </div>
+    </section>
+
+    <!-- USE CASES & ACTIVITY -->
+    <section id="usecases">
+        <div class="section-header">
+            <div class="icon" style="background:#e0f2f1;color:#00695c;">🧩</div>
+            <div>
+                <div class="section-num">Chapter 00B</div>
+                <h2>Use Case & Activity Flow</h2>
+            </div>
+        </div>
+
+        <p style="margin-bottom:1.5rem;color:var(--text-secondary);">Phần này tổng hợp từ
+            <code>diagram/UseCase.xml</code> và <code>diagram/ActDiagram.xml</code>, chuyển thành mô tả phù hợp với hệ
+            thống hiện tại: frontend React, backend ASP.NET Core Web API, Swagger/OpenAPI và MySQL.</p>
+
+        <h3>Actor & Use Case Scope</h3>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Actor</th>
+                        <th>Use cases chính</th>
+                        <th>Ghi chú triển khai</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Visitor</strong></td>
+                        <td>Xem bản đồ, duyệt tour, xem chi tiết địa điểm, phát audio, auto-play bằng geofence, scan QR,
+                            favorite địa điểm</td>
+                        <td>Không cần tài khoản; định danh bằng <code>DeviceId</code> trong localStorage và gửi
+                            analytics qua <code>/api/analytics/*</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Manager</strong></td>
+                        <td>Quản lý địa điểm được phân công, upload ảnh/audio, xem thống kê</td>
+                        <td>Đăng nhập bằng JWT; truy cập phạm vi <code>/manager/*</code> và API manager tương ứng</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Admin</strong></td>
+                        <td>Quản lý người dùng, địa điểm, tour, phân công manager, xem analytics</td>
+                        <td>Đăng nhập role admin; xem dashboard analytics qua
+                            <code>GET /api/admin/analytics/summary</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mermaid-container">
+            <pre class="mermaid">
+graph LR
+    Visitor["Visitor"]
+    Manager["Manager"]
+    Admin["Admin"]
+
+    subgraph System["Tourism Guide System"]
+        ViewMap(("View Map"))
+        BrowseTours(("Browse Tours"))
+        ViewDetail(("View Location Detail"))
+        PlayAudio(("Play Audio"))
+        AutoPlay(("Auto Play Audio<br/>Geofence"))
+        ScanQR(("Scan QR"))
+        Favorite(("Favorite Location"))
+
+        ManageAssigned(("Manage Assigned Locations"))
+        UploadMedia(("Upload Audio/Image"))
+        ManagerStats(("View Statistics"))
+
+        ManageUsers(("Manage Users"))
+        ManageLocations(("Manage Locations"))
+        ManageTours(("Manage Tours"))
+        AssignManagers(("Assign Managers"))
+        ViewAnalytics(("View Analytics"))
+        CreateLocation(("Create Location"))
+        EditLocation(("Edit Location"))
+        DeleteLocation(("Delete Location"))
+    end
+
+    Visitor --> ViewMap
+    Visitor --> BrowseTours
+    Visitor --> ViewDetail
+    Visitor --> Favorite
+    ViewDetail -. include .-> PlayAudio
+    ScanQR -. include .-> PlayAudio
+    AutoPlay -. extend .-> PlayAudio
+
+    Manager --> ManageAssigned
+    Manager --> UploadMedia
+    Manager --> ManagerStats
+
+    Admin --> ManageUsers
+    Admin --> ManageLocations
+    Admin --> ManageTours
+    Admin --> AssignManagers
+    Admin --> ViewAnalytics
+    ManageLocations -. include .-> CreateLocation
+    ManageLocations -. include .-> EditLocation
+    ManageLocations -. include .-> DeleteLocation
+    </pre>
+        </div>
+
+        <h3 style="margin-top:1.5rem;">Visitor Activity Flow</h3>
+        <p style="margin-bottom:1rem;color:var(--text-secondary);">Activity diagram mô tả luồng public app: người dùng
+            mở web, React tải dữ liệu tour/location từ API C#, render bản đồ, bật GPS tracking, tự phát audio khi gần
+            POI và ghi analytics/favorite về backend.</p>
+
+        <div class="timeline">
+            <div class="timeline-item">
+                <h4>1. Open Web App</h4>
+                <p>Visitor mở ứng dụng; React khởi tạo app shell, load tours/locations và lấy/cấp <code>DeviceId</code>.
+                </p>
+            </div>
+            <div class="timeline-item">
+                <h4>2. Load Data From API</h4>
+                <p>Frontend gọi API lấy tours/locations; backend ASP.NET Core query MySQL và trả dữ liệu cho map/detail
+                    view.</p>
+            </div>
+            <div class="timeline-item">
+                <h4>3. Render Map + Start GPS</h4>
+                <p>React render Google Maps + POIs, sau đó dùng Geolocation API để theo dõi vị trí hiện tại.</p>
+            </div>
+            <div class="timeline-item">
+                <h4>4. Near POI Decision</h4>
+                <p>Nếu khoảng cách tới POI dưới ngưỡng geofence, frontend phát audio; nếu chưa gần, tiếp tục tracking
+                    theo chu kỳ.</p>
+            </div>
+            <div class="timeline-item">
+                <h4>5. Analytics & Favorite</h4>
+                <p>Audio play, view, heartbeat và favorite được gửi về <code>/api/analytics/*</code>; backend lưu vào
+                    MySQL để Admin Dashboard tổng hợp.</p>
+            </div>
+        </div>
+
+        <div class="mermaid-container">
+            <pre class="mermaid">
+flowchart TB
+    subgraph User["User"]
+        Start((Start))
+        Open["Open Web App"]
+        FavoriteClick["User Click Favorite"]
+        EndUser((Close App))
+    end
+
+    subgraph Frontend["Frontend React"]
+        Load["Load App + Tours"]
+        CallApi["Call API: Get Tours/Locations"]
+        Render["Render Map + POIs"]
+        StartGps["Start GPS Tracking"]
+        CurrentLocation["Get Current Location"]
+        Near{"Near POI?"}
+        Play["Play Audio"]
+        TrackEvent["Track Analytics Event"]
+        SendFavorite["Send Favorite Event"]
+        Continue["Continue Tracking"]
+        Stop{"Stop?"}
+        EndGps((GPS Stop))
+    end
+
+    subgraph Backend["Backend .NET API"]
+        Query["Query DB<br/>Tours + Locations"]
+        ReturnData["Return Data"]
+        SaveAnalytics["Save Analytics<br/>Play, View, Favorite"]
+    end
+
+    Start --> Open --> Load --> CallApi --> Query --> ReturnData --> Render --> StartGps --> CurrentLocation --> Near
+    Near -- Yes --> Play --> TrackEvent --> SaveAnalytics --> Stop
+    Near -- No --> Continue --> Stop
+    FavoriteClick --> SendFavorite --> SaveAnalytics
+    Stop -- Continue --> CurrentLocation
+    Stop -- Close App --> EndUser
+    Stop -- GPS Stop --> EndGps
+    </pre>
+        </div>
+
+        <div class="highlight">
+            <strong>Mapping với repo:</strong> Visitor flow dùng <code>frontend/src/services/analyticsService.js</code>,
+            <code>deviceId.js</code>, <code>backend/Controllers/AnalyticsController.cs</code> và
+            <code>backend/Services/AnalyticsService.cs</code>. Admin/manager flow dùng JWT + role guard và các dashboard
+            React hiện có.
         </div>
     </section>
 
@@ -884,24 +1073,30 @@
             <div class="timeline-item">
                 <h4>Tầng 1 — Security Config Check</h4>
                 <p>Kiểm tra <code>JWT_SECRET</code>, thông tin kết nối DB (<code>DB_HOST</code>, <code>DB_USER</code>),
-                    và khóa mã hóa (nếu dùng) đã được cấu hình đúng. Từ chối khởi động nếu thiếu biến môi trường quan trọng.</p>
+                    và khóa mã hóa (nếu dùng) đã được cấu hình đúng. Từ chối khởi động nếu thiếu biến môi trường quan
+                    trọng.</p>
             </div>
             <div class="timeline-item">
                 <h4>Tầng 2 — Database Connection</h4>
-                <p>Kết nối MySQL qua SQLAlchemy engine. Thực hiện ping/health-check và cấu hình connection pool.</p>
+                <p>Kết nối MySQL qua EF Core + Pomelo MySQL provider. Thực hiện health-check, cấu hình connection string
+                    và DbContext lifetime.</p>
             </div>
             <div class="timeline-item">
                 <h4>Tầng 3 — Migration + Seeding</h4>
-                <p>Chạy migration (Alembic) để đồng bộ schema. Tạo tài khoản admin mặc định (nếu chưa có) và dữ liệu mẫu Locations cho demo.</p>
+                <p>Chạy EF Core migrations để đồng bộ schema. Tạo tài khoản admin mặc định (nếu chưa có) và dữ liệu mẫu
+                    Locations cho demo.</p>
             </div>
             <div class="timeline-item">
                 <h4>Tầng 4 — Indexing</h4>
-                <p>Tạo index cho truy vấn gần vị trí: composite index cho <code>(Latitude, Longitude)</code>, index cho <code>Favorites(user_id)</code>,
-                    và index tìm kiếm <code>Locations(Name)</code>. (Tối ưu: bounding box trước, rồi Haversine ở app layer.)</p>
+                <p>Tạo index cho truy vấn gần vị trí: composite index cho <code>(Latitude, Longitude)</code>, index cho
+                    <code>LocationFavoriteStates(DeviceId, LocationId)</code>,
+                    index cho <code>VisitorDevices(LastSeenAtUtc)</code> và index tìm kiếm <code>Locations(Name)</code>.
+                </p>
             </div>
             <div class="timeline-item">
                 <h4>Gắn Routers → Server Ready</h4>
-                <p>auth, locations, favorites, audio, admin — prefix <code>/api</code>. Bật CORS cho frontend domain và bật OpenAPI docs cho môi trường dev.</p>
+                <p>auth, locations, analytics, tours, uploads, admin/manager — prefix <code>/api</code>. Bật CORS cho
+                    frontend domain và bật Swagger UI tại <code>/swagger</code> để kiểm thử API C#.</p>
             </div>
         </div>
 
@@ -921,23 +1116,28 @@
         <div class="card-grid" style="margin-top:1rem;">
             <div class="card">
                 <h3>🛰️ GPS</h3>
-                <p><code>waitForPosition()</code> — xin quyền vị trí, lấy tọa độ lần đầu (high accuracy), timeout 10s. Nếu từ chối → chuyển sang chế độ duyệt theo danh sách.</p>
+                <p><code>waitForPosition()</code> — xin quyền vị trí, lấy tọa độ lần đầu (high accuracy), timeout 10s.
+                    Nếu từ chối → chuyển sang chế độ duyệt theo danh sách.</p>
             </div>
             <div class="card">
                 <h3>💾 Offline Data</h3>
-                <p><code>getOfflineLocations(lang)</code> — lấy từ IndexedDB để hiện tức thì (danh sách + chi tiết đã cache).</p>
+                <p><code>getOfflineLocations(lang)</code> — lấy từ IndexedDB để hiện tức thì (danh sách + chi tiết đã
+                    cache).</p>
             </div>
             <div class="card">
                 <h3>🌐 Online Data</h3>
-                <p><code>loadLocations(lang)</code> → gọi API → <code>saveLocations()</code> → cập nhật IndexedDB + cache ảnh/audio.</p>
+                <p><code>loadLocations(lang)</code> → gọi API → <code>saveLocations()</code> → cập nhật IndexedDB +
+                    cache ảnh/audio.</p>
             </div>
             <div class="card">
                 <h3>⭐ Nearby Set</h3>
-                <p>Lọc địa điểm trong bán kính (ví dụ 1–2km) để ưu tiên hiển thị và chuẩn bị audio (prefetch) cho trải nghiệm mượt.</p>
+                <p>Lọc địa điểm trong bán kính (ví dụ 1–2km) để ưu tiên hiển thị và chuẩn bị audio (prefetch) cho trải
+                    nghiệm mượt.</p>
             </div>
             <div class="card">
                 <h3>📦 Offline Pack</h3>
-                <p>Tùy chọn: người dùng tải sẵn gói dữ liệu (danh sách/ảnh/audio) cho một khu vực để dùng khi mất mạng.</p>
+                <p>Tùy chọn: người dùng tải sẵn gói dữ liệu (danh sách/ảnh/audio) cho một khu vực để dùng khi mất mạng.
+                </p>
             </div>
         </div>
     </section>
@@ -953,7 +1153,8 @@
         </div>
 
         <p style="margin-bottom:1.5rem;color:var(--text-secondary);">Hệ thống xử lý các vấn đề thực tế: nhiễu GPS
-            (debounce), tối ưu pin (throttle), và phát audio mượt mà ngay cả khi offline. Điều kiện kích hoạt: người dùng cách địa điểm <strong>&lt; 50m</strong>.</p>
+            (debounce), tối ưu pin (throttle), và phát audio mượt mà ngay cả khi offline. Điều kiện kích hoạt: người
+            dùng cách địa điểm <strong>&lt; 50m</strong>.</p>
 
         <h3>4 Giai Đoạn Xử Lý</h3>
         <div class="timeline">
@@ -964,12 +1165,14 @@
             </div>
             <div class="timeline-item">
                 <h4>Giai đoạn 2 — Zone Detection (GeofenceEngine)</h4>
-                <p><code>checkGeofences(pos)</code>: tính khoảng cách bằng Haversine (meters). Nếu <strong>distance &lt; 50m</strong> → pendingEntries.
+                <p><code>checkGeofences(pos)</code>: tính khoảng cách bằng Haversine (meters). Nếu <strong>distance &lt;
+                        50m</strong> → pendingEntries.
                     Khi ra khỏi vùng đã trigger → cooldown để tránh phát lặp liên tục.</p>
             </div>
             <div class="timeline-item">
                 <h4>Giai đoạn 3 — Audio Decision (Heartbeat 1s)</h4>
-                <p><code>reconcileLoop</code> mỗi 1s: xác nhận ENTER sau debounce → chọn địa điểm ưu tiên (khoảng cách + trạng thái audio) → đẩy NarrationEngine.</p>
+                <p><code>reconcileLoop</code> mỗi 1s: xác nhận ENTER sau debounce → chọn địa điểm ưu tiên (khoảng cách +
+                    trạng thái audio) → đẩy NarrationEngine.</p>
             </div>
             <div class="timeline-item">
                 <h4>Giai đoạn 4 — Audio Playback (4-Tier Hybrid)</h4>
@@ -984,27 +1187,31 @@
                 <div class="tier-label" style="background:#2e7d32;">Tier 1</div>
                 <div class="tier-content">
                     <strong>Uploaded / Pre-recorded Audio</strong>
-                    <span>Ưu tiên phát file audio đã được admin upload cho đúng ngôn ngữ (VI/EN/ZH/DE). Nếu đã cache offline → phát tức thì.</span>
+                    <span>Ưu tiên phát file audio đã được admin upload cho đúng ngôn ngữ (VI/EN/ZH/DE). Nếu đã cache
+                        offline → phát tức thì.</span>
                 </div>
             </div>
             <div class="tier-item">
                 <div class="tier-label" style="background:#1565c0;">Tier 2</div>
                 <div class="tier-content">
                     <strong>Server-side TTS (Optional)</strong>
-                    <span>Nếu thiếu audio, backend có thể sinh audio TTS từ nội dung (theo ngôn ngữ đã chọn) và lưu để tái sử dụng (phục vụ offline pack).</span>
+                    <span>Nếu thiếu audio, backend có thể sinh audio TTS từ nội dung (theo ngôn ngữ đã chọn) và lưu để
+                        tái sử dụng (phục vụ offline pack).</span>
                 </div>
             </div>
             <div class="tier-item">
                 <div class="tier-label" style="background:#0f766e;">Tier 3</div>
                 <div class="tier-content">
                     <strong>On-device Speech Synthesis</strong>
-                    <span><code>window.speechSynthesis</code> — fallback cuối cùng khi offline và không có audio file; đảm bảo luôn “có tiếng nói”.</span>
+                    <span><code>window.speechSynthesis</code> — fallback cuối cùng khi offline và không có audio file;
+                        đảm bảo luôn “có tiếng nói”.</span>
                 </div>
             </div>
         </div>
 
         <div class="highlight">
-            <strong>Background Prefetch:</strong> Khi người dùng di chuyển, app ưu tiên cache audio/ảnh của các địa điểm gần nhất (ví dụ trong 500m) để giảm độ trễ lúc vào geofence. Cơ chế throttle/backoff để tránh tải quá mức.
+            <strong>Background Prefetch:</strong> Khi người dùng di chuyển, app ưu tiên cache audio/ảnh của các địa điểm
+            gần nhất (ví dụ trong 500m) để giảm độ trễ lúc vào geofence. Cơ chế throttle/backoff để tránh tải quá mức.
         </div>
     </section>
 
@@ -1021,19 +1228,23 @@
         <div class="card-grid">
             <div class="card">
                 <h3>GET /locations</h3>
-                <p>Lấy danh sách địa điểm theo ngôn ngữ (<code>lang=vi|en|zh|de</code>). Trả về name/summary/lat/lng, ảnh đại diện và trạng thái audio để frontend hiển thị và chuẩn bị auto-play.</p>
+                <p>Lấy danh sách địa điểm theo ngôn ngữ (<code>lang=vi|en|zh|de</code>). Trả về name/summary/lat/lng,
+                    ảnh đại diện và trạng thái audio để frontend hiển thị và chuẩn bị auto-play.</p>
             </div>
             <div class="card">
                 <h3>GET /locations/nearby</h3>
-                <p>Nhận <code>lat</code>, <code>lng</code>, <code>radius</code> (m) → trả về các địa điểm gần. Server có thể lọc sơ bộ theo bounding box, frontend dùng Haversine để quyết định trigger &lt; 50m.</p>
+                <p>Nhận <code>lat</code>, <code>lng</code>, <code>radius</code> (m) → trả về các địa điểm gần. Server có
+                    thể lọc sơ bộ theo bounding box, frontend dùng Haversine để quyết định trigger &lt; 50m.</p>
             </div>
             <div class="card">
                 <h3>POST /admin/locations</h3>
-                <p>Admin tạo địa điểm: lưu metadata + nội dung thuyết minh VI/EN/ZH/DE. Audio có thể upload theo từng ngôn ngữ hoặc dùng TTS (tùy chọn) để sinh audio.</p>
+                <p>Admin tạo địa điểm: lưu metadata + nội dung thuyết minh VI/EN/ZH/DE. Audio có thể upload theo từng
+                    ngôn ngữ hoặc dùng TTS (tùy chọn) để sinh audio.</p>
             </div>
             <div class="card">
                 <h3>DELETE /admin/locations/{id}</h3>
-                <p>Xóa địa điểm và dọn dữ liệu liên quan (favorites, audio files, cache keys). Đảm bảo không còn file rác trên storage.</p>
+                <p>Xóa địa điểm và dọn dữ liệu liên quan (favorites, audio files, cache keys). Đảm bảo không còn file
+                    rác trên storage.</p>
             </div>
         </div>
 
@@ -1057,13 +1268,15 @@
                 <div class="tier-label" style="background:#0f766e;">Tier 3</div>
                 <div class="tier-content">
                     <strong>Nguyên bản tiếng Việt (VI)</strong>
-                    <span>Lớp phòng thủ cuối cho nội dung. Nếu thiếu audio, hệ thống có thể dùng TTS on-device để đảm bảo phát được.</span>
+                    <span>Lớp phòng thủ cuối cho nội dung. Nếu thiếu audio, hệ thống có thể dùng TTS on-device để đảm
+                        bảo phát được.</span>
                 </div>
             </div>
         </div>
 
         <div class="highlight info">
-            <strong>Offline Caching:</strong> Audio/ảnh có thể được cache theo ngôn ngữ và theo địa điểm. Khi mất mạng, app vẫn xem được danh sách và vẫn phát được audio đã tải trước đó.
+            <strong>Offline Caching:</strong> Audio/ảnh có thể được cache theo ngôn ngữ và theo địa điểm. Khi mất mạng,
+            app vẫn xem được danh sách và vẫn phát được audio đã tải trước đó.
         </div>
     </section>
 
@@ -1081,7 +1294,8 @@
             <div class="card">
                 <h3>Audio Assets (Uploaded)</h3>
                 <ul>
-                    <li>Admin upload audio thuyết minh theo <code>(location_id, lang)</code>: <code>vi/en/zh/de</code>.</li>
+                    <li>Admin upload audio thuyết minh theo <code>(location_id, lang)</code>: <code>vi/en/zh/de</code>.
+                    </li>
                     <li>Lưu metadata: duration, checksum, updated_at để phục vụ cache-bust và đồng bộ offline.</li>
                     <li>Quy ước định dạng: MP3/AAC, bitrate phù hợp mobile để giảm dung lượng offline.</li>
                 </ul>
@@ -1089,7 +1303,8 @@
             <div class="card">
                 <h3>Optional Server-side TTS</h3>
                 <ul>
-                    <li>Khi thiếu audio, admin có thể yêu cầu backend sinh TTS từ text (theo lang) và lưu thành audio asset.</li>
+                    <li>Khi thiếu audio, admin có thể yêu cầu backend sinh TTS từ text (theo lang) và lưu thành audio
+                        asset.</li>
                     <li>Trạng thái: queued → processing → completed/failed; có log lỗi để xử lý lại.</li>
                     <li>Mục tiêu: đảm bảo đủ audio cho chế độ offline, không bắt buộc cho phiên bản MVP.</li>
                 </ul>
@@ -1098,7 +1313,8 @@
                 <h3>Frontend Audio Player</h3>
                 <ul>
                     <li>Tự động mở mini-player khi ENTER geofence và có audio tương ứng.</li>
-                    <li>Điều khiển: play/pause, stop, auto-skip khi ra khỏi vùng hoặc chuyển sang địa điểm ưu tiên hơn.</li>
+                    <li>Điều khiển: play/pause, stop, auto-skip khi ra khỏi vùng hoặc chuyển sang địa điểm ưu tiên hơn.
+                    </li>
                     <li>Fallback: nếu không có audio file → dùng <code>window.speechSynthesis</code>.</li>
                 </ul>
             </div>
@@ -1107,7 +1323,8 @@
                 <ul>
                     <li>Service Worker cache audio theo ngôn ngữ để giới hạn dung lượng.</li>
                     <li>Prefetch theo “nearby set” và/hoặc theo danh sách yêu thích.</li>
-                    <li>Cache-bust theo <code>updated_at</code> hoặc <code>checksum</code> khi admin cập nhật nội dung.</li>
+                    <li>Cache-bust theo <code>updated_at</code> hoặc <code>checksum</code> khi admin cập nhật nội dung.
+                    </li>
                 </ul>
             </div>
         </div>
@@ -1147,17 +1364,19 @@
                     <li><code>POST /api/auth/register</code>, <code>POST /api/auth/login</code></li>
                     <li><code>access_token</code>: JWT (ví dụ 30 phút) để gọi API</li>
                     <li><code>refresh_token</code> (tùy chọn): kéo dài phiên đăng nhập (ví dụ 7 ngày)</li>
-                    <li>Mật khẩu được hash bằng <code>bcrypt</code>; không lưu plain text</li>
+                    <li>Mật khẩu được hash trong backend C#; không lưu plain text</li>
                 </ul>
             </div>
             <div class="card">
                 <h3>🛡️ RBAC (user/manager/admin)</h3>
                 <ul>
-                    <li>Role nằm trong bảng <code>Users.Role</code>: <strong>user</strong>, <strong>manager</strong>, <strong>admin</strong></li>
+                    <li>Role nằm trong bảng <code>Users.Role</code>: <strong>user</strong>, <strong>manager</strong>,
+                        <strong>admin</strong></li>
                     <li>User: xem bản đồ, xem địa điểm, nghe audio, quản lý yêu thích</li>
-                    <li>Manager: quản lý các địa điểm được gán (CRUD nội dung), quản lý thuyết minh (TextVi/En/Zh/De), xem thống kê theo thời gian</li>
+                    <li>Manager: quản lý các địa điểm được gán (CRUD nội dung), quản lý thuyết minh (TextVi/En/Zh/De),
+                        xem thống kê theo thời gian</li>
                     <li>Admin: CRUD Locations, quản lý Users/Managers, phân công địa điểm cho manager</li>
-                    <li>API guard: <code>require_role("admin")</code> cho <code>/api/admin/*</code>, <code>require_role("manager")</code> cho <code>/api/manager/*</code></li>
+                    <li>API guard bằng <code>[Authorize(Roles = "...")]</code> cho admin/manager endpoints</li>
                 </ul>
             </div>
         </div>
@@ -1215,7 +1434,8 @@
                     <tr>
                         <td><strong>manager</strong></td>
                         <td>1</td>
-                        <td>Quản lý địa điểm được gán: CRUD nội dung, quản lý text thuyết minh đa ngôn ngữ, theo dõi thống kê (views/audio plays)</td>
+                        <td>Quản lý địa điểm được gán: CRUD nội dung, quản lý text thuyết minh đa ngôn ngữ, theo dõi
+                            thống kê (views/audio plays)</td>
                     </tr>
                     <tr>
                         <td><strong>user</strong></td>
@@ -1227,7 +1447,8 @@
         </div>
 
         <div class="highlight">
-            <strong>Account Safety:</strong> Admin có thể khóa tài khoản (<code>IsLocked=true</code>). Backend áp dụng rate limit cho login để giảm brute-force và log các sự kiện đăng nhập phục vụ kiểm tra.
+            <strong>Account Safety:</strong> Admin có thể khóa tài khoản (<code>IsLocked=true</code>). Backend áp dụng
+            rate limit cho login để giảm brute-force và log các sự kiện đăng nhập phục vụ kiểm tra.
         </div>
     </section>
 
@@ -1244,24 +1465,30 @@
         <div class="card-grid">
             <div class="card">
                 <h3>Flow 1 — Language Select</h3>
-                <p>User chọn ngôn ngữ thuyết minh: <strong>VI / EN / ZH / DE</strong>. Frontend lưu <code>lang</code> vào LocalStorage và dùng tham số <code>?lang=</code> khi gọi API.</p>
+                <p>User chọn ngôn ngữ thuyết minh: <strong>VI / EN / ZH / DE</strong>. Frontend lưu <code>lang</code>
+                    vào LocalStorage và dùng tham số <code>?lang=</code> khi gọi API.</p>
             </div>
             <div class="card">
                 <h3>Flow 2 — Content Fallback</h3>
-                <p>Nếu thiếu nội dung/audio của ngôn ngữ mục tiêu: fallback theo chuỗi <strong>Target → EN → VI</strong>. UI hiển thị rõ nhãn ngôn ngữ đang phát để tránh gây nhầm lẫn.</p>
+                <p>Nếu thiếu nội dung/audio của ngôn ngữ mục tiêu: fallback theo chuỗi <strong>Target → EN →
+                        VI</strong>. UI hiển thị rõ nhãn ngôn ngữ đang phát để tránh gây nhầm lẫn.</p>
             </div>
             <div class="card">
                 <h3>Flow 3 — Admin Localization</h3>
-                <p>Admin chỉnh sửa nội dung thuyết minh theo từng ngôn ngữ (TextVi/TextEn/TextZh/TextDe) và upload audio tương ứng. AI-assist (tùy chọn) hỗ trợ viết nháp/dịch, nhưng admin chịu trách nhiệm duyệt.</p>
+                <p>Admin chỉnh sửa nội dung thuyết minh theo từng ngôn ngữ (TextVi/TextEn/TextZh/TextDe) và upload audio
+                    tương ứng. AI-assist (tùy chọn) hỗ trợ viết nháp/dịch, nhưng admin chịu trách nhiệm duyệt.</p>
             </div>
             <div class="card">
                 <h3>Flow 4 — Offline Cache by Language</h3>
-                <p>IndexedDB lưu Locations theo <code>lang</code>. Service Worker cache audio theo ngôn ngữ để tối ưu dung lượng và cho phép chuyển ngôn ngữ mượt khi online.</p>
+                <p>IndexedDB lưu Locations theo <code>lang</code>. Service Worker cache audio theo ngôn ngữ để tối ưu
+                    dung lượng và cho phép chuyển ngôn ngữ mượt khi online.</p>
             </div>
         </div>
 
         <div class="highlight success">
-            <strong>Nguyên tắc chất lượng:</strong> Nội dung đa ngôn ngữ phải nhất quán giữa text và audio. Hệ thống ưu tiên “đúng ngôn ngữ” nhưng luôn có fallback để đảm bảo trải nghiệm không bị đứt quãng khi thiếu dữ liệu hoặc khi offline.
+            <strong>Nguyên tắc chất lượng:</strong> Nội dung đa ngôn ngữ phải nhất quán giữa text và audio. Hệ thống ưu
+            tiên “đúng ngôn ngữ” nhưng luôn có fallback để đảm bảo trải nghiệm không bị đứt quãng khi thiếu dữ liệu hoặc
+            khi offline.
         </div>
     </section>
 
@@ -1280,8 +1507,10 @@
                 <h3>Lớp 1 — Service Worker Strategies</h3>
                 <p><code>sw.js</code> (Workbox-based). Chiến lược cache theo loại tài nguyên:</p>
                 <ul>
-                    <li>Locations data: <strong>NetworkFirst</strong> (timeout 8s), cache <code>locations-api-cache</code>, TTL 15 phút</li>
-                    <li>Audio: <strong>CacheFirst</strong> theo ngôn ngữ, cache <code>audio-cache-lang-{lang}</code></li>
+                    <li>Locations data: <strong>NetworkFirst</strong> (timeout 8s), cache
+                        <code>locations-api-cache</code>, TTL 15 phút</li>
+                    <li>Audio: <strong>CacheFirst</strong> theo ngôn ngữ, cache <code>audio-cache-lang-{lang}</code>
+                    </li>
                     <li>Images: <strong>CacheFirst</strong>, 30 ngày, max 50</li>
                     <li>App shell: <strong>Precache</strong> (HTML/CSS/JS) để app mở được khi offline</li>
                 </ul>
@@ -1306,7 +1535,8 @@
             </div>
             <div class="card">
                 <h3>Lớp 4 — Offline Packs</h3>
-                <p>Offline mode tập trung vào <strong>nội dung + audio</strong> (PWA), đảm bảo ứng dụng vẫn dùng được khi mất mạng.</p>
+                <p>Offline mode tập trung vào <strong>nội dung + audio</strong> (PWA), đảm bảo ứng dụng vẫn dùng được
+                    khi mất mạng.</p>
                 <ul>
                     <li>IndexedDB lưu danh sách/chi tiết Locations theo ngôn ngữ</li>
                     <li>Cache API lưu ảnh và audio đã nghe / đã prefetch</li>
@@ -1330,12 +1560,14 @@
                     <tr>
                         <td><code>SET_ACTIVE_LANGUAGE</code></td>
                         <td>Frontend</td>
-                        <td>Service Worker ưu tiên giữ cache của ngôn ngữ hiện tại (VI/EN/ZH/DE) và dọn cache ngôn ngữ ít dùng khi hết dung lượng.</td>
+                        <td>Service Worker ưu tiên giữ cache của ngôn ngữ hiện tại (VI/EN/ZH/DE) và dọn cache ngôn ngữ
+                            ít dùng khi hết dung lượng.</td>
                     </tr>
                     <tr>
                         <td><code>PREFETCH_NEARBY</code></td>
                         <td>Frontend</td>
-                        <td>Yêu cầu SW prefetch audio/ảnh của các địa điểm gần nhất để giảm độ trễ khi ENTER geofence.</td>
+                        <td>Yêu cầu SW prefetch audio/ảnh của các địa điểm gần nhất để giảm độ trễ khi ENTER geofence.
+                        </td>
                     </tr>
                     <tr>
                         <td><code>CLEAR_OFFLINE_CACHE</code></td>
@@ -1350,14 +1582,16 @@
                     <tr>
                         <td><code>OFFLINE_STATUS</code></td>
                         <td>Service Worker</td>
-                        <td>Thông báo trạng thái cache/offline (dung lượng, ngôn ngữ đang giữ, số lượng audio đã cache) để UI hiển thị minh bạch.</td>
+                        <td>Thông báo trạng thái cache/offline (dung lượng, ngôn ngữ đang giữ, số lượng audio đã cache)
+                            để UI hiển thị minh bạch.</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
         <div class="highlight info">
-            <strong>Edge Case — Disk Full:</strong> Khi gặp <code>QuotaExceededError</code>, Service Worker sẽ dọn cache cũ (theo LRU) và ưu tiên giữ audio của ngôn ngữ đang dùng và các địa điểm đã được nghe gần đây.
+            <strong>Edge Case — Disk Full:</strong> Khi gặp <code>QuotaExceededError</code>, Service Worker sẽ dọn cache
+            cũ (theo LRU) và ưu tiên giữ audio của ngôn ngữ đang dùng và các địa điểm đã được nghe gần đây.
         </div>
     </section>
 
@@ -1367,11 +1601,13 @@
             <div class="icon" style="background:#e8f5e9;color:#1b5e20;">🗺️</div>
             <div>
                 <div class="section-num">Chapter 10</div>
-                <h2>Map System — Leaflet Map</h2>
+                <h2>Map System — Google Maps</h2>
             </div>
         </div>
 
-        <p style="margin-bottom:1.5rem;color:var(--text-secondary);">Frontend sử dụng <strong>Leaflet Map</strong> để hiển thị vị trí người dùng, Leaflet marker địa điểm, và dẫn hướng cơ bản. Khi offline, hệ thống vẫn giữ được danh sách/chi tiết/audio đã cache; bản đồ có thể hiển thị ở chế độ hạn chế.</p>
+        <p style="margin-bottom:1.5rem;color:var(--text-secondary);">Frontend sử dụng <strong>Google Maps</strong> để
+            hiển thị vị trí người dùng, marker địa điểm, và dẫn hướng cơ bản. Khi offline, hệ thống vẫn giữ được danh
+            sách/chi tiết/audio đã cache; bản đồ có thể hiển thị ở chế độ hạn chế.</p>
 
         <h3>Chuỗi Liên Kết 4 Tầng (End-to-End)</h3>
         <div class="table-wrap">
@@ -1386,23 +1622,25 @@
                 <tbody>
                     <tr>
                         <td>1. Map Initialization</td>
-                        <td>Leaflet.js + OpenStreetMap Tiles</td>
+                        <td>Google Maps JS API + API Key</td>
                         <td>Khởi tạo bản đồ, style cơ bản, và các control (zoom, my-location).</td>
                     </tr>
                     <tr>
                         <td>2. Data Layer</td>
                         <td><code>GET /api/locations</code>, <code>/nearby</code></td>
-                        <td>Lấy danh sách địa điểm, Leaflet marker data, và chi tiết theo ngôn ngữ.</td>
+                        <td>Lấy danh sách địa điểm, marker data, và chi tiết theo ngôn ngữ.</td>
                     </tr>
                     <tr>
                         <td>3. Location Tracking</td>
                         <td>Geolocation <code>watchPosition</code></td>
-                        <td>Cập nhật vị trí theo throttle; chạy GeofenceEngine để quyết định trigger audio &lt; 50m.</td>
+                        <td>Cập nhật vị trí theo throttle; chạy GeofenceEngine để quyết định trigger audio &lt; 50m.
+                        </td>
                     </tr>
                     <tr>
                         <td>4. Offline Fallback</td>
                         <td>IndexedDB + Service Worker cache</td>
-                        <td>Khi offline: vẫn hiển thị danh sách/chi tiết/audio đã cache; bản đồ ở chế độ hạn chế hoặc tạm ẩn.</td>
+                        <td>Khi offline: vẫn hiển thị danh sách/chi tiết/audio đã cache; bản đồ ở chế độ hạn chế hoặc
+                            tạm ẩn.</td>
                     </tr>
                 </tbody>
             </table>
@@ -1412,15 +1650,17 @@
         <div class="card-grid">
             <div class="card">
                 <h3>🌐 Online (Default)</h3>
-                <p>Leaflet Map đầy đủ: vị trí người dùng, Leaflet marker, tìm kiếm cơ bản và chỉ đường (tùy phạm vi).</p>
+                <p>Google Maps đầy đủ: vị trí người dùng, marker, tìm kiếm cơ bản và chỉ đường (tùy phạm vi).</p>
             </div>
             <div class="card">
                 <h3>📴 Offline (Limited)</h3>
-                <p>Khi không có mạng: ưu tiên nội dung (Locations + Audio) đã cache. Bản đồ hiển thị hạn chế (ví dụ vị trí hiện tại + danh sách gần) tùy khả năng tải tài nguyên.</p>
+                <p>Khi không có mạng: ưu tiên nội dung (Locations + Audio) đã cache. Bản đồ hiển thị hạn chế (ví dụ vị
+                    trí hiện tại + danh sách gần) tùy khả năng tải tài nguyên.</p>
             </div>
             <div class="card">
                 <h3>🔄 Hybrid</h3>
-                <p>Online map + offline content/audio: ngay cả mạng yếu, audio đã cache vẫn phát được; dữ liệu địa điểm có thể được cập nhật dần khi online.</p>
+                <p>Online map + offline content/audio: ngay cả mạng yếu, audio đã cache vẫn phát được; dữ liệu địa điểm
+                    có thể được cập nhật dần khi online.</p>
             </div>
         </div>
 
@@ -1437,7 +1677,7 @@
                 <tbody>
                     <tr>
                         <td><code>GET /api/locations/nearby</code></td>
-                        <td>Trả về danh sách địa điểm gần vị trí hiện tại để hiển thị Leaflet marker</td>
+                        <td>Trả về danh sách địa điểm gần vị trí hiện tại để hiển thị marker</td>
                         <td>short cache</td>
                     </tr>
                     <tr>
@@ -1446,12 +1686,12 @@
                         <td>revalidate</td>
                     </tr>
                     <tr>
-                        <td><code>GET /api/favorites</code></td>
-                        <td>Danh sách địa điểm yêu thích của user</td>
+                        <td><code>POST /api/analytics/favorite-clicks</code></td>
+                        <td>Ghi nhận hành vi favorite/unfavorite theo <code>DeviceId</code></td>
                         <td>no-store</td>
                     </tr>
                     <tr>
-                        <td><code>POST /api/admin/locations</code></td>
+                        <td><code>POST /api/locations</code></td>
                         <td>Admin tạo/cập nhật địa điểm (kèm upload audio ở endpoint riêng)</td>
                         <td>no-store</td>
                     </tr>
@@ -1460,7 +1700,8 @@
         </div>
 
         <div class="highlight">
-            <strong>Security:</strong> Cấu hình nguồn tile Leaflet/OpenStreetMap phù hợp với frontend domain. Backend kiểm tra input <code>lat/lng</code>, giới hạn rate, và không lộ thông tin nhạy cảm trong response.
+            <strong>Security:</strong> Bảo vệ API key Google Maps (chỉ dùng trên frontend domain đã whitelist). Backend
+            kiểm tra input <code>lat/lng</code>, giới hạn rate, và không lộ thông tin nhạy cảm trong response.
         </div>
     </section>
 
@@ -1474,7 +1715,9 @@
             </div>
         </div>
 
-        <p style="margin-bottom:1.5rem;color:var(--text-secondary);">Admin là nơi quản trị toàn bộ dữ liệu địa điểm và phân quyền: nội dung thuyết minh, tọa độ, ảnh, audio theo ngôn ngữ, quản lý người dùng/manager và phân công địa điểm cho manager. Mục tiêu là đảm bảo dữ liệu “đúng, đủ, nhất quán” để auto-play hoạt động tin cậy.</p>
+        <p style="margin-bottom:1.5rem;color:var(--text-secondary);">Admin là nơi quản trị toàn bộ dữ liệu địa điểm và
+            phân quyền: nội dung thuyết minh, tọa độ, ảnh, audio theo ngôn ngữ, quản lý người dùng/manager và phân công
+            địa điểm cho manager. Mục tiêu là đảm bảo dữ liệu “đúng, đủ, nhất quán” để auto-play hoạt động tin cậy.</p>
 
         <div class="card-grid">
             <div class="card">
@@ -1489,7 +1732,7 @@
             <div class="card">
                 <h3>👤 User Management</h3>
                 <ul>
-                    <li>Danh sách Users, xem trạng thái và role (user/manager/admin)</li>
+                    <li>Danh sách AdminUsers, xem trạng thái và role (admin/manager)</li>
                     <li>Khóa/mở khóa tài khoản: <code>IsLocked</code></li>
                     <li>Reset mật khẩu (theo quy trình nội bộ) và log thao tác quản trị</li>
                     <li>Quản lý manager: cấp/thu role manager, kiểm soát truy cập theo doanh nghiệp</li>
@@ -1501,7 +1744,21 @@
                     <li>Phân công địa điểm cho manager: bảng <code>LocationManagerAssignments</code></li>
                     <li>Cho phép 1 manager quản lý nhiều địa điểm; tránh trùng phân công bằng unique key</li>
                     <li>Tra cứu nhanh: manager → danh sách địa điểm đã gán / địa điểm khả dụng</li>
-                    <li>Mục tiêu: tách quyền “quản trị hệ thống” (admin) và “quản trị nội dung theo doanh nghiệp” (manager)</li>
+                    <li>Mục tiêu: tách quyền “quản trị hệ thống” (admin) và “quản trị nội dung theo doanh nghiệp”
+                        (manager)</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>📊 Device Analytics Tracking</h3>
+                <ul>
+                    <li>React tạo <code>DeviceId</code> trong localStorage và gửi kèm heartbeat/event cho khách truy cập
+                    </li>
+                    <li>Admin routes không gửi heartbeat để tránh tự làm nhiễu số liệu dashboard</li>
+                    <li>ASP.NET Core API lưu <code>VisitorDevices</code>, <code>AnalyticsEvents</code>,
+                        <code>AppUsageHeartbeats</code>, <code>AudioPlays</code>, <code>LocationFavoriteStates</code>
+                    </li>
+                    <li>Admin Dashboard gọi <code>GET /api/admin/analytics/summary</code> định kỳ để xem thiết bị đang
+                        hoạt động, lượt nghe audio, favorite và danh sách khách gần đây</li>
                 </ul>
             </div>
             <div class="card">
@@ -1526,6 +1783,53 @@
             <span class="flow-step success">Publish</span>
             <span class="flow-arrow">→</span>
             <span class="flow-step">User app sync → ready</span>
+        </div>
+
+        <h3 style="margin-top:1.5rem;">Admin Device Tracking Sequence</h3>
+        <p style="margin-bottom:1rem;color:var(--text-secondary);">Cơ chế tracking dùng cho khách truy cập web: frontend
+            React gửi heartbeat và sự kiện hành vi về Swagger API C#, backend tổng hợp theo <code>DeviceId</code>, còn
+            Admin Dashboard chỉ đọc báo cáo đã tổng hợp.</p>
+        <div class="mermaid-container">
+            <pre class="mermaid">
+sequenceDiagram
+    participant Guest as Guest Browser
+    participant FE as React App
+    participant DID as deviceId.js
+    participant API as ASP.NET Core Web API
+    participant SVC as AnalyticsService
+    participant DB as MySQL
+    participant Admin as Admin Dashboard
+    participant Swagger as Swagger UI
+
+    Guest->>FE: Open public route
+    FE->>DID: getOrCreateDeviceId()
+    DID-->>FE: travel_device_id
+    Note over FE: PublicAnalyticsTracker enabled<br/>when path is not /admin
+
+    loop Page view + heartbeat interval
+        FE->>API: POST /api/analytics/heartbeat<br/>{deviceId,path,platform,eventType}
+        API->>SVC: RecordHeartbeatAsync()
+        SVC->>DB: UPSERT VisitorDevices<br/>INSERT AppUsageHeartbeats<br/>INSERT AnalyticsEvents
+        DB-->>SVC: OK
+        API-->>FE: 202 Accepted
+    end
+
+    alt User plays audio or toggles favorite
+        FE->>API: POST /api/analytics/audio-plays<br/>or /favorite-clicks
+        API->>SVC: RecordAudioPlayAsync()<br/>RecordFavoriteClickAsync()
+        SVC->>DB: INSERT metric rows<br/>UPDATE favorite state
+        API-->>FE: 202 Accepted
+    end
+
+    Admin->>API: GET /api/admin/analytics/summary<br/>Authorization: Bearer admin JWT
+    API->>SVC: GetSummaryAsync()
+    SVC->>DB: Count active devices,<br/>audio plays, favorites,<br/>recent VisitorDevices
+    DB-->>SVC: Aggregated metrics
+    API-->>Admin: currentActiveDevices,<br/>totalAudioPlays, recentVisitors
+
+    Swagger->>API: Test same endpoints in /swagger
+    API-->>Swagger: OpenAPI response examples
+    </pre>
         </div>
     </section>
 
@@ -1597,7 +1901,7 @@
                     </tr>
                     <tr>
                         <td><strong>Simple RBAC</strong></td>
-                        <td>Role-based guards: user/admin cho các route /api/admin/*</td>
+                        <td>Role-based guards: admin/manager cho các route quản trị và dashboard</td>
                         <td>OWASP access control guidance</td>
                     </tr>
                 </tbody>
@@ -1744,42 +2048,60 @@
             <pre class="mermaid">
 sequenceDiagram
     participant U as User/Browser
-    participant SW as Service Worker
-    participant FE as React Frontend
-    participant MAP as Leaflet Map
+    participant FE as React Frontend (Vite)
     participant GE as GeofenceEngine
-    participant AP as FastAPI Backend
-    participant DB as MySQL
     participant AU as Audio Player
+    participant SW as Service Worker
+    participant AP as ASP.NET Core API
+    participant DB as MySQL
 
-    U->>SW: Mở app → SW register
-    FE->>U: Chọn ngôn ngữ (VI/EN/ZH/DE)
-    FE->>SW: getOfflineLocations(lang) (IndexedDB)
-    SW-->>FE: Cached list + details
-    FE->>AP: GET /api/locations?lang=en
-    AP->>DB: Query Locations (+ audio metadata)
-    DB-->>AP: Rows
-    AP-->>FE: Locations response
-    FE->>MAP: Render map + markers
-    FE->>GE: startTracking (watchPosition)
+    U->>FE: Open app
+    FE->>SW: register()
+    FE->>SW: getOfflineLocations(lang)
+    SW-->>FE: cached locations + audio assets
+    FE->>AP: GET /api/locations?lang={lang}
+    AP->>DB: Query Locations + LocationAudios
+    DB-->>AP: location rows
+    AP-->>FE: locations response
+    FE->>FE: render Leaflet map + markers
+    FE->>AP: sendHeartbeat("page_view")
+    AP->>DB: RecordHeartbeatAsync()
+    FE->>U: navigator.geolocation.watchPosition()
 
-    loop Every 5s (GPS Throttle)
-        U->>GE: GPS position update
-        GE->>GE: Haversine distance to Locations
-        GE->>GE: ENTER when distance < 50m (debounce)
-        GE->>AU: Auto-play narration for best location
+    loop GPS position updates
+        U-->>FE: position.coords
+        FE->>GE: checkGeofences(position)
+        GE->>GE: haversineDistance(position, poi)
+        GE->>GE: selectBestPoi(candidates)
+        GE->>GE: canTriggerPoi(poiId)
+
+        alt Can Trigger
+            GE->>AU: addToQueue(audioPayload)
+            AU->>AU: play()
+            AU->>AU: speakLocationAsync(location, langCode)
+            AU->>SW: fetch audio asset (CacheFirst)
+            SW-->>AU: cached or network audio
+            AU->>AU: playWithFallback()
+            AU->>FE: trackAudioPlay(location.id)
+            FE->>AP: POST /api/analytics/audio-plays<br/>{deviceId,locationId,audioId}
+            AP->>AP: EnqueueAsync(AudioPlayEvent)
+            AP-->>FE: 202 Accepted
+            AP->>AP: RecordAudioPlayBatchAsync()
+            AP->>DB: INSERT AudioPlays + AnalyticsEvents
+        else Ignore Duplicate
+            GE-->>FE: skip cooldown/alreadyTriggered/debounce
+        end
+
+        opt Favorite toggled
+            FE->>AP: trackFavoriteClick(locationId, isFavorite)
+            AP->>DB: RecordFavoriteClickAsync()
+        end
+
+        opt Heartbeat interval
+            FE->>AP: sendHeartbeat("heartbeat")
+            AP->>DB: RecordHeartbeatAsync()
+        end
     end
-
-    alt Audio file available (preferred)
-        AU->>SW: fetch audio asset (CacheFirst)
-        SW-->>AU: MP3 from cache or network
-    else Fallback TTS
-        AU->>U: window.speechSynthesis (offline safe)
-    end
-    AU-->>AP: POST /api/history (location_id, lang, timestamp)
-    AP->>DB: Insert PlayHistory
-    AP-->>AU: 200 OK
-    AU-->>FE: onFinished → close popup
     </pre>
         </div>
     </section>
@@ -1798,13 +2120,14 @@ sequenceDiagram
             <div class="card">
                 <h3>Backend</h3>
                 <ul>
-                    <li><strong>FastAPI</strong> — async Python web framework</li>
-                    <li><strong>SQLAlchemy</strong> — ORM + repository layer</li>
-                    <li><strong>Alembic</strong> — database migrations</li>
-                    <li><strong>MySQL</strong> — relational database (Users, Locations, Favorites)</li>
+                    <li><strong>ASP.NET Core Web API</strong> — backend REST API C#</li>
+                    <li><strong>Swagger/OpenAPI</strong> — tài liệu và kiểm thử API tại <code>/swagger</code></li>
+                    <li><strong>EF Core + Pomelo</strong> — ORM + MySQL provider</li>
+                    <li><strong>EF Core Migrations</strong> — database migrations</li>
+                    <li><strong>MySQL</strong> — relational database (AdminUsers, Locations, Analytics, Favorites theo
+                        DeviceId)</li>
                     <li><strong>JWT</strong> — authentication tokens</li>
-                    <li><strong>bcrypt</strong> — password hashing</li>
-                    <li><strong>Pydantic</strong> — request/response schemas</li>
+                    <li><strong>ASP.NET Core Authorization</strong> — role-based guards cho admin/manager</li>
                     <li><strong>Optional:</strong> TTS provider (server-side) để sinh audio khi thiếu file upload</li>
                 </ul>
             </div>
@@ -1813,7 +2136,7 @@ sequenceDiagram
                 <ul>
                     <li><strong>ReactJS</strong> — UI framework</li>
                     <li><strong>Vite</strong> — build tool</li>
-                    <li><strong>Leaflet.js + OpenStreetMap Tiles</strong> — bản đồ, Leaflet marker, popup</li>
+                    <li><strong>Google Maps JavaScript API</strong> — bản đồ, marker, info window</li>
                     <li><strong>Geolocation API</strong> — GPS tracking</li>
                     <li><strong>Haversine</strong> — tính khoảng cách để trigger geofence 50m</li>
                     <li><strong>Workbox</strong> — Service Worker toolkit</li>
@@ -1823,8 +2146,8 @@ sequenceDiagram
             </div>
             <div class="card">
                 <h3>Zero-Cost Core</h3>
-                <ul>                    
-                    <li>✅ FastAPI: open-source backend framework</li>
+                <ul>
+                    <li>✅ ASP.NET Core Web API: open-source backend framework</li>
                     <li>✅ React + Vite: free frontend (PWA)</li>
                     <li>✅ MySQL: free local / self-hosted database</li>
                     <li>✅ Workbox: service worker toolkit (offline support)</li>
@@ -1837,7 +2160,8 @@ sequenceDiagram
 
     <footer>
         <p><strong>Ứng Dụng Thuyết Minh Du Lịch Theo GPS</strong></p>
-        <p>Full-stack: FastAPI + MySQL + ReactJS (PWA) + Leaflet Map + Auto Audio (Geofence 50m)</p>
+        <p>Full-stack: ASP.NET Core Web API + Swagger/OpenAPI + MySQL + ReactJS (PWA) + Google Maps + Auto Audio
+            (Geofence 50m)</p>
         <p style="margin-top:.5rem;">Compiled from system architecture • Audited against source code</p>
     </footer>
 
@@ -1862,72 +2186,78 @@ sequenceDiagram
 
     <!-- Diagram data (section mapping + mermaid definitions) -->
     <script>
-/**
- * Mermaid diagram data for system-presentation.html
- * Auto-generated from docs/walkthrough/diagrams/*.mermaid
- * DO NOT EDIT MANUALLY — run gen_diagrams_data.py to regenerate
- */
-(function () {
-    window.DIAGRAM_DATA = {
-        sections: {
-            overview: [
-                { key: 'architecture', label: '🏗️ Kiến trúc hệ thống' },
-                { key: 'routing', label: '🔀 Frontend Routing' }
-            ],
-            startup: [
-                { key: 'backend-startup', label: '⚙️ Backend Startup' },
-                { key: 'frontend-startup', label: '🖥️ Frontend Startup' }
-            ],
-            geofence: [
-                { key: 'geofence-audio', label: '📡 Geofence + Audio' }
-            ],
-            content: [
-                { key: 'poi-content', label: '📍 Locations Content' }
-            ],
-            audio: [
-                { key: 'audio-tts', label: '🎧 Audio / TTS' }
-            ],
-            auth: [
-                { key: 'auth-rbac', label: '🔐 Auth Flow' },
-                { key: 'permissions', label: '🛡️ Permission Matrix' }
-            ],
-            localization: [
-                { key: 'localization', label: '🌐 Localization Pipeline' }
-            ],
-            offline: [
-                { key: 'offline-pwa', label: '📴 Offline Architecture' }
-            ],
-            maps: [
-                { key: 'map-pack', label: '🗺️ Leaflet Map Flow' }
-            ],
-            admin: [
-                { key: 'admin-owner', label: '🎛️ Admin CMS Flow' },
-                { key: 'ai-advisor', label: '🤖 AI Assist (Optional)' }
-            ],
-            'full-flow': [
-                { key: 'full-flow', label: '🔄 Full End-to-End Flow' }
-            ]
-        },
-        diagrams: {
-            'architecture': {
-                title: 'Kiến trúc tổng quan hệ thống',
-                mermaid: `graph TB
-    subgraph Frontend["Frontend — ReactJS (PWA) + Leaflet Map"]
+        /**
+         * Mermaid diagram data for system-presentation.html
+         * Auto-generated from docs/walkthrough/diagrams/*.mermaid
+         * DO NOT EDIT MANUALLY — run gen_diagrams_data.py to regenerate
+         */
+        (function () {
+            window.DIAGRAM_DATA = {
+                sections: {
+                    overview: [
+                        { key: 'architecture', label: '🏗️ Kiến trúc hệ thống' },
+                        { key: 'routing', label: '🔀 Frontend Routing' }
+                    ],
+                    usecases: [
+                        { key: 'use-case-scope', label: '🧩 Use Case Scope' },
+                        { key: 'visitor-activity', label: '🚶 Visitor Activity Flow' }
+                    ],
+                    startup: [
+                        { key: 'backend-startup', label: '⚙️ Backend Startup' },
+                        { key: 'frontend-startup', label: '🖥️ Frontend Startup' }
+                    ],
+                    geofence: [
+                        { key: 'geofence-audio', label: '📡 Geofence + Audio' }
+                    ],
+                    content: [
+                        { key: 'poi-content', label: '📍 Locations Content' }
+                    ],
+                    audio: [
+                        { key: 'audio-tts', label: '🎧 Audio / TTS' }
+                    ],
+                    auth: [
+                        { key: 'auth-rbac', label: '🔐 Auth Flow' },
+                        { key: 'permissions', label: '🛡️ Permission Matrix' }
+                    ],
+                    localization: [
+                        { key: 'localization', label: '🌐 Localization Pipeline' }
+                    ],
+                    offline: [
+                        { key: 'offline-pwa', label: '📴 Offline Architecture' }
+                    ],
+                    maps: [
+                        { key: 'map-pack', label: '🗺️ Google Maps Flow' }
+                    ],
+                    admin: [
+                        { key: 'admin-owner', label: '🎛️ Admin CMS Flow' },
+                        { key: 'admin-device-tracking', label: '📊 Device Tracking' },
+                        { key: 'ai-advisor', label: '🤖 AI Assist (Optional)' }
+                    ],
+                    'full-flow': [
+                        { key: 'full-flow', label: '🔄 Full End-to-End Flow' }
+                    ]
+                },
+                diagrams: {
+                    'architecture': {
+                        title: 'Kiến trúc tổng quan hệ thống',
+                        mermaid: `graph TB
+    subgraph Frontend["Frontend — ReactJS (PWA) + Google Maps"]
         APP["App\\nRouter + State"]
-        MAPUI["Map Screen\\nLeaflet Map + Markers"]
+        MAPUI["Map Screen\\nGoogle Maps + Markers"]
         LIST["Locations List/Detail\\nLanguage select"]
         ADMINUI["Admin CMS\\nLocations/Audio/Users"]
     end
 
-    subgraph Backend["Backend — FastAPI"]
+    subgraph Backend["Backend — ASP.NET Core Web API + Swagger"]
         AUTH["/api/auth\\nRegister/Login"]
         LOCS["/api/locations\\nList/Nearby/Detail"]
-        FAV["/api/favorites\\nUser favorites"]
-        ADMIN_BE["/api/admin\\nCRUD + Upload"]
+        ANALYTICS["/api/analytics\\nHeartbeat/Event/Audio/Favorite"]
+        ADMIN_BE["/api/admin\\nAnalytics/Assignments"]
+        SWAGGER["/swagger\\nOpenAPI UI"]
     end
 
     subgraph Data["Data Layer"]
-        MYSQL[("MySQL\\nUsers/Locations/Favorites")]
+        MYSQL[("MySQL\\nAdminUsers/Locations/Analytics")]
         IDB[("IndexedDB\\nTourGuideDB")]
         SW["Service Worker\\nWorkbox"]
         CACHE[("Cache API\\nAudio/Images")]
@@ -1939,19 +2269,20 @@ sequenceDiagram
     MAPUI -->|"GET /api/locations/nearby"| LOCS
     LIST -->|"GET /api/locations"| LOCS
     APP -->|"POST /api/auth/login"| AUTH
-    APP -->|"GET/POST /api/favorites"| FAV
-    ADMINUI -->|"CRUD /api/admin/*"| ADMIN_BE
+    APP -->|"POST /api/analytics/*"| ANALYTICS
+    ADMINUI -->|"GET /api/admin/analytics/summary"| ADMIN_BE
+    ADMINUI --> SWAGGER
     AUTH --> MYSQL
     LOCS --> MYSQL
-    FAV --> MYSQL
+    ANALYTICS --> MYSQL
     ADMIN_BE --> MYSQL
     APP --> IDB
     APP --> SW
     SW --> CACHE`
-            },
-            'routing': {
-                title: 'Frontend Routing — React Router',
-                mermaid: `graph TB
+                    },
+                    'routing': {
+                        title: 'Frontend Routing — React Router',
+                        mermaid: `graph TB
     ROOT["/ Browser URL"]
 
     ROOT -->|"path=/*"| PUBLIC["User App\\n🗺️ Map + Locations\\nNo admin auth"]
@@ -1969,56 +2300,146 @@ sequenceDiagram
     style ADMIN fill:#2196F3,color:white
     style LOGIN fill:#9E9E9E,color:white
     `
-            },
-            'backend-startup': {
-                title: 'Backend Startup Sequence',
-                mermaid: `sequenceDiagram
+                    },
+                    'use-case-scope': {
+                        title: 'Use Case Scope — Visitor / Manager / Admin',
+                        mermaid: `graph LR
+    Visitor["Visitor"]
+    Manager["Manager"]
+    Admin["Admin"]
+
+    subgraph System["Tourism Guide System"]
+        ViewMap(("View Map"))
+        BrowseTours(("Browse Tours"))
+        ViewDetail(("View Location Detail"))
+        PlayAudio(("Play Audio"))
+        AutoPlay(("Auto Play Audio<br/>Geofence"))
+        ScanQR(("Scan QR"))
+        Favorite(("Favorite Location"))
+
+        ManageAssigned(("Manage Assigned Locations"))
+        UploadMedia(("Upload Audio/Image"))
+        ManagerStats(("View Statistics"))
+
+        ManageUsers(("Manage Users"))
+        ManageLocations(("Manage Locations"))
+        ManageTours(("Manage Tours"))
+        AssignManagers(("Assign Managers"))
+        ViewAnalytics(("View Analytics"))
+        CreateLocation(("Create Location"))
+        EditLocation(("Edit Location"))
+        DeleteLocation(("Delete Location"))
+    end
+
+    Visitor --> ViewMap
+    Visitor --> BrowseTours
+    Visitor --> ViewDetail
+    Visitor --> Favorite
+    ViewDetail -. include .-> PlayAudio
+    ScanQR -. include .-> PlayAudio
+    AutoPlay -. extend .-> PlayAudio
+
+    Manager --> ManageAssigned
+    Manager --> UploadMedia
+    Manager --> ManagerStats
+
+    Admin --> ManageUsers
+    Admin --> ManageLocations
+    Admin --> ManageTours
+    Admin --> AssignManagers
+    Admin --> ViewAnalytics
+    ManageLocations -. include .-> CreateLocation
+    ManageLocations -. include .-> EditLocation
+    ManageLocations -. include .-> DeleteLocation`
+                    },
+                    'visitor-activity': {
+                        title: 'Visitor Activity Flow — React + .NET API',
+                        mermaid: `flowchart TB
+    subgraph User["User"]
+        Start((Start))
+        Open["Open Web App"]
+        FavoriteClick["User Click Favorite"]
+        EndUser((Close App))
+    end
+
+    subgraph Frontend["Frontend React"]
+        Load["Load App + Tours"]
+        CallApi["Call API: Get Tours/Locations"]
+        Render["Render Map + POIs"]
+        StartGps["Start GPS Tracking"]
+        CurrentLocation["Get Current Location"]
+        Near{"Near POI?"}
+        Play["Play Audio"]
+        TrackEvent["Track Analytics Event"]
+        SendFavorite["Send Favorite Event"]
+        Continue["Continue Tracking"]
+        Stop{"Stop?"}
+        EndGps((GPS Stop))
+    end
+
+    subgraph Backend["Backend .NET API"]
+        Query["Query DB<br/>Tours + Locations"]
+        ReturnData["Return Data"]
+        SaveAnalytics["Save Analytics<br/>Play, View, Favorite"]
+    end
+
+    Start --> Open --> Load --> CallApi --> Query --> ReturnData --> Render --> StartGps --> CurrentLocation --> Near
+    Near -- Yes --> Play --> TrackEvent --> SaveAnalytics --> Stop
+    Near -- No --> Continue --> Stop
+    FavoriteClick --> SendFavorite --> SaveAnalytics
+    Stop -- Continue --> CurrentLocation
+    Stop -- Close App --> EndUser
+    Stop -- GPS Stop --> EndGps`
+                    },
+                    'backend-startup': {
+                        title: 'Backend Startup Sequence',
+                        mermaid: `sequenceDiagram
     participant OS as Server OS
-    participant MAIN as main.py
-    participant CFG as config.py
-    participant DB as database.py
-    participant MIG as Alembic
+    participant MAIN as Program.cs
+    participant CFG as appsettings/env
+    participant DB as AppDbContext
+    participant MIG as EF Core Migrations
     participant AUTH as AuthService
     participant LOCS as LocationsService
 
-    OS->>MAIN: uvicorn app.main:app --port 8000
+    OS->>MAIN: dotnet run / container start
     activate MAIN
-    MAIN->>MAIN: lifespan() start
+    MAIN->>MAIN: Configure services + middleware
 
     rect rgb(255, 230, 230)
         Note over MAIN,CFG: Security Validation (non-dev only)
-        MAIN->>CFG: Check JWT_SECRET
+        MAIN->>CFG: Check JWT settings
         MAIN->>CFG: Check DB connection variables
         Note over MAIN: Refuse startup if secrets missing
     end
 
     rect rgb(230, 255, 230)
         Note over MAIN,DB: Database Connection
-        MAIN->>DB: connect_db()
-        DB->>DB: create_engine(MYSQL_URL)
+        MAIN->>DB: UseMySql(connectionString)
+        DB->>DB: Configure Pomelo provider
         DB-->>MAIN: MySQL connected
     end
 
     rect rgb(230, 230, 255)
         Note over MAIN,MIG: Migrations + Seed
-        MAIN->>MIG: alembic upgrade head
-        MAIN->>AUTH: ensure_admin_account()
+        MAIN->>MIG: db.Database.Migrate()
+        MAIN->>AUTH: seed default admin
         Note over AUTH: Create default admin<br/>if not exists
         MAIN->>LOCS: seed_sample_locations() (optional)
     end
 
     rect rgb(255, 255, 230)
         Note over MAIN,DB: Ensure Indexes
-        Note over DB: Index for Favorites(user_id)<br/>Index for Locations(name)<br/>Query optimization for nearby
+        Note over DB: Index for VisitorDevices(LastSeenAtUtc)<br/>Index for AnalyticsEvents(DeviceId,CreatedAtUtc)<br/>Index for Locations(name)
     end
 
-    MAIN->>MAIN: Mount routers (/api/auth, /api/locations, /api/favorites, /api/admin)
-    Note over MAIN: Server ready on port 8000
+    MAIN->>MAIN: Map controllers + Swagger UI (/swagger)
+    Note over MAIN: Server ready with OpenAPI docs
     deactivate MAIN`
-            },
-            'frontend-startup': {
-                title: 'Frontend Startup Sequence',
-                mermaid: `sequenceDiagram
+                    },
+                    'frontend-startup': {
+                        title: 'Frontend Startup Sequence',
+                        mermaid: `sequenceDiagram
     participant Browser as User Browser
     participant MAIN as main.jsx
     participant APP as App.jsx
@@ -2028,7 +2449,7 @@ sequenceDiagram
     participant GEO as Geolocation API
     participant STORE as locationsStore
     participant API as api.js
-    participant BACKEND as FastAPI API
+    participant BACKEND as ASP.NET Core API
     participant IDB as IndexedDB (TourGuideDB)
     participant SW as Service Worker
 
@@ -2070,15 +2491,15 @@ sequenceDiagram
     MAPUI->>MAPUI: splashVisible = false
 
     Note over MAPUI: Render map markers<br/>+ start geofence tracking`
-            },
-            'geofence-audio': {
-                title: 'GPS + Geofence + Audio Narration Flow',
-                mermaid: `sequenceDiagram
+                    },
+                    'geofence-audio': {
+                        title: 'GPS + Geofence + Audio Narration Flow',
+                        mermaid: `sequenceDiagram
     participant GPS as Geolocation API<br/>watchPosition throttle 5s
     participant STORE as locationsStore
     participant GEO as GeofenceEngine<br/>debounce + cooldown
     participant SW as Service Worker<br/>CacheFirst (audio)
-    participant API as FastAPI Backend
+    participant API as ASP.NET Core API
     participant AU as Audio Player
 
     GPS->>GPS: watchPosition()
@@ -2101,12 +2522,12 @@ sequenceDiagram
         AU->>AU: speechSynthesis.speak(text)
     end
 
-    AU->>API: POST /api/history
+    AU->>API: POST /api/analytics/audio-plays
     API-->>AU: 200 OK`
-            },
-            'poi-content': {
-                title: 'Locations Content Pipeline',
-                mermaid: `graph LR
+                    },
+                    'poi-content': {
+                        title: 'Locations Content Pipeline',
+                        mermaid: `graph LR
     subgraph Router["/api"]
         L_LIST["GET /locations\\nlist by lang"]
         L_NEAR["GET /locations/nearby\\nnearby"]
@@ -2122,7 +2543,7 @@ sequenceDiagram
     subgraph DB["MySQL Tables"]
         T_LOC[("Locations\\nname,address,lat,lng\\ntext_vi/en/zh/de")]
         T_AUD[("LocationAudios\\nlocation_id,lang,url")]
-        T_FAV[("Favorites\\nuser_id,location_id")]
+        T_FAV[("LocationFavoriteStates\\ndevice_id,location_id")]
     end
 
     L_LIST --> S_LOC --> T_LOC
@@ -2131,16 +2552,16 @@ sequenceDiagram
     ADM --> S_LOC --> T_LOC
     ADM --> S_AUD --> T_AUD
     S_LOC --> T_FAV`
-            },
-            'audio-tts': {
-                title: 'Audio Assets + Offline Caching',
-                mermaid: `graph TB
+                    },
+                    'audio-tts': {
+                        title: 'Audio Assets + Offline Caching',
+                        mermaid: `graph TB
     subgraph Admin["Admin CMS"]
         UP_TXT["Edit text VI/EN/ZH/DE"]
         UP_AUD["Upload audio per lang"]
     end
 
-    subgraph Backend["FastAPI"]
+    subgraph Backend["ASP.NET Core Web API"]
         META["Save metadata\\nLocationAudios"]
         SIGN["Return audio URL\\n(versioned)"]
     end
@@ -2158,14 +2579,14 @@ sequenceDiagram
     SIGN --> PLAYER
     PLAYER --> SWC
     UP_TXT --> PLAYER`
-            },
-            'auth-rbac': {
-                title: 'Authentication + RBAC Flow',
-                mermaid: `sequenceDiagram
+                    },
+                    'auth-rbac': {
+                        title: 'Authentication + RBAC Flow',
+                        mermaid: `sequenceDiagram
     participant Client as Web App
     participant API as /api/auth
     participant SVC as AuthService
-    participant DB as MySQL (Users)
+    participant DB as MySQL (AdminUsers)
     participant JWT as JWT Library
 
     rect rgb(230, 245, 255)
@@ -2174,7 +2595,7 @@ sequenceDiagram
         API->>SVC: authenticate()
         SVC->>DB: SELECT user WHERE username
         DB-->>SVC: {hash, role, is_locked}
-        SVC->>SVC: verify bcrypt + IsLocked check
+        SVC->>SVC: verify password hash + IsLocked check
         SVC->>JWT: sign access_token<br/>{sub, role}<br/>expire: 30 min
         JWT-->>SVC: token
         SVC-->>Client: {access_token, role}
@@ -2182,37 +2603,39 @@ sequenceDiagram
 
     rect rgb(255, 245, 230)
         Note over Client,JWT: ADMIN GUARD
-        Client->>API: GET /api/admin/locations<br/>Authorization: Bearer token
+        Client->>API: GET /api/admin/analytics/summary<br/>Authorization: Bearer token
         API->>JWT: verify token
         JWT-->>API: {sub, role}
         API-->>Client: 200 OK (role=admin) / 403 (otherwise)
     end`
-            },
-            'permissions': {
-                title: 'RBAC Permission Matrix',
-                mermaid: `graph TB
-    subgraph Roles["Users.Role"]
+                    },
+                    'permissions': {
+                        title: 'RBAC Permission Matrix',
+                        mermaid: `graph TB
+    subgraph Roles["AdminUsers.Role + Public Guest"]
         ADMIN_R["admin\\n/admin/*"]
-        USER_R["user\\npublic app"]
+        MANAGER_R["manager\\n/manager/*"]
+        GUEST_R["guest device\\npublic app"]
     end
 
     subgraph Domains["API Domains"]
         AUTH["/api/auth\\nregister/login"]
         LOCS["/api/locations\\nlist/nearby/detail"]
-        FAV["/api/favorites\\nadd/remove/list"]
-        ADM["/api/admin\\nCRUD + uploads"]
+        AN["/api/analytics\\nheartbeat/event/favorite"]
+        ADM["/api/admin\\nanalytics + assignments"]
     end
 
-    ADMIN_R --- AUTH & LOCS & FAV & ADM
-    USER_R --- AUTH & LOCS & FAV`
-            },
-            'localization': {
-                title: 'Localization (VI/EN/ZH/DE) + Fallback',
-                mermaid: `sequenceDiagram
+    ADMIN_R --- AUTH & LOCS & AN & ADM
+    MANAGER_R --- AUTH & LOCS
+    GUEST_R --- LOCS & AN`
+                    },
+                    'localization': {
+                        title: 'Localization (VI/EN/ZH/DE) + Fallback',
+                        mermaid: `sequenceDiagram
     participant User as User
     participant FE as React Frontend
     participant SW as Service Worker/IDB
-    participant API as FastAPI
+    participant API as ASP.NET Core API
     participant DB as MySQL
 
     User->>FE: Select language (vi/en/zh/de)
@@ -2228,10 +2651,10 @@ sequenceDiagram
         API-->>FE: EN fallback
         Note over FE: Final fallback = VI
     end`
-            },
-            'offline-pwa': {
-                title: 'Offline / PWA — 4 Layers',
-                mermaid: `graph TB
+                    },
+                    'offline-pwa': {
+                        title: 'Offline / PWA — 4 Layers',
+                        mermaid: `graph TB
     subgraph SW["Service Worker — Workbox"]
         PRECACHE["App shell precache\\nHTML/CSS/JS"]
         API_ROUTE["/api/locations*\\nNetworkFirst (8s)\\nlocations-api-cache"]
@@ -2248,30 +2671,30 @@ sequenceDiagram
     API_ROUTE --> STORE
     AUDIO_ROUTE --> FALLBACK
     STORE --> FALLBACK`
-            },
-            'map-pack': {
-                title: 'Leaflet Map Initialization Flow',
-                mermaid: `sequenceDiagram
+                    },
+                    'map-pack': {
+                        title: 'Google Maps Initialization Flow',
+                        mermaid: `sequenceDiagram
     participant FE as React Frontend
-    participant GM as Leaflet.js + OpenStreetMap
-    participant API as FastAPI
+    participant GM as Google Maps JS API
+    participant API as ASP.NET Core API
     participant DB as MySQL
 
-    FE->>GM: Load Leaflet tiles
-    GM-->>FE: Leaflet library ready
+    FE->>GM: Load script with API key
+    GM-->>FE: Maps library ready
     FE->>API: GET /api/locations/nearby?lat=..&lng=..&radius=1500
     API->>DB: Query nearby locations
     DB-->>API: rows
-    API-->>FE: leafletMarkers[]
-    FE->>GM: Render Leaflet markers + popups`
-            },
-            'admin-owner': {
-                title: 'Admin CMS Publishing Flow',
-                mermaid: `sequenceDiagram
+    API-->>FE: markers[]
+    FE->>GM: Render markers + info windows`
+                    },
+                    'admin-owner': {
+                        title: 'Admin CMS Publishing Flow',
+                        mermaid: `sequenceDiagram
     participant Admin as Admin
     participant FE as Admin CMS
     participant AUTH as /api/auth
-    participant API as /api/admin
+    participant API as Swagger API C#
     participant DB as MySQL
 
     Admin->>FE: Login
@@ -2279,18 +2702,58 @@ sequenceDiagram
     AUTH-->>FE: access_token (role=admin)
 
     Admin->>FE: Create/Update Location + texts
-    FE->>API: POST /api/admin/locations
+    FE->>API: POST /api/locations
     API->>DB: INSERT/UPDATE Locations
     DB-->>API: OK
 
     Admin->>FE: Upload audio (vi/en/zh/de)
-    FE->>API: POST /api/admin/locations/{id}/audio
-    API->>DB: UPSERT LocationAudios
+    FE->>API: POST /api/upload/image
+    API->>DB: Save file path / media metadata
     API-->>FE: OK`
-            },
-            'ai-advisor': {
-                title: 'AI Assist (Optional) — Content Drafting',
-                mermaid: `sequenceDiagram
+                    },
+                    'admin-device-tracking': {
+                        title: 'Admin Dashboard — Device Tracking Sequence',
+                        mermaid: `sequenceDiagram
+    participant Guest as Guest Browser
+    participant FE as React App
+    participant DID as deviceId.js
+    participant API as ASP.NET Core Web API
+    participant SVC as AnalyticsService
+    participant DB as MySQL
+    participant Admin as Admin Dashboard
+    participant Swagger as Swagger UI
+
+    Guest->>FE: Open public route
+    FE->>DID: getOrCreateDeviceId()
+    DID-->>FE: travel_device_id
+    Note over FE: Heartbeat enabled only outside /admin
+
+    loop Page view + interval heartbeat
+        FE->>API: POST /api/analytics/heartbeat<br/>{deviceId,path,platform,eventType}
+        API->>SVC: RecordHeartbeatAsync()
+        SVC->>DB: UPSERT VisitorDevices<br/>INSERT AppUsageHeartbeats<br/>INSERT AnalyticsEvents
+        API-->>FE: 202 Accepted
+    end
+
+    alt Audio/favorite interaction
+        FE->>API: POST /api/analytics/audio-plays<br/>or /favorite-clicks
+        API->>SVC: Record metric
+        SVC->>DB: INSERT AudioPlays/FavoriteClicks<br/>UPDATE LocationFavoriteStates
+        API-->>FE: 202 Accepted
+    end
+
+    Admin->>API: GET /api/admin/analytics/summary<br/>Bearer admin JWT
+    API->>SVC: GetSummaryAsync()
+    SVC->>DB: Aggregate active devices,<br/>totals, recent visitors
+    DB-->>SVC: AnalyticsSummaryDto data
+    API-->>Admin: currentActiveDevices,<br/>totalAudioPlays,<br/>totalFavoritesSaved,<br/>recentVisitors
+
+    Swagger->>API: Manual test at /swagger
+    API-->>Swagger: OpenAPI JSON + responses`
+                    },
+                    'ai-advisor': {
+                        title: 'AI Assist (Optional) — Content Drafting',
+                        mermaid: `sequenceDiagram
     participant Admin as Admin
     participant FE as Admin CMS
     participant API as /api/admin/ai
@@ -2302,15 +2765,15 @@ sequenceDiagram
     AI-->>API: draft text
     API-->>FE: draft text
     Note over FE: Admin reviews, edits, then publishes (human-in-the-loop)`
-            },
-            'full-flow': {
-                title: 'End-to-End Flow — Mở App đến Nghe Audio',
-                mermaid: `graph TB
+                    },
+                    'full-flow': {
+                        title: 'End-to-End Flow — Mở App đến Nghe Audio',
+                        mermaid: `graph TB
     START["User mở app"] --> SW_REG["SW register + precache app shell"]
     SW_REG --> LANG["Chọn ngôn ngữ (VI/EN/ZH/DE)"]
     LANG --> LOAD_IDB["Load cached Locations (IndexedDB)"]
-    LANG --> FETCH_API["Fetch Locations (FastAPI + MySQL)"]
-    LOAD_IDB --> RENDER["Render UI + Leaflet markers"]
+    LANG --> FETCH_API["Fetch Locations (ASP.NET Core API + MySQL)"]
+    LOAD_IDB --> RENDER["Render UI + markers (Google Maps)"]
     FETCH_API --> SAVE_IDB["Save to IndexedDB + cache audio/images"]
     SAVE_IDB --> RENDER
 
@@ -2318,16 +2781,16 @@ sequenceDiagram
     GPS --> CHECK["Haversine distance → ENTER when < 50m (debounce)"]
     CHECK --> PLAY["Auto-play audio (cache first)"]
     PLAY --> FALLBACK["Fallback: speechSynthesis if no audio"]
-    PLAY --> HISTORY["POST /api/history (PlayHistory)"]
+    PLAY --> HISTORY["POST /api/analytics/audio-plays"]
 
     style START fill:#4CAF50,color:white
     style PLAY fill:#2196F3,color:white
     style LANG fill:#9C27B0,color:white`
-            }
-        }
-    };
-})();
-</script>
+                    }
+                }
+            };
+        })();
+    </script>
 
     <!-- Mermaid JS + Diagram interaction -->
     <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
@@ -2338,7 +2801,7 @@ sequenceDiagram
             startOnLoad: true,
             theme: 'default',
             securityLevel: 'loose',
-            sequence: { mirrorActors: false, messageMargin: 40, actorFontWeight: 'bold' }
+            sequence: { mirrorActors: true, messageMargin: 40, actorFontWeight: 'bold' }
         });
 
         // === Diagram Button Injection ===
@@ -2528,4 +2991,3 @@ sequenceDiagram
 </body>
 
 </html>
-
